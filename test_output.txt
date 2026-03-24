@@ -1,0 +1,84 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.1, pytest-7.4.3, pluggy-1.6.0 -- /home/codespace/.python/current/bin/python
+cachedir: .pytest_cache
+rootdir: /workspaces/Neuro-genomic-AI
+plugins: anyio-3.7.1, asyncio-0.21.1, cov-4.1.0
+asyncio: mode=Mode.STRICT
+collecting ... collected 47 items / 3 errors
+
+==================================== ERRORS ====================================
+______________________ ERROR collecting tests/test_api.py ______________________
+ImportError while importing test module '/workspaces/Neuro-genomic-AI/tests/test_api.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/python/3.12.1/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_api.py:8: in <module>
+    from src.api.main import app
+src/api/main.py:14: in <module>
+    from src.api.middleware.auth import auth_middleware
+src/api/middleware/auth.py:7: in <module>
+    import jwt
+E   ModuleNotFoundError: No module named 'jwt'
+_____________________ ERROR collecting tests/test_auth.py ______________________
+ImportError while importing test module '/workspaces/Neuro-genomic-AI/tests/test_auth.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/python/3.12.1/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_auth.py:6: in <module>
+    import jwt
+E   ModuleNotFoundError: No module named 'jwt'
+____________________ ERROR collecting tests/test_upload.py _____________________
+ImportError while importing test module '/workspaces/Neuro-genomic-AI/tests/test_upload.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/python/3.12.1/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_upload.py:8: in <module>
+    from src.api.main import app
+src/api/main.py:14: in <module>
+    from src.api.middleware.auth import auth_middleware
+src/api/middleware/auth.py:7: in <module>
+    import jwt
+E   ModuleNotFoundError: No module named 'jwt'
+
+---------- coverage: platform linux, python 3.12.1-final-0 -----------
+Name                                         Stmts   Miss  Cover
+----------------------------------------------------------------
+src/api/main.py                                 47     39    17%
+src/api/middleware/__init__.py                   0      0   100%
+src/api/middleware/auth.py                      22     19    14%
+src/api/models/__init__.py                       0      0   100%
+src/api/models/schemas.py                       57      0   100%
+src/api/routes/__init__.py                       0      0   100%
+src/api/routes/analysis.py                      12      5    58%
+src/api/routes/export.py                        10      2    80%
+src/api/routes/health.py                        10      2    80%
+src/api/routes/upload.py                        30     15    50%
+src/core/__init__.py                             0      0   100%
+src/core/pipeline.py                            55     39    29%
+src/dashboard/__init__.py                        0      0   100%
+src/dashboard/app.py                            73     73     0%
+src/dashboard/components/__init__.py             0      0   100%
+src/dashboard/components/reports.py             21     21     0%
+src/dashboard/components/sidebar.py             11     11     0%
+src/dashboard/components/visualizations.py      15     15     0%
+src/utils/__init__.py                            0      0   100%
+src/utils/logger.py                              8      0   100%
+src/utils/metrics.py                            25     25     0%
+src/utils/validators.py                         14     14     0%
+src/workers/__init__.py                          0      0   100%
+src/workers/celery_app.py                        9      0   100%
+src/workers/monitor.py                          11     11     0%
+src/workers/tasks.py                            49     28    43%
+----------------------------------------------------------------
+TOTAL                                          479    319    33%
+Coverage HTML written to dir htmlcov
+
+=========================== short test summary info ============================
+ERROR tests/test_api.py
+ERROR tests/test_auth.py
+ERROR tests/test_upload.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
+============================== 3 errors in 8.46s ===============================

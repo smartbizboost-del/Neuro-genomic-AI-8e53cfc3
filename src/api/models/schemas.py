@@ -61,7 +61,7 @@ class FileMetadata(BaseModel):
     status: str
 
 class BatchAnalysisRequest(BaseModel):
-    file_ids: List[str] = Field(..., min_items=1, max_items=100)
+    file_ids: List[str] = Field(..., min_length=1, max_length=100)
 
 class BatchAnalysisResponse(BaseModel):
     batch_id: str
