@@ -3,22 +3,26 @@ API tests
 """
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from src.api.main import app
 
-client = TestClient(app)
-
-def test_root():
-    response = client.get("/")
+@pytest.mark.asyncio
+async def test_root():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
+        response = await client.get("/")
     assert response.status_code == 200
     assert "Neuro-Genomic AI" in response.json()["name"]
 
-def test_health():
-    response = client.get("/health")
+@pytest.mark.asyncio
+async def test_health():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
+        response = await client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
 
-def test_ready():
-    response = client.get("/ready")
+@pytest.mark.asyncio
+async def test_ready():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
+        response = await client.get("/ready")
     assert response.status_code == 200
     assert response.json()["status"] == "ready"

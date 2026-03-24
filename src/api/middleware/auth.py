@@ -27,3 +27,8 @@ def verify_token(credentials: HTTPAuthorizationCredentials = security):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+
+def auth_middleware(credentials: HTTPAuthorizationCredentials = security):
+    """Legacy compatibility middleware entrypoint"""
+    return verify_token(credentials)
