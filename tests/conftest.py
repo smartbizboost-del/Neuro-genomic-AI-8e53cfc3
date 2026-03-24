@@ -10,11 +10,26 @@ import numpy as np
 import tempfile
 from httpx import AsyncClient, ASGITransport
 
+# ============================================================================
+# SECURITY CONFIGURATION FOR TESTS
+# ============================================================================
+# Set a secure JWT secret key for testing (at least 32 bytes)
+TEST_JWT_SECRET_KEY = "test-secret-key-at-least-32-bytes-for-jwt-hs256"
+
+# Set environment variable before importing app
+os.environ.setdefault("JWT_SECRET_KEY", TEST_JWT_SECRET_KEY)
+
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from src.api.main import app
 from src.core.pipeline import NeuroGenomicPipeline
+
+
+@pytest.fixture(autouse=True)
+def set_jwt_secret(monkeypatch):
+    """Ensure JWT secret key is set for all tests"""
+    monkeypatch.setenv("JWT_SECRET_KEY", TEST_JWT_SECRET_KEY)
 
 
 @pytest.fixture

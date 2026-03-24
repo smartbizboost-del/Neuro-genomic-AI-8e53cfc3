@@ -5,7 +5,7 @@ Authentication middleware tests
 import pytest
 import jwt
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from httpx import AsyncClient, ASGITransport
@@ -13,10 +13,13 @@ from src.api.main import app
 from src.api.middleware.auth import create_access_token, verify_token
 from fastapi.security import HTTPAuthorizationCredentials
 
+# Use a secure JWT secret key for testing (at least 32 bytes)
+TEST_JWT_SECRET = "test-secret-key-at-least-32-bytes-for-jwt-hs256"
+
 
 def test_create_access_token():
     """Test JWT token creation"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         data = {"sub": "user_123"}
         token = create_access_token(data)
         
@@ -24,23 +27,23 @@ def test_create_access_token():
         assert isinstance(token, str)
         
         # Verify token can be decoded
-        decoded = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        decoded = jwt.decode(token, TEST_JWT_SECRET, algorithms=["HS256"])
         assert decoded["sub"] == "user_123"
 
 
 def test_create_access_token_has_expiration():
     """Test that created tokens have expiration"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         data = {"sub": "user_123"}
         token = create_access_token(data)
         
-        decoded = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        decoded = jwt.decode(token, TEST_JWT_SECRET, algorithms=["HS256"])
         assert "exp" in decoded
 
 
 def test_verify_valid_token():
     """Test verifying a valid token"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         data = {"sub": "user_123"}
         token = create_access_token(data)
         
@@ -52,12 +55,12 @@ def test_verify_valid_token():
 
 def test_verify_expired_token():
     """Test that expired tokens raise exception"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         # Create an expired token
         to_encode = {"sub": "user_123"}
-        expire = datetime.utcnow() - timedelta(hours=1)  # Already expired
+        expire = datetime.now(timezone.utc) - timedelta(hours=1)  # Already expired
         to_encode.update({"exp": expire})
-        expired_token = jwt.encode(to_encode, "test-secret", algorithm="HS256")
+        expired_token = jwt.encode(to_encode, TEST_JWT_SECRET, algorithm="HS256")
         
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=expired_token)
         
@@ -70,7 +73,7 @@ def test_verify_expired_token():
 
 def test_verify_invalid_token():
     """Test that invalid tokens raise exception"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid-token-string")
         
         from fastapi import HTTPException
@@ -82,12 +85,12 @@ def test_verify_invalid_token():
 
 def test_verify_token_wrong_secret():
     """Test that tokens signed with wrong secret are rejected"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         data = {"sub": "user_123"}
         token = create_access_token(data)
         
         # Try to verify with wrong secret
-        with patch.dict(os.environ, {"JWT_SECRET_KEY": "wrong-secret"}):
+        with patch.dict(os.environ, {"JWT_SECRET_KEY": "wrong-secret-key-at-least-32-bytes-for-jwt-hs256"}):
             credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
             
             from fastapi import HTTPException
@@ -111,17 +114,17 @@ async def test_missing_authorization_header():
 @pytest.mark.asyncio
 async def test_valid_token_flow():
     """Test successful authentication flow"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         token = create_access_token({"sub": "user_123"})
         
         # Test that we can create and decode the token
-        decoded = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        decoded = jwt.decode(token, TEST_JWT_SECRET, algorithms=["HS256"])
         assert decoded["sub"] == "user_123"
 
 
 def test_create_token_with_multiple_claims():
     """Test token creation with multiple claims"""
-    with patch.dict(os.environ, {"JWT_SECRET_KEY": "test-secret"}):
+    with patch.dict(os.environ, {"JWT_SECRET_KEY": TEST_JWT_SECRET}):
         data = {
             "sub": "user_123",
             "email": "user@example.com",
@@ -129,7 +132,7 @@ def test_create_token_with_multiple_claims():
         }
         token = create_access_token(data)
         
-        decoded = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        decoded = jwt.decode(token, TEST_JWT_SECRET, algorithms=["HS256"])
         assert decoded["sub"] == "user_123"
         assert decoded["email"] == "user@example.com"
         assert "read" in decoded["permissions"]
