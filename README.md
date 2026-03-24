@@ -68,6 +68,9 @@
 - Docker & Docker Compose
 - 8GB RAM minimum
 
+> ⚠️ Compatibility note: This project uses `starlette` test utilities with `httpx==0.28.x`.
+> If you upgrade httpx, ensure `starlette`/`fastapi` versions remain aligned (520+), and update tests to use `httpx.AsyncClient` + `ASGITransport` as shown in `tests/test_api.py`.
+
 ### Installation (5 minutes)
 
 ```bash
