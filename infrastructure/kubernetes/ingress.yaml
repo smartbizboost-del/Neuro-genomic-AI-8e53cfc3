@@ -1,0 +1,38 @@
+# infrastructure/kubernetes/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neuro-ingress
+  namespace: neuro-genomic
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "10r/s"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+spec:
+  tls:
+  - hosts:
+    - api.neuro-genomic.com
+    - dashboard.neuro-genomic.com
+    secretName: neuro-tls
+  rules:
+  - host: api.neuro-genomic.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: neuro-api
+            port:
+              number: 8000
+  - host: dashboard.neuro-genomic.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: neuro-dashboard
+            port:
+              number: 8501

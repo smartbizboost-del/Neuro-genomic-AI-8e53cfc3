@@ -1,0 +1,135 @@
+# .github/workflows/ci.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  DOCKER_REGISTRY: "neuro-genomic.ocir.io"
+  IMAGE_NAME: "neuro-genomic"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements/base.txt
+          pip install pytest pytest-cov flake8 black
+
+      - name: Lint with flake8
+        run: flake8 src/ --count --max-complexity=10 --statistics
+
+      - name: Format check with black
+        run: black --check src/
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ --cov=src --cov-report=xml --cov-report=html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to OCI Registry
+        run: |
+          echo ${{ secrets.OCI_AUTH_TOKEN }} | docker login ${{ env.DOCKER_REGISTRY }} -u ${{ secrets.OCI_USERNAME }} --password-stdin
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: docker/Dockerfile.api
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }}
+
+      - name: Build and push Worker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: docker/Dockerfile.worker
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/worker:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/worker:${{ github.sha }}
+
+      - name: Build and push Dashboard image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: docker/Dockerfile.dashboard
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/dashboard:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/dashboard:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install OCI CLI
+        run: |
+          curl -L -o oci-cli.zip https://github.com/oracle/oci-cli/releases/latest/download/oci-cli.zip
+          unzip oci-cli.zip
+          sudo ./oci-cli/install.sh --accept-all-defaults
+
+      - name: Configure OCI CLI
+        run: |
+          mkdir -p ~/.oci
+          echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
+          echo "${{ secrets.OCI_KEY }}" > ~/.oci/key.pem
+          chmod 600 ~/.oci/key.pem
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubectl for OKE
+        run: |
+          oci ce cluster create-kubeconfig --cluster-id ${{ secrets.OKE_CLUSTER_ID }} --file $HOME/.kube/config --region ${{ secrets.OCI_REGION }}
+          kubectl config use-context cluster-${{ secrets.OKE_CLUSTER_ID }}
+
+      - name: Update Kubernetes manifests with image tags
+        run: |
+          sed -i "s|image: neuro-genomic-api:latest|image: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }}|g" infrastructure/kubernetes/deployment.yaml
+          sed -i "s|image: neuro-genomic-worker:latest|image: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/worker:${{ github.sha }}|g" infrastructure/kubernetes/deployment.yaml
+          sed -i "s|image: neuro-genomic-dashboard:latest|image: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}/dashboard:${{ github.sha }}|g" infrastructure/kubernetes/deployment.yaml
+
+      - name: Apply Kubernetes configurations
+        run: |
+          kubectl apply -f infrastructure/kubernetes/configmap.yaml
+          kubectl apply -f infrastructure/kubernetes/secrets.yaml || true
+          kubectl apply -f infrastructure/kubernetes/deployment.yaml
+          kubectl apply -f infrastructure/kubernetes/service.yaml
+          kubectl apply -f infrastructure/kubernetes/ingress.yaml
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/neuro-api -n neuro-genomic --timeout=5m
+          kubectl rollout status deployment/neuro-worker -n neuro-genomic --timeout=5m
+          kubectl rollout status deployment/neuro-dashboard -n neuro-genomic --timeout=5m
