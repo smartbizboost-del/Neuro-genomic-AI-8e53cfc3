@@ -71,8 +71,20 @@ elif page == "Results Viewer":
                         st.dataframe(features_df)
                         
                         st.subheader("Risk Assessment")
-                        risk_df = pd.DataFrame.from_dict(data['risk'], orient='index', columns=['Probability'])
+                        # Filter out non-numeric keys for the chart
+                        risk_probs = {k: v for k, v in data['risk'].items() if k in ['normal', 'suspect', 'pathological']}
+                        risk_df = pd.DataFrame.from_dict(risk_probs, orient='index', columns=['Probability'])
                         st.bar_chart(risk_df)
+                        
+                        st.caption(f"Model used: **{data['risk'].get('model_used', 'Supervised Classifier')}**")
+                        
+                        st.subheader("Unsupervised Analysis")
+                        anomaly_score = data['risk'].get('anomaly_score', 0)
+                        cluster = data['risk'].get('unsupervised_cluster', 'N/A')
+                        st.metric("Anomaly Score (Neg Log-Likelihood)", f"{anomaly_score:.2f}",
+                                  delta="Anomalous" if anomaly_score > 15 else "Normal",
+                                  delta_color="inverse")
+                        st.write(f"Assigned Cluster: **{cluster}**")
                     
                     with col2:
                         st.subheader("Clinical Interpretation")

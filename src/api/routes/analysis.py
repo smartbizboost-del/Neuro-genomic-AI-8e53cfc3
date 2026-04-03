@@ -9,22 +9,23 @@ import uuid
 from src.api.models.schemas import AnalysisResponse
 
 router = APIRouter()
+RESULTS_DB = {}
 
 @router.get("/analysis/{file_id}", response_model=AnalysisResponse)
 async def get_analysis(file_id: str):
     """
     Get analysis results for a processed file
     """
-    # This would query the database for actual results
-    # Placeholder implementation
-    
     # Validate UUID format
     try:
         uuid.UUID(file_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid file ID format")
     
-    # Mock response - replace with actual database query
+    if file_id in RESULTS_DB:
+        return AnalysisResponse(**RESULTS_DB[file_id])
+    
+    # Mock response - fallback
     return AnalysisResponse(
         file_id=file_id,
         features={
@@ -42,12 +43,12 @@ async def get_analysis(file_id: str):
             "normal": 0.85,
             "suspect": 0.12,
             "pathological": 0.03,
-            "predicted_class": "normal"
+            "predicted_class": "normal",
+            "anomaly_score": 0.0,
+            "unsupervised_cluster": 0
         },
         interpretation=[
-            "RMSSD indicates good vagal tone",
-            "LF/HF ratio suggests healthy autonomic balance",
-            "Developmental index is within normal range"
+            "Data is still processing or unavailable. Showing Mock representation."
         ],
         developmental_index=0.72,
         gestational_weeks=32,

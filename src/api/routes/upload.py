@@ -14,20 +14,18 @@ from src.workers.tasks import process_ecg_file
 
 router = APIRouter()
 
-# MinIO/S3 client
-s3_client = boto3.client(
-    's3',
-    endpoint_url=os.getenv('MINIO_ENDPOINT', 'http://minio:9000'),
-    aws_access_key_id=os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
-    aws_secret_access_key=os.getenv('MINIO_SECRET_KEY', 'minioadmin'),
-    verify=False
-)
+from src.workers.tasks import extract_raw_signals
+from src.api.routes.analysis import RESULTS_DB
+from fastapi import BackgroundTasks
+import tempfile
+from src.core.pipeline import NeuroGenomicPipeline
 
-BUCKET_NAME = os.getenv('MINIO_BUCKET', 'neuro-genomic-ecg')
+pipeline = NeuroGenomicPipeline()
 
 @router.post("/upload", response_model=UploadResponse)
 async def upload_ecg(
     file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
     gestational_weeks: int = None,
     patient_id: str = None
 ):
@@ -48,31 +46,39 @@ async def upload_ecg(
     file_id = str(uuid.uuid4())
     s3_key = f"uploads/{file_id}/{file.filename}"
     
-    # Upload to S3/MinIO
-    try:
-        content = await file.read()
-        s3_client.put_object(
-            Bucket=BUCKET_NAME,
-            Key=s3_key,
-            Body=content,
-            ContentType=file.content_type
-        )
-    except ClientError as e:
-        raise HTTPException(status_code=500, detail=f"S3 upload failed: {e}")
+    content = await file.read()
     
-    # Trigger async processing
-    task = process_ecg_file.delay(
-        file_id=file_id,
-        s3_key=s3_key,
-        gestational_weeks=gestational_weeks,
-        patient_id=patient_id
-    )
+    def process_locally():
+        import os
+        temp_path = os.path.join(tempfile.gettempdir(), f"{file_id}.ecg")
+        with open(temp_path, "wb") as f:
+            f.write(content)
+        try:
+            mixed_signal = extract_raw_signals(temp_path)
+            res = pipeline.process_recording(mixed_signal, 500, gestational_weeks)
+            RESULTS_DB[file_id] = {
+                "file_id": file_id,
+                "features": res["features"],
+                "risk": res["risk"],
+                "interpretation": res["interpretation"],
+                "developmental_index": res["developmental_index"],
+                "gestational_weeks": gestational_weeks or 32,
+                "created_at": "2024-01-01T00:00:00Z",
+                "confidence_intervals": None
+            }
+        except Exception as e:
+            print(f"Error locally processing: {e}")
+            
+    if background_tasks:
+        background_tasks.add_task(process_locally)
+    else:
+        process_locally()
     
     return UploadResponse(
         file_id=file_id,
         filename=file.filename,
         size=len(content),
-        task_id=task.id,
+        task_id="local_sync",
         status="processing",
         message="File uploaded successfully. Processing started."
     )
