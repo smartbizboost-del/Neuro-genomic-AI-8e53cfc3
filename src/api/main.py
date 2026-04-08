@@ -10,8 +10,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from src.api.routes import health, upload, analysis, export
-from src.api.middleware.auth import auth_middleware
+from src.api.routes import health, upload, analysis, export, admin, auth
 from src.api.middleware.logging import log_requests
 from src.core.pipeline import NeuroGenomicPipeline
 from src.utils.logger import setup_logging
@@ -75,6 +74,8 @@ app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(upload.router, prefix="/api/v1", tags=["upload"])
 app.include_router(analysis.router, prefix="/api/v1", tags=["analysis"])
 app.include_router(export.router, prefix="/api/v1", tags=["export"])
+app.include_router(admin.router, prefix="/api/v1", tags=["admin"])
+app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 
 @app.get("/")
 async def root():

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuro-Genomic AI | Ethical AI for Fetal Development</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #3b82f6;
+        }
+
+        .btn-outline {
+            padding: 0.5rem 1rem;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            color: #3b82f6;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary {
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 0 4rem;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #334155;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .hero-image {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+
+        .dna-visual {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+        }
+
+        .ecg-wave svg {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* Expertise Section */
+        .expertise {
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .expertise h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .expertise-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .expertise-card {
+            background: #1e293b;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid #334155;
+        }
+
+        .expertise-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Recognition Row */
+        .recognition {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .recognition-item {
+            text-align: center;
+        }
+
+        .recognition-badge {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* About Section */
+        .about {
+            padding: 4rem 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .about p {
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-image {
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .about-image span {
+            font-size: 5rem;
+        }
+
+        /* Team Section */
+        .team {
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .team h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-subtitle {
+            color: #94a3b8;
+            margin-bottom: 3rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .team-card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+
+        .team-avatar {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .team-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .team-title {
+            color: #3b82f6;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .team-bio {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 4rem 0;
+            background: #1e293b;
+            border-radius: 20px;
+            margin: 2rem 0;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: #0f172a;
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        .testimonial-author {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        /* Blog Section */
+        .blog {
+            padding: 4rem 0;
+        }
+
+        .blog h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .blog-card {
+            background: #1e293b;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .blog-card h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .blog-card p {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #0f172a;
+            padding: 3rem 0 2rem;
+            border-top: 1px solid #334155;
+            margin-top: 4rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .footer-links h4 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            display: block;
+            color: #94a3b8;
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid #334155;
+            margin-top: 2rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .hero-grid, .about, .team-grid, .testimonials-grid, .blog-grid, .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-links {
+                display: none;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .expertise-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <span class="logo-icon">🧬</span>
+                <span class="logo-text">Neuro-Genomic AI</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#team">Team</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div>
+                <a href="#" class="btn-outline">Sign In</a>
+                <a href="#" class="btn-primary">Request Demo</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <div class="container">
+                <div class="hero-grid">
+                    <div>
+                        <div class="hero-badge">🏆 #2 of 52 Innovators</div>
+                        <h1>Understanding development by listening to the <span class="gradient-text">earliest signals</span> of life.</h1>
+                        <p class="hero-description">Neuro-Genomic AI is an ethical AI platform that models fetal nervous system development from heart rate signals — moving beyond "is something wrong?" to <strong>"how is development progressing?"</strong></p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn-primary">Request Demo →</a>
+                            <a href="#" class="btn-outline">Learn More</a>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-number">1,800+</div>
+                                <div class="stat-label">Recordings Analyzed</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">12</div>
+                                <div class="stat-label">HRV Features</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">329</div>
+                                <div class="stat-label">Tests Passing</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">$5B+</div>
+                                <div class="stat-label">Market Opportunity</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <div class="dna-visual">🧬</div>
+                        <div class="ecg-wave">
+                            <svg viewBox="0 0 300 100" width="100%">
+                                <path d="M0,50 L20,50 L30,20 L40,80 L50,40 L60,60 L70,30 L80,70 L90,50 L120,50 L130,20 L140,80 L150,40 L160,60 L170,30 L180,70 L190,50 L220,50 L230,20 L240,80 L250,40 L260,60 L270,30 L280,70 L290,50 L300,50" fill="none" stroke="#3b82f6" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p style="margin-top: 1rem; color: #94a3b8;">AI-powered fetal development monitoring</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Our Expertise Section -->
+        <section class="expertise">
+            <div class="container">
+                <h2>Our Expertise in Action</h2>
+                <div class="expertise-grid">
+                    <div class="expertise-card">
+                        <div class="expertise-icon">🔬</div>
+                        <h3>Research Institutions</h3>
+                        <p>University labs, research institutions, PhD candidates</p>
+                    </div>
+                    <div class="expertise-card">
+                        <div class="expertise-icon">🏥</div>
+                        <h3>Clinical Settings</h3>
+                        <p>Hospitals, clinics, maternal-fetal medicine specialists</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recognition Row -->
+        <div class="container">
+            <div class="recognition">
+                <div class="recognition-item">
+                    <div class="recognition-badge">🥈</div>
+                    <div>#2 of 52 Innovators</div>
+                    <small style="color:#94a3b8">Kirinyaga University</small>
+                </div>
+                <div class="recognition-item">
+                    <div class="recognition-badge">🚀</div>
+                    <div>Innovation Hub</div>
+                    <small style="color:#94a3b8">Dedicated Workspace</small>
+                </div>
+                <div class="recognition-item">
+                    <div class="recognition-badge">👥</div>
+                    <div>3 Co-Founders</div>
+                    <small style="color:#94a3b8">Kirinyaga University</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <section class="about" id="about">
+            <div>
+                <h2>About Us</h2>
+                <p><strong>Understanding development by listening to the earliest signals of life.</strong></p>
+                <p>Neuro-Genomic AI analyzes fetal heart rate variability using unsupervised machine learning to discover developmental patterns of the autonomic nervous system — the first window into functional brain development before birth.</p>
+                <p>With 1,800+ recordings analyzed, 12 HRV features extracted, and 329 automated tests passing, our platform is validated, reliable, and ready for research and clinical applications.</p>
+                <a href="#" class="btn-primary">Learn More About Us →</a>
+            </div>
+            <div class="about-image">
+                <span>🧬</span>
+                <p style="margin-top: 1rem;">Ethical AI for Fetal Development</p>
+            </div>
+        </section>
+
+        <!-- Team Section -->
+        <section class="team" id="team">
+            <div class="container">
+                <h2>Trust the Team of Experts Behind the Innovation</h2>
+                <p class="team-subtitle">3 co-founders from Kirinyaga University Innovation Hub</p>
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="team-avatar">🧬</div>
+                        <h3>Collins Omondi</h3>
+                        <div class="team-title">CEO, Co-Founder</div>
+                        <p class="team-bio">Biology, biosignals, ethics, and AI. Created the original algorithm and ethical framework. #2 of 52 innovators.</p>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-avatar">🧠</div>
+                        <h3>[CSO Name]</h3>
+                        <div class="team-title">CSO, Co-Founder</div>
+                        <p class="team-bio">Biomedical engineering, signal processing, AI, deep learning, and neural networks.</p>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-avatar">💻</div>
+                        <h3>[CTO Name]</h3>
+                        <div class="team-title">CTO, Co-Founder</div>
+                        <p class="team-bio">Software engineering, cloud architecture, DevOps, and API development.</p>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem;">
+                    <a href="#" class="btn-outline">Learn More About Us →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section class="testimonials">
+            <div class="container">
+                <div class="testimonials-grid">
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">"The Research Edition simplifies ECG data analysis, helping us publish faster and with more confidence."</p>
+                        <p class="testimonial-author">— Dr. Jane Mlemma, Research Scientist</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">"Real-time monitoring helps us make timely, informed decisions in neonatal care."</p>
+                        <p class="testimonial-author">— Dr. Samuel Kipchoge, Neonatologist</p>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="#" class="btn-primary">Book a Demo →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blog Section -->
+        <section class="blog">
+            <div class="container">
+                <h2>Blog & Resources</h2>
+                <div class="blog-grid">
+                    <div class="blog-card">
+                        <h4>The Science Behind Heart Rate Variability (HRV) in Fetal Development</h4>
+                        <p>Understanding how HRV reveals autonomic nervous system maturation.</p>
+                    </div>
+                    <div class="blog-card">
+                        <h4>Case Study: Improved Fetal Monitoring at Kirinyaga Hospital</h4>
+                        <p>How Neuro-Genomic AI enhanced early detection of developmental concerns.</p>
+                    </div>
+                    <div class="blog-card">
+                        <h4>Uncertainty Visualization: Why Ethical AI Matters in Prenatal Care</h4>
+                        <p>Building trust through transparency and confidence intervals.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="logo" style="margin-bottom: 1rem;">
+                        <span class="logo-icon">🧬</span>
+                        <span class="logo-text">Neuro-Genomic AI</span>
+                    </div>
+                    <p style="color:#94a3b8">Understanding development by listening to the earliest signals of life.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Team</a>
+                    <a href="#">Services</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <a href="#">Technology</a>
+                    <a href="#">Documentation</a>
+                    <a href="#">API Reference</a>
+                    <a href="#">Research Papers</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Ethics Statement</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved.</p>
+                <p>📍 Kirinyaga University Innovation Hub, Kerugoya, Kenya</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
