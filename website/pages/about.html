@@ -6,138 +6,6 @@
     <title>About Us | Neuro-Genomic AI</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        .about-hero {
-            padding: 5rem 0;
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 3rem;
-            align-items: start;
-        }
-
-        .about-hero .intro-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            color: #60a5fa;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .about-hero h2,
-        .page-header h1 {
-            font-size: clamp(2.25rem, 2.5vw, 3rem);
-            line-height: 1.05;
-        }
-
-        .about-hero p,
-        .about-hero ul li,
-        .about-trust p,
-        .about-hero .meta-copy {
-            color: #cbd5e1;
-        }
-
-        .about-hero ul {
-            margin-top: 2rem;
-            list-style: none;
-            display: grid;
-            gap: 1rem;
-        }
-
-        .about-hero li {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(147, 197, 253, 0.18);
-            border-radius: 18px;
-            padding: 1.25rem 1.5rem;
-        }
-
-        .about-hero li strong {
-            display: block;
-            margin-bottom: 0.4rem;
-            color: #f8fafc;
-        }
-
-        .about-card {
-            background: #111827;
-            border: 1px solid #334155;
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0 32px 80px rgba(15, 23, 42, 0.25);
-        }
-
-        .about-card h3 {
-            color: #60a5fa;
-            margin-bottom: 1rem;
-        }
-
-        .feature-grid,
-        .trust-grid,
-        .serving-grid {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .feature-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-top: 2rem;
-        }
-
-        .feature-card,
-        .trust-pill,
-        .serving-card {
-            background: #111827;
-            border: 1px solid #334155;
-            border-radius: 20px;
-            padding: 1.5rem;
-        }
-
-        .feature-card h4,
-        .trust-pill h3 {
-            margin-bottom: 0.75rem;
-        }
-
-        .about-trust {
-            padding: 4rem 0;
-        }
-
-        .about-trust .trust-split {
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 2rem;
-            align-items: start;
-        }
-
-        .integrity-panel {
-            margin-top: 1.5rem;
-            background: rgba(59, 130, 246, 0.12);
-            border: 1px solid #3b82f6;
-            border-radius: 22px;
-            padding: 1.75rem;
-        }
-
-        .serving-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            margin-top: 1.75rem;
-        }
-
-        @media (max-width: 960px) {
-            .about-hero,
-            .about-trust .trust-split {
-                grid-template-columns: 1fr;
-            }
-
-            .feature-grid,
-            .serving-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-menu {
-                display: none;
-            }
-        }
-    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -151,107 +19,222 @@
                 <li><a href="about.html" class="active">About</a></li>
                 <li><a href="team.html">Team</a></li>
                 <li><a href="services.html">Services</a></li>
-                <li><a href="technology.html">Technology</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
             <div class="nav-buttons">
-                <a href="login.html" class="btn-outline">Sign In</a>
-                <a href="contact.html" class="btn-primary">Request Demo</a>
+                <a href="#" class="btn-outline">Sign In</a>
+                <a href="#" class="btn-primary">Request Demo</a>
             </div>
         </div>
     </nav>
 
     <main>
+        <!-- Page Header -->
         <section class="page-header">
             <div class="container">
                 <h1>About Neuro-Genomic AI</h1>
-                <p>Neuro-Genomic AI is a health intelligence platform built for reliable, secure, and traceable biomedical analysis.</p>
+                <p>Understanding development by listening to the earliest signals of life.</p>
             </div>
         </section>
 
-        <section class="about-hero">
-            <div>
-                <span class="intro-tag">Health intelligence platform</span>
-                <h2>Neuro-Genomic AI brings biomedical data into clear, accountable action.</h2>
-                <p class="meta-copy">A product built to help clinicians, researchers, and institutions derive trusted insights from physiological and genomic data with operational integrity in every stage.</p>
-                <ul>
-                    <li><strong>Trusted analysis</strong> — signal processing, machine learning, and traceability combined for reliable decision support.</li>
-                    <li><strong>Real-time scalability</strong> — distributed systems built to handle large biomedical datasets and live workflows.</li>
-                    <li><strong>Audit-ready operations</strong> — full traceability, observability, and governance baked into the platform.</li>
-                </ul>
-            </div>
-            <div class="about-card">
-                <h3>Product focus</h3>
-                <p>Neuro-Genomic AI is designed to transform how physiological and biomedical data is analyzed, interpreted, and acted upon. It is productized for healthcare and research teams that require clear outcomes and institutional trust.</p>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <h4>Advanced Data Analysis</h4>
-                        <p>Process and analyze ECG, genomic, and bio-signals with precision.</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Scalable Infrastructure</h4>
-                        <p>Designed for distributed workloads, real-time performance, and enterprise deployment.</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Clinical & Research Support</h4>
-                        <p>Enable hospitals, labs, and researchers to make faster, data-driven decisions.</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Operational Visibility</h4>
-                        <p>Monitoring, logging, and analytics are first-class platform capabilities.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="about-trust">
+        <!-- Our Mission -->
+        <section class="mission-section">
             <div class="container">
-                <div class="section-header">
-                    <h2>Built for trust, transparency, and enterprise-grade integrity.</h2>
-                    <p>Most platforms stop at model outputs. We focus on the system that produces those outputs.</p>
+                <div class="mission-grid">
+                    <div class="mission-content">
+                        <h2>Our Mission</h2>
+                        <p>To empower clinicians, researchers, and families with ethical AI that reveals the hidden story of fetal nervous system development — transforming prenatal care from reactive monitoring to proactive understanding.</p>
+                        <p>We believe that every heartbeat contains information. By unlocking the patterns within heart rate variability, we can detect developmental trajectories, identify potential concerns earlier, and ultimately improve outcomes for mothers and babies worldwide.</p>
+                    </div>
+                    <div class="vision-content">
+                        <h2>Our Vision</h2>
+                        <p>To become the global standard for AI-powered fetal nervous system assessment — deployed in every major hospital, research institution, and medical device platform across the world.</p>
+                        <p>We envision a future where no parent has to wonder if their baby's nervous system is developing normally, because the data will be clear, transparent, and actionable.</p>
+                    </div>
                 </div>
-                <div class="trust-split">
-                    <div class="about-card">
-                        <p>Our system is built not just to analyze data, but to ensure traceability, auditability, and operational integrity across every stage of the pipeline.</p>
-                        <div class="trust-grid">
-                            <div class="trust-pill">
-                                <h3>Reliable</h3>
-                                <p>Engineered for system health, uptime, and predictable performance.</p>
+            </div>
+        </section>
+
+        <!-- Who We Serve + Image Section -->
+        <section class="who-we-serve">
+            <div class="container">
+                <div class="serve-grid">
+                    <div class="serve-content">
+                        <h2>Who We Serve</h2>
+                        <p>Neuro-Genomic AI is built for the entire prenatal care ecosystem — from researchers discovering new patterns to clinicians making real-time decisions.</p>
+
+                        <div class="serve-list">
+                            <div class="serve-item">
+                                <span class="serve-icon">🔬</span>
+                                <div>
+                                    <h3>Research Institutions</h3>
+                                    <p>University labs, PhD candidates, and research scientists studying fetal development and autonomic nervous system maturation.</p>
+                                </div>
                             </div>
-                            <div class="trust-pill">
-                                <h3>Transparent</h3>
-                                <p>Every result is supported by auditable data lineage and process visibility.</p>
+                            <div class="serve-item">
+                                <span class="serve-icon">🏥</span>
+                                <div>
+                                    <h3>Hospitals & Clinics</h3>
+                                    <p>Maternal-fetal medicine specialists, obstetricians, and neonatologists monitoring high-risk pregnancies.</p>
+                                </div>
                             </div>
-                            <div class="trust-pill">
-                                <h3>Auditable</h3>
-                                <p>Designed for teams that need accountability and governance at scale.</p>
+                            <div class="serve-item">
+                                <span class="serve-icon">💻</span>
+                                <div>
+                                    <h3>MedTech Companies</h3>
+                                    <p>Device manufacturers integrating AI-powered analytics into their fetal monitoring platforms.</p>
+                                </div>
+                            </div>
+                            <div class="serve-item">
+                                <span class="serve-icon">🌍</span>
+                                <div>
+                                    <h3>Public Health Systems</h3>
+                                    <p>Government health ministries and NGOs working to reduce maternal and infant mortality.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="about-card">
-                        <h3>Integrity & Governance Layer</h3>
-                        <p>We integrate measurable integrity metrics into system operations, enabling institutions to assess trust, stability, and responsible AI usage in real time.</p>
-                        <div class="integrity-panel">
-                            <p><strong>End-to-End Data Traceability</strong><br>Every analysis is trackable from input to output.</p>
-                            <p><strong>Audit-Ready Infrastructure</strong><br>Built for institutional environments requiring accountability.</p>
-                            <p><strong>Governance Integration</strong><br>Supports risk detection, ethical usage, and integrity metrics.</p>
+                    <div class="serve-image">
+                        <img src="../images/team-collaborating.jpg.png" alt="Neuro-Genomic AI team collaborating" style="width:100%; border-radius:16px;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- What Makes Us Unique -->
+        <section class="unique-section">
+            <div class="container">
+                <h2>What Makes Us Unique</h2>
+                <p class="unique-intro">We're not just another AI health startup. Here's what sets Neuro-Genomic AI apart.</p>
+
+                <div class="unique-grid">
+                    <div class="unique-card">
+                        <div class="unique-icon">🧠</div>
+                        <h3>Unsupervised Discovery, Not Just Prediction</h3>
+                        <p>Most AI models are supervised — they learn to predict what you already know. Our unsupervised approach discovers patterns no one has seen before, revealing novel developmental trajectories.</p>
+                        <div class="unique-value">
+                            <strong>Value to you:</strong> Discover what you didn't know to look for.
+                        </div>
+                    </div>
+                    <div class="unique-card">
+                        <div class="unique-icon">🛡️</div>
+                        <h3>Ethical AI Built Into Every Layer</h3>
+                        <p>We don't treat ethics as a compliance checkbox. Uncertainty visualization, confidence intervals, and transparent limitations are core features — not afterthoughts.</p>
+                        <div class="unique-value">
+                            <strong>Value to you:</strong> Trust what the AI tells you. Know when it's uncertain.
+                        </div>
+                    </div>
+                    <div class="unique-card">
+                        <div class="unique-icon">📈</div>
+                        <h3>Longitudinal Tracking, Not Snapshots</h3>
+                        <p>Other tools give you a point-in-time risk score. We track individual developmental trajectories across gestation — showing how each fetus is progressing over time.</p>
+                        <div class="unique-value">
+                            <strong>Value to you:</strong> See development as a journey, not just a moment.
+                        </div>
+                    </div>
+                    <div class="unique-card">
+                        <div class="unique-icon">☁️</div>
+                        <h3>Software-Only, Scalable by Design</h3>
+                        <p>No hardware costs. No manufacturing delays. Our cloud-native platform deploys instantly and scales to thousands of hospitals.</p>
+                        <div class="unique-value">
+                            <strong>Value to you:</strong> Lower costs, faster deployment, global reach.
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="serving">
+        <!-- The Value We Add -->
+        <section class="value-add">
             <div class="container">
-                <div class="section-header">
-                    <h2>Who we serve</h2>
-                    <p>Focused on teams that need high-confidence biomedical intelligence.</p>
+                <h2>The Value We Add to Your Work</h2>
+                <div class="value-grid">
+                    <div class="value-card">
+                        <span class="value-icon">🔬</span>
+                        <h3>For Researchers</h3>
+                        <ul>
+                            <li>Publish faster with automated HRV analysis</li>
+                            <li>Access publication-ready visualizations</li>
+                            <li>Replicate results with documented, open-source code</li>
+                            <li>Generate novel hypotheses through unsupervised discovery</li>
+                        </ul>
+                    </div>
+                    <div class="value-card">
+                        <span class="value-icon">🏥</span>
+                        <h3>For Clinicians</h3>
+                        <ul>
+                            <li>Detect developmental concerns 4-6 weeks earlier</li>
+                            <li>Make evidence-based delivery decisions</li>
+                            <li>Reduce unnecessary interventions</li>
+                            <li>Communicate risk with confidence intervals</li>
+                        </ul>
+                    </div>
+                    <div class="value-card">
+                        <span class="value-icon">💼</span>
+                        <h3>For MedTech Partners</h3>
+                        <ul>
+                            <li>Add AI differentiation to existing products</li>
+                            <li>Fast integration via REST API</li>
+                            <li>White-label options for your brand</li>
+                            <li>Scalable cloud infrastructure</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="serving-grid">
-                    <div class="serving-card"><h3>Hospitals and clinical teams</h3></div>
-                    <div class="serving-card"><h3>Biomedical researchers</h3></div>
-                    <div class="serving-card"><h3>Health-tech organizations</h3></div>
-                    <div class="serving-card"><h3>Data-driven healthcare institutions</h3></div>
+            </div>
+        </section>
+
+        <!-- Our Journey -->
+        <section class="journey-section">
+            <div class="container">
+                <h2>Our Journey</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-year">January 2026</div>
+                        <div class="timeline-content">
+                            <h4>Concept Born</h4>
+                            <p>The idea of using unsupervised learning to discover fetal developmental patterns was conceived at Kirinyaga University.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">March 2026</div>
+                        <div class="timeline-content">
+                            <h4>#2 of 52 Innovators</h4>
+                            <p>Neuro-Genomic AI placed second out of 52 innovations at the Kirinyaga University Science, Technology and Innovation Day.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">April 2026</div>
+                        <div class="timeline-content">
+                            <h4>MVP Complete</h4>
+                            <p>Working API, interactive dashboard, and 329 passing tests. Dockerized deployment on Oracle Cloud Infrastructure ready.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2026-2027</div>
+                        <div class="timeline-content">
+                            <h4>Clinical Validation</h4>
+                            <p>Partnering with hospitals to validate our Developmental Index against real clinical outcomes.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2028+</div>
+                        <div class="timeline-content">
+                            <h4>Global Scale</h4>
+                            <p>FDA clearance, enterprise deployment, and ultimately improving prenatal care worldwide.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to transform fetal monitoring?</h2>
+                <p>Join researchers and clinicians using Neuro-Genomic AI to understand development from the earliest signals of life.</p>
+                <div class="cta-buttons">
+                    <a href="contact.html" class="btn-primary">Request a Demo</a>
+                    <a href="services.html" class="btn-outline">View Services</a>
                 </div>
             </div>
         </section>
@@ -264,6 +247,11 @@
                     <span class="logo-icon">🧬</span>
                     <span class="logo-text">Neuro-Genomic AI</span>
                     <p>Understanding development by listening to the earliest signals of life.</p>
+                    <div class="footer-trust">
+                        <span>Partner: Kirinyaga University Innovation Hub</span>
+                        <span>Recognition: #2 Innovators</span>
+                    </div>
+                    <p class="footer-address">Nairobi Office (placeholder) • Kirinyaga University Innovation Hub</p>
                 </div>
                 <div class="footer-links">
                     <h4>Company</h4>
@@ -277,17 +265,21 @@
                     <a href="technology.html">Technology</a>
                     <a href="#">Documentation</a>
                     <a href="#">API Reference</a>
+                    <a href="#">Research Papers</a>
                 </div>
                 <div class="footer-links">
                     <h4>Legal</h4>
                     <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
+                    <a href="#">IP Protection</a>
+                    <a href="#">Ethics Statement</a>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved.</p>
+                <p>📍 Kirinyaga University Innovation Hub, Kerugoya, Kenya</p>
             </div>
         </div>
     </footer>
+
 </body>
 </html>
