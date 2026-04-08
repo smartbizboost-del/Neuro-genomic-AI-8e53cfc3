@@ -6,6 +6,138 @@
     <title>About Us | Neuro-Genomic AI</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .about-hero {
+            padding: 5rem 0;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .about-hero .intro-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            color: #60a5fa;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .about-hero h2,
+        .page-header h1 {
+            font-size: clamp(2.25rem, 2.5vw, 3rem);
+            line-height: 1.05;
+        }
+
+        .about-hero p,
+        .about-hero ul li,
+        .about-trust p,
+        .about-hero .meta-copy {
+            color: #cbd5e1;
+        }
+
+        .about-hero ul {
+            margin-top: 2rem;
+            list-style: none;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .about-hero li {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(147, 197, 253, 0.18);
+            border-radius: 18px;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .about-hero li strong {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #f8fafc;
+        }
+
+        .about-card {
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 32px 80px rgba(15, 23, 42, 0.25);
+        }
+
+        .about-card h3 {
+            color: #60a5fa;
+            margin-bottom: 1rem;
+        }
+
+        .feature-grid,
+        .trust-grid,
+        .serving-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .feature-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-top: 2rem;
+        }
+
+        .feature-card,
+        .trust-pill,
+        .serving-card {
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .feature-card h4,
+        .trust-pill h3 {
+            margin-bottom: 0.75rem;
+        }
+
+        .about-trust {
+            padding: 4rem 0;
+        }
+
+        .about-trust .trust-split {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .integrity-panel {
+            margin-top: 1.5rem;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid #3b82f6;
+            border-radius: 22px;
+            padding: 1.75rem;
+        }
+
+        .serving-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-top: 1.75rem;
+        }
+
+        @media (max-width: 960px) {
+            .about-hero,
+            .about-trust .trust-split {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid,
+            .serving-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -37,101 +169,89 @@
             </div>
         </section>
 
-        <section class="about-content">
+        <section class="about-hero">
+            <div>
+                <span class="intro-tag">Health intelligence platform</span>
+                <h2>Neuro-Genomic AI brings biomedical data into clear, accountable action.</h2>
+                <p class="meta-copy">A product built to help clinicians, researchers, and institutions derive trusted insights from physiological and genomic data with operational integrity in every stage.</p>
+                <ul>
+                    <li><strong>Trusted analysis</strong> — signal processing, machine learning, and traceability combined for reliable decision support.</li>
+                    <li><strong>Real-time scalability</strong> — distributed systems built to handle large biomedical datasets and live workflows.</li>
+                    <li><strong>Audit-ready operations</strong> — full traceability, observability, and governance baked into the platform.</li>
+                </ul>
+            </div>
+            <div class="about-card">
+                <h3>Product focus</h3>
+                <p>Neuro-Genomic AI is designed to transform how physiological and biomedical data is analyzed, interpreted, and acted upon. It is productized for healthcare and research teams that require clear outcomes and institutional trust.</p>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Advanced Data Analysis</h4>
+                        <p>Process and analyze ECG, genomic, and bio-signals with precision.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Scalable Infrastructure</h4>
+                        <p>Designed for distributed workloads, real-time performance, and enterprise deployment.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Clinical & Research Support</h4>
+                        <p>Enable hospitals, labs, and researchers to make faster, data-driven decisions.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Operational Visibility</h4>
+                        <p>Monitoring, logging, and analytics are first-class platform capabilities.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-trust">
             <div class="container">
-                <div class="content-grid">
-                    <div>
-                        <p>Neuro-Genomic AI is a health intelligence platform designed to transform how physiological and biomedical data is analyzed, interpreted, and acted upon.</p>
-                        <p>We combine advanced signal processing, machine learning, and scalable infrastructure to enable clinicians, researchers, and institutions to extract meaningful insights from complex biological data—reliably, securely, and in real time.</p>
+                <div class="section-header">
+                    <h2>Built for trust, transparency, and enterprise-grade integrity.</h2>
+                    <p>Most platforms stop at model outputs. We focus on the system that produces those outputs.</p>
+                </div>
+                <div class="trust-split">
+                    <div class="about-card">
                         <p>Our system is built not just to analyze data, but to ensure traceability, auditability, and operational integrity across every stage of the pipeline.</p>
+                        <div class="trust-grid">
+                            <div class="trust-pill">
+                                <h3>Reliable</h3>
+                                <p>Engineered for system health, uptime, and predictable performance.</p>
+                            </div>
+                            <div class="trust-pill">
+                                <h3>Transparent</h3>
+                                <p>Every result is supported by auditable data lineage and process visibility.</p>
+                            </div>
+                            <div class="trust-pill">
+                                <h3>Auditable</h3>
+                                <p>Designed for teams that need accountability and governance at scale.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h2>Our Mission</h2>
-                        <p>To build a trusted intelligence layer for biomedical data—where analysis is not only accurate, but transparent, verifiable, and scalable across institutions.</p>
-
-                        <h2>What We Do</h2>
-                        <ul class="feature-list">
-                            <li><strong>Advanced Data Analysis</strong><br>Process and analyze physiological signals (e.g., ECG, genomic data) with high precision.</li>
-                            <li><strong>Scalable Infrastructure</strong><br>Handle large datasets and real-time processing through distributed systems.</li>
-                            <li><strong>Clinical & Research Support</strong><br>Enable hospitals, labs, and researchers to make faster, data-driven decisions.</li>
-                            <li><strong>Operational Visibility</strong><br>Provide full system observability through integrated monitoring, logging, and analytics.</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="difference">
-            <div class="container">
-                <h2>How We Are Different</h2>
-                <p>Most platforms focus only on outputs. We focus on system integrity.</p>
-                <p>Our platform is designed with:</p>
-                <div class="difference-grid">
-                    <div class="difference-card">
-                        <h3>End-to-End Data Traceability</h3>
-                        <p>Every analysis is trackable from input to output.</p>
-                    </div>
-                    <div class="difference-card">
-                        <h3>Audit-Ready Infrastructure</h3>
-                        <p>Built for institutional environments requiring accountability.</p>
-                    </div>
-                    <div class="difference-card">
-                        <h3>Reliability-First Engineering</h3>
-                        <p>System health, logs, and monitoring are core—not afterthoughts.</p>
-                    </div>
-                    <div class="difference-card">
-                        <h3>Governance Integration</h3>
-                        <p>Designed to support integrity metrics, risk detection, and ethical data usage.</p>
+                    <div class="about-card">
+                        <h3>Integrity & Governance Layer</h3>
+                        <p>We integrate measurable integrity metrics into system operations, enabling institutions to assess trust, stability, and responsible AI usage in real time.</p>
+                        <div class="integrity-panel">
+                            <p><strong>End-to-End Data Traceability</strong><br>Every analysis is trackable from input to output.</p>
+                            <p><strong>Audit-Ready Infrastructure</strong><br>Built for institutional environments requiring accountability.</p>
+                            <p><strong>Governance Integration</strong><br>Supports risk detection, ethical usage, and integrity metrics.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <section class="vision">
-            <div class="container">
-                <h2>Our Vision</h2>
-                <p>To become the foundational infrastructure for biomedical intelligence—powering hospitals, research institutions, and global health systems with trustworthy, scalable AI.</p>
             </div>
         </section>
 
         <section class="serving">
             <div class="container">
-                <h2>Who We Serve</h2>
+                <div class="section-header">
+                    <h2>Who we serve</h2>
+                    <p>Focused on teams that need high-confidence biomedical intelligence.</p>
+                </div>
                 <div class="serving-grid">
-                    <div class="serving-card">
-                        <h3>Hospitals and clinical teams</h3>
-                    </div>
-                    <div class="serving-card">
-                        <h3>Biomedical researchers</h3>
-                    </div>
-                    <div class="serving-card">
-                        <h3>Health-tech organizations</h3>
-                    </div>
-                    <div class="serving-card">
-                        <h3>Data-driven healthcare institutions</h3>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="trust">
-            <div class="container">
-                <h2>Built for Trust</h2>
-                <p>In healthcare, accuracy is not enough. Systems must be reliable, transparent, auditable.</p>
-                <div class="trust-grid">
-                    <div class="trust-card">
-                        <h3>Reliable</h3>
-                    </div>
-                    <div class="trust-card">
-                        <h3>Transparent</h3>
-                    </div>
-                    <div class="trust-card">
-                        <h3>Auditable</h3>
-                    </div>
-                </div>
-                <div class="integrity">
-                    <h2>Integrity & Governance Layer</h2>
-                    <p>We integrate measurable integrity metrics into system operations, enabling institutions to assess trust, stability, and responsible AI usage in real time.</p>
+                    <div class="serving-card"><h3>Hospitals and clinical teams</h3></div>
+                    <div class="serving-card"><h3>Biomedical researchers</h3></div>
+                    <div class="serving-card"><h3>Health-tech organizations</h3></div>
+                    <div class="serving-card"><h3>Data-driven healthcare institutions</h3></div>
                 </div>
             </div>
         </section>
