@@ -18,6 +18,7 @@ COPY requirements/base.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY src/ /app/src/
+COPY src_legacy/ /app/src_legacy/
 COPY config/ /app/config/
 
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app

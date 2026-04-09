@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Copy application code
 COPY src/ /app/src/
+COPY src_legacy/ /app/src_legacy/
 COPY config/ /app/config/
 COPY scripts/ /app/scripts/
 
