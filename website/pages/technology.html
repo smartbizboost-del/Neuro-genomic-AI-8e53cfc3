@@ -14,7 +14,8 @@
         .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
         .logo-icon { font-size: 1.8rem; }
         .logo-text { background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .nav-menu { display: flex; list-style: none; gap: 2rem; }
+        .nav-menu { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; list-style: none; gap: 2rem; }
+        .nav-menu li { display: inline-flex; }
         .nav-menu a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
         .nav-menu a:hover, .nav-menu a.active { color: #3b82f6; }
         .btn-outline { padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 8px; color: #3b82f6; text-decoration: none; transition: all 0.3s; }
@@ -111,7 +112,7 @@
 
         <section class="ethics-section"><div class="container"><h2 style="text-align:center;">🛡️ Ethical AI by Design</h2><div class="ethics-toggle"><div class="toggle-btn active" onclick="showEthics('without')">Typical AI</div><div class="toggle-btn" onclick="showEthics('with')">Neuro‑Genomic AI</div></div><div class="ethics-demo" id="ethicsDemo"><div class="without"><p style="color:#ef4444;">⚠️ "Fetus at risk — 87% confidence"</p><p style="color:#94a3b8;">No explanation. No uncertainty. No transparency.</p></div><div class="with"><p style="color:#10b981;">✅ "RMSSD = 28ms (↓15% from expected). LF/HF = 1.3 (↑0.2).</p><p style="color:#10b981;">Confidence: 92% (±3%). Signal quality: Good.</p><p style="color:#94a3b8;">⚠️ Research insights only — not for clinical diagnosis.</p></div></div></div></section>
 
-        <div class="container"><div class="cta-section"><h2>Ready to see the technology in action?</h2><p>Request a live demo or explore our open‑source code.</p><div class="cta-buttons"><a href="contact.html" class="btn-primary">Request Demo →</a><a href="https://github.com/smartbizboost-del/Neuro-genomic-AI-8e53cfc3" class="btn-outline">View on GitHub</a></div></div></div>
+        <div class="container"><div class="cta-section"><h2>Ready to see the technology in action?</h2><p>Request a live demo or explore our open‑source code.</p><div class="cta-buttons"><a href="contact.html" class="btn-primary">Request Demo →</a></div></div></div>
     </main>
 
     <footer class="footer"><div class="container"><div class="footer-grid"><div><div class="logo" style="margin-bottom:1rem;"><span class="logo-icon">🧬</span><span class="logo-text">Neuro-Genomic AI</span></div><p style="color:#94a3b8">Understanding development by listening to the earliest signals of life.</p></div><div class="footer-links"><h4>Company</h4><a href="about.html">About</a><a href="team.html">Team</a><a href="services.html">Services</a></div><div class="footer-links"><h4>Resources</h4><a href="technology.html">Technology</a><a href="#">Documentation</a><a href="#">API Reference</a></div><div class="footer-links"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Ethics Statement</a></div></div><div class="footer-bottom"><p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved. | Kirinyaga University Innovation Hub, Kerugoya, Kenya</p></div></div></footer>
