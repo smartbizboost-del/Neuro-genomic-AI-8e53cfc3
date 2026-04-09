@@ -50,6 +50,7 @@ body {
 .logo-text {
     background: linear-gradient(135deg, #3b82f6, #a855f7);
     -webkit-background-clip: text;
+    background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
 }
@@ -159,6 +160,7 @@ h1 {
 .gradient-text {
     background: linear-gradient(135deg, #3b82f6, #a855f7);
     -webkit-background-clip: text;
+    background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
 }
@@ -480,6 +482,7 @@ h1 {
     margin-bottom: 1rem;
     background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
 }
@@ -1544,4 +1547,14 @@ footer img:hover {
     .auth-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Gradient text with full browser compatibility */
+.gradient-text,
+.logo-text,
+h1 span {
+    background: linear-gradient(135deg, #3b82f6, #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
