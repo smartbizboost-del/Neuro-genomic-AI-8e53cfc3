@@ -14,9 +14,9 @@
         .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
         .logo-icon { font-size: 1.8rem; }
         .logo-text { background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .nav-links { display: flex; list-style: none; gap: 2rem; }
-        .nav-links a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
-        .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
+        .nav-menu { display: flex; list-style: none; gap: 2rem; }
+        .nav-menu a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
+        .nav-menu a:hover, .nav-menu a.active { color: #3b82f6; }
         .btn-outline { padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 8px; color: #3b82f6; text-decoration: none; transition: all 0.3s; }
         .btn-outline:hover { background: #3b82f6; color: white; }
         .btn-primary { padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #a855f7); border-radius: 8px; color: white; text-decoration: none; font-weight: 500; transition: opacity 0.3s; }
@@ -72,7 +72,7 @@
         .footer { background: #0f172a; padding: 3rem 0 2rem; border-top: 1px solid #334155; margin-top: 4rem; }
         .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
         .footer-bottom { text-align: center; padding-top: 2rem; border-top: 1px solid #334155; margin-top: 2rem; color: #64748b; }
-        @media (max-width: 768px) { .nav-links { display: none; } .how-grid, .features-grid, .validation-grid, .footer-grid { grid-template-columns: 1fr; } .pipeline-flow { flex-direction: column; } }
+        @media (max-width: 768px) { .nav-menu { display: none; } .how-grid, .features-grid, .validation-grid, .footer-grid { grid-template-columns: 1fr; } .pipeline-flow { flex-direction: column; } }
     </style>
 </head>
 <body>

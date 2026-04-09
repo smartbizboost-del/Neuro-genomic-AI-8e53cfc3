@@ -1433,6 +1433,21 @@ footer img:hover {
     border: 1px solid rgba(59, 130, 246, 0.25);
     color: #e2e8f0;
 }
+.form-alert.success {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: #d1fae5;
+}
+.form-alert.error {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.35);
+    color: #fee2e2;
+}
+.form-alert.warning {
+    background: rgba(250, 204, 21, 0.12);
+    border-color: rgba(250, 204, 21, 0.35);
+    color: #fef9c3;
+}
 .auth-panel {
     background: #111827;
     border: 1px solid #334155;

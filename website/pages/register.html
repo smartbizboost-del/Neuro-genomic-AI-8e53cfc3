@@ -81,29 +81,67 @@
         </section>
     </main>
     <script>
-        document.getElementById('register-form').addEventListener('submit', async function (event) {
+        const form = document.getElementById('register-form');
+        const alertEl = document.getElementById('auth-alert');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        function setAlert(message, type = 'info') {
+            alertEl.textContent = message;
+            alertEl.classList.remove('success', 'error', 'warning');
+            if (type === 'success') alertEl.classList.add('success');
+            if (type === 'error') alertEl.classList.add('error');
+            if (type === 'warning') alertEl.classList.add('warning');
+        }
+
+        form.addEventListener('submit', async function (event) {
             event.preventDefault();
-            const alertEl = document.getElementById('auth-alert');
-            alertEl.textContent = '';
-            const name = document.getElementById('name').value.trim();
+            setAlert('Submitting registration...', 'info');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+
+            const full_name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
+
             try {
                 const response = await fetch('/api/v1/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, role })
+                    body: JSON.stringify({ full_name, email, password, role })
                 });
                 const payload = await response.json();
+
                 if (!response.ok) {
-                    alertEl.textContent = payload.detail || 'Registration failed. Please review your information.';
+                    setAlert(payload.detail || 'Registration failed. Please review your information.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Register';
                     return;
                 }
-                alertEl.textContent = 'Account created successfully. Redirecting to dashboard...';
-                window.location.href = 'dashboard.html';
+
+                const loginResponse = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const loginPayload = await loginResponse.json();
+
+                if (!loginResponse.ok) {
+                    setAlert('Registration succeeded, but automatic login failed. Please sign in manually.', 'warning');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Register';
+                    return;
+                }
+
+                localStorage.setItem('access_token', loginPayload.access_token);
+                setAlert('Account created successfully. Redirecting to dashboard...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1200);
             } catch (error) {
-                alertEl.textContent = 'Unable to reach the registration service. Please try again later.';
+                setAlert('Unable to reach the registration service. Please try again later.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register';
             }
         });
     </script>
