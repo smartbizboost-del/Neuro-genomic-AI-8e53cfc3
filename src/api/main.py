@@ -28,10 +28,10 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Neuro-Genomic AI API")
     try:
-        pipeline.train_model()  # Load trained model if available
-        logger.info("Model loaded successfully")
+        # pipeline.train_model()  # Load trained model if available - removed legacy classifier
+        logger.info("Pipeline initialized successfully")
     except Exception as e:
-        logger.warning(f"Model not loaded: {e}")
+        logger.warning(f"Pipeline initialization warning: {e}")
     yield
     # Shutdown
     logger.info("Shutting down Neuro-Genomic AI API")
