@@ -23,23 +23,43 @@ class NeuroGenomicPipeline:
     
     def __init__(self):
         self.feature_extractor = None
+        # self.classifier = None  # Legacy code removed
+        self.classifier = None
         self.unsupervised_model = GaussianMixture(n_components=3, random_state=42)
         self.scaler = StandardScaler()
         self._bootstrap_model()
         
     def _bootstrap_model(self):
-        """Bootstrap the Unsupervised Model with synthetic data"""
-        logger.info("Bootstrapping Unsupervised Gaussian Mixture Model...")
+        """Train the GradientBoosting Model on synthetic historical logic limits"""
+        logger.info("Bootstrapping Supervised Gradient Boosting Model...")
+        # Features order: rmssd, sdnn, mean_rr, lf_hf_ratio, pnn50
+        # y format: "normal", "suspect", "pathological"
         
-        # Generate synthetic data for unsupervised learning
+        # Synthetic generator matching clinical boundaries
         X_train = []
+        y_train = []
         
-        # Generate 300 synthetic feature vectors
-        for _ in range(300):
-            X_train.append([np.random.normal(30, 15), np.random.normal(40, 20), 
-                            np.random.normal(450, 100), np.random.normal(2.0, 1.0), np.random.normal(10, 8)])
+        # Generate 100 Normal cases (High RMSSD, good SDNN, balanced LF_HF)
+        for _ in range(100):
+            X_train.append([np.random.normal(45, 10), np.random.normal(50, 15), 
+                            np.random.normal(400, 50), np.random.normal(1.5, 0.3), np.random.normal(15, 5)])
+            y_train.append("normal")
             
-        # Bootstrap the Unsupervised Model
+        # Generate 100 Suspect cases (Medium RMSSD, high LF_HF)
+        for _ in range(100):
+            X_train.append([np.random.normal(25, 8), np.random.normal(35, 10), 
+                            np.random.normal(450, 50), np.random.normal(2.5, 0.4), np.random.normal(8, 3)])
+            y_train.append("suspect")
+            
+        # Generate 100 Pathological cases (Low RMSSD, low SDNN, extreme LF_HF)
+        for _ in range(100):
+            X_train.append([np.random.normal(10, 5), np.random.normal(15, 5), 
+                            np.random.normal(500, 50), np.random.normal(3.5, 0.5), np.random.normal(2, 1)])
+            y_train.append("pathological")
+            
+        self.classifier.train(np.array(X_train), np.array(y_train))
+        
+        # Bootstrap the Unsupervised Model with the synthetic distribution
         X_train_scaled = self.scaler.fit_transform(np.array(X_train))
         self.unsupervised_model.fit(X_train_scaled)
         logger.info("Unsupervised Gaussian Mixture Model Bootstrapped.")
@@ -123,7 +143,7 @@ class NeuroGenomicPipeline:
         return min(max(index / 100, 0), 1)
     
     def _classify_risk(self, features: Dict[str, float]) -> Dict[str, Any]:
-        """Classify risk using the Unsupervised Gaussian Mixture Model"""
+        """Classify risk using the Supervised Gradient Boosting Model built from Legacy Code"""
         X_test = np.array([[
             features.get("rmssd", 0),
             features.get("sdnn", 0),
@@ -132,25 +152,32 @@ class NeuroGenomicPipeline:
             features.get("pnn50", 0)
         ]])
         
+        prediction = self.classifier.predict(X_test)[0]
+        
+        # Pull probabilities if supported
+        probabilities = [0.0, 0.0, 0.0]
+        try:
+            proba = self.classifier.model.predict_proba(X_test)[0]
+            classes = self.classifier.model.classes_
+            prob_dict = {classes[i]: proba[i] for i in range(len(classes))}
+            normal_p = prob_dict.get("normal", 0.0)
+            suspect_p = prob_dict.get("suspect", 0.0)
+            pathological_p = prob_dict.get("pathological", 0.0)
+        except AttributeError:
+            normal_p, suspect_p, pathological_p = 0.0, 0.0, 0.0
+
         # Unsupervised Risk Assessment
         X_test_scaled = self.scaler.transform(X_test)
         unsupervised_cluster = self.unsupervised_model.predict(X_test_scaled)[0]
         # score_samples returns log-likelihoods. Negative log-likelihood = anomaly score
         anomaly_score = -float(self.unsupervised_model.score_samples(X_test_scaled)[0])
-        
-        # Map clusters to risk levels (simplified mapping)
-        cluster_risk_map = {0: "normal", 1: "suspect", 2: "pathological"}
-        predicted_class = cluster_risk_map.get(unsupervised_cluster, "unknown")
-        
-        # Calculate probabilities based on cluster membership
-        cluster_proba = self.unsupervised_model.predict_proba(X_test_scaled)[0]
-        
+
         return {
-            "normal": float(cluster_proba[0]) if unsupervised_cluster == 0 else 0.0,
-            "suspect": float(cluster_proba[1]) if unsupervised_cluster == 1 else 0.0,
-            "pathological": float(cluster_proba[2]) if unsupervised_cluster == 2 else 0.0,
-            "predicted_class": predicted_class,
-            "model_used": "GaussianMixture",
+            "normal": float(normal_p),
+            "suspect": float(suspect_p),
+            "pathological": float(pathological_p),
+            "predicted_class": prediction,
+            "model_used": "GradientBoostingClassifier",
             "unsupervised_cluster": int(unsupervised_cluster),
             "anomaly_score": anomaly_score
         }
