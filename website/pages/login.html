@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Neuro-Genomic AI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo-icon">NG</span>
+                <span class="logo-text">Neuro-Genomic AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="technology.html">Technology</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="login.html" class="btn-outline">Sign In</a>
+                <a href="register.html" class="btn-primary">Register</a>
+            </div>
+        </div>
+    </nav>
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>Sign In</h1>
+                <p>Access your Neuro-Genomic AI dashboard and role-based analytics.</p>
+            </div>
+        </section>
+        <section class="auth-panel">
+            <div class="container">
+                <div class="auth-grid">
+                    <div class="auth-form">
+                        <h2>Log in to your account</h2>
+                        <div id="auth-alert" class="form-alert"></div>
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            </div>
+                            <button type="submit" class="btn-primary">Sign In</button>
+                        </form>
+                        <p>New to Neuro-Genomic AI? <a href="register.html">Create an account</a>.</p>
+                    </div>
+                    <div class="auth-summary">
+                        <h2>Why sign in?</h2>
+                        <ul>
+                            <li>Role-based dashboards for Researcher, Clinician, and Admin</li>
+                            <li>Secure access to patient analytics and study datasets</li>
+                            <li>Personalized monitoring and alerts for fetal development</li>
+                        </ul>
+                        <p>After signing in, you can access the full platform and manage your organization’s projects from a single dashboard.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const alertEl = document.getElementById('auth-alert');
+            alertEl.textContent = '';
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    alertEl.textContent = payload.detail || 'Login failed. Please check your credentials.';
+                    return;
+                }
+                // Store token
+                localStorage.setItem('access_token', payload.access_token);
+                alertEl.textContent = 'Login successful. Redirecting to dashboard...';
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                alertEl.textContent = 'Unable to reach the authentication server. Please try again later.';
+            }
+        });
+    </script>
+</body>
+</html>

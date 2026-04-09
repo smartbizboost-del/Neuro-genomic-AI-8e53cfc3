@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Neuro-Genomic AI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo-icon">NG</span>
+                <span class="logo-text">Neuro-Genomic AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="technology.html">Technology</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <button id="logout-btn" class="btn-outline">Logout</button>
+            </div>
+        </div>
+    </nav>
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>Role-Based Dashboard</h1>
+                <p>Choose your role to explore the Neuro-Genomic AI experience.</p>
+            </div>
+        </section>
+        <section class="auth-panel">
+            <div class="container">
+                <div class="dashboard-intro">
+                    <h2>Welcome to your analytics cockpit</h2>
+                    <p>Neuro-Genomic AI supports distinct workflows for Researchers, Clinicians, and Administrators. Your dashboard is personalized based on your role and permissions.</p>
+                </div>
+                <div class="role-selector">
+                    <button type="button" class="role-pill active" data-role="researcher">Researcher</button>
+                    <button type="button" class="role-pill" data-role="clinician">Clinician</button>
+                    <button type="button" class="role-pill" data-role="admin">Administrator</button>
+                </div>
+                <div class="role-panel" data-role="researcher" style="display:grid;">
+                    <div class="dashboard-card">
+                        <h3>Researcher Analytics</h3>
+                        <p>Explore unsupervised signal discovery, cohort comparisons, and model validation for fetal neurodevelopment.</p>
+                        <ul>
+                            <li>Study-specific cohort views</li>
+                            <li>Data export for publications</li>
+                            <li>Feature importance and visualization</li>
+                        </ul>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Research Tools</h3>
+                        <p>Run experiments, compare developmental trajectories, and publish findings with audit-ready metadata.</p>
+                    </div>
+                </div>
+                <div class="role-panel" data-role="clinician">
+                    <div class="dashboard-card">
+                        <h3>Clinician Workflow</h3>
+                        <p>View patient summaries, risk alerts, and personalized growth signals in one clear interface.</p>
+                        <ul>
+                            <li>Real-time monitoring</li>
+                            <li>Clinical alert dashboard</li>
+                            <li>Patient history and notes</li>
+                        </ul>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Care Coordination</h3>
+                        <p>Share secure reports with care teams, review trend lines, and document decisions for each pregnancy.</p>
+                    </div>
+                </div>
+                <div class="role-panel" data-role="admin">
+                    <div class="dashboard-card">
+                        <h3>Administrator Controls</h3>
+                        <p>Manage user access, configure research projects, and monitor platform health across your organization.</p>
+                        <ul>
+                            <li>User role management</li>
+                            <li>Audit logs and compliance</li>
+                            <li>System performance overview</li>
+                        </ul>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Platform Settings</h3>
+                        <p>Adjust access policies, configure dataset permissions, and review deployed AI models in a secure workspace.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        async function loadUserData() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const user = await response.json();
+                showRolePanel(user.role);
+                
+                // Update welcome message with user name
+                const intro = document.querySelector('.dashboard-intro h2');
+                if (user.full_name) {
+                    intro.textContent = `Welcome back, ${user.full_name}`;
+                }
+                
+            } catch (error) {
+                console.error('Failed to load user data:', error);
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function showRolePanel(role) {
+            document.querySelectorAll('.role-panel').forEach(panel => {
+                panel.style.display = panel.dataset.role === role ? 'grid' : 'none';
+            });
+            
+            // Update role selector
+            document.querySelectorAll('.role-pill').forEach(pill => {
+                pill.classList.remove('active');
+                if (pill.dataset.role === role) {
+                    pill.classList.add('active');
+                }
+            });
+        }
+        
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('access_token');
+            window.location.href = '../index.html';
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+        });
+        
+        // Role selector for demo purposes (normally disabled)
+        document.querySelectorAll('.role-pill').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const selectedRole = button.dataset.role;
+                showRolePanel(selectedRole);
+            });
+        });
+    </script>
+</body>
+</html>

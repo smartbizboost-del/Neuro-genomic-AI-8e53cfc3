@@ -1,6 +1,6 @@
-# 📚 NEURO-GENOMIC AI – COMPLETE DOCUMENTATION
+# 📚 NEURO-GENOMIC AI – DOCUMENTATION
 
-## Professional Documentation for Your Project
+## Professional Documentation
 
 ---
 
@@ -454,7 +454,7 @@ curl -X GET "http://localhost:8000/api/v1/export/pdf?analysis_id=abc123"
 | **Purpose** | **Contact** |
 |-------------|-------------|
 | Technical Support | demoivresphenomenal@gmail.com |
-| Partnership Inquiries | collins.omondi@students.kirinyaga.ac.ke |
+| Partnership Inquiries | demoivresphenomenal@gmail.com |
 | GitHub Issues | https://github.com/smartbizboost-del/Neuro-genomic-AI/issues |
 
 ---
@@ -465,4 +465,3 @@ curl -X GET "http://localhost:8000/api/v1/export/pdf?analysis_id=abc123"
 
 ---
 
-*Your friend and partner in innovation* 🤝
