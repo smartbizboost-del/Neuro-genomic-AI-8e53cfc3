@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Neuro-Genomic AI | Admin Control Infrastructure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0b0f1c; }
+        .card-bg { background: #10131f; border: 1px solid #262c3f; border-radius: 24px; }
+        .badge-role { background: #1e2a4a; padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; color: #bfceff; }
+        .stat-number { font-size: 2rem; font-weight: 700; }
+        .health-bar { background: #1e243b; border-radius: 12px; height: 8px; overflow: hidden; }
+        .health-fill { background: #2dd4bf; height: 8px; }
+        .nav-item { cursor: pointer; transition: 0.2s; }
+        .tab-content { display: block; }
+        .tab-content.hidden { display: none; }
+    </style>
+</head>
+<body class="text-white">
+<div class="max-w-[1600px] mx-auto px-6 py-5">
+    <!-- Header -->
+    <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-brain text-3xl text-blue-400"></i>
+            <div><h1 class="text-2xl font-bold">Neuro-Genomic AI</h1><p class="text-xs text-gray-400">Enterprise Admin Console</p></div>
+        </div>
+        <div class="flex gap-5 text-sm font-medium">
+            <div class="nav-item text-blue-400 border-b-2 border-blue-400 pb-1" data-tab="overview">Overview</div>
+            <div class="nav-item text-gray-300" data-tab="users">Users</div>
+            <div class="nav-item text-gray-300" data-tab="analytics">Analytics</div>
+            <div class="nav-item text-gray-300" data-tab="health">System Health</div>
+            <div class="nav-item text-gray-300" data-tab="alerts">Alerts</div>
+            <div class="nav-item text-gray-300" data-tab="pipeline">Data Pipeline</div>
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+            <i class="fas fa-user-shield text-indigo-400"></i>
+            <span id="userEmail">admin@neuro-genomic.ai</span>
+            <button id="logoutBtn" class="hidden bg-red-600 px-3 py-1 rounded-lg text-xs">Logout</button>
+        </div>
+    </div>
+
+    <div id="loginPanel" class="card-bg p-6 mb-8">
+        <div class="text-lg font-semibold mb-4">Admin Login</div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-2" for="loginEmail">Email</label>
+                <input id="loginEmail" type="email" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white" placeholder="admin@example.com">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-2" for="loginPassword">Password</label>
+                <input id="loginPassword" type="password" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white" placeholder="Password">
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <button id="loginBtn" class="bg-blue-600 px-4 py-2 rounded-lg text-sm font-semibold">Sign In</button>
+                <span id="loginMessage" class="text-sm text-yellow-300"></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardContent" class="hidden">
+    <!-- Overview Tab -->
+    <div id="overviewTab" class="tab-content">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="card-bg p-5"><div class="text-gray-400 text-sm">TOTAL USERS</div><div class="stat-number">47</div><div class="text-green-400 text-xs mt-2">+8% this month</div></div>
+            <div class="card-bg p-5"><div class="text-gray-400 text-sm">ACTIVE TODAY</div><div class="stat-number" id="activeCount">12</div><button id="incActiveBtn" class="mt-2 bg-blue-600 px-3 py-1 rounded-lg text-xs">+1 Active</button></div>
+            <div class="card-bg p-5"><div class="text-gray-400 text-sm">API UPTIME</div><div class="stat-number">99.8%</div><div class="text-green-400 text-xs">✅ Healthy</div></div>
+            <div class="card-bg p-5"><div class="text-gray-400 text-sm">AVG RESPONSE</div><div class="stat-number">34.2<span class="text-base">ms</span></div><div class="text-green-400 text-xs">⬇ 12ms</div></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="card-bg p-5"><div class="font-semibold mb-3"><i class="fas fa-microchip mr-2"></i> TECH STACK</div><div class="flex flex-wrap gap-2"><span class="badge-role">FastAPI + React</span><span class="badge-role">PostgreSQL</span><span class="badge-role">Redis/RabbitMQ</span><span class="badge-role">Prometheus+Grafana</span></div></div>
+            <div class="card-bg p-5"><div class="font-semibold mb-3"><i class="fas fa-code-branch mr-2"></i> ADMIN API ENDPOINTS</div><div class="flex flex-wrap gap-2"><span class="badge-role">GET /admin/metrics</span><span class="badge-role">POST /admin/users</span><span class="badge-role">PUT /admin/analytics</span><span class="badge-role">GET /admin/support</span></div></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card-bg p-4"><div class="font-semibold mb-2">📈 User Growth</div><canvas id="userChart" height="150"></canvas></div>
+            <div class="card-bg p-4"><div class="font-semibold mb-2">⚙️ Service Stats</div><div><span class="stat-number text-2xl">1,234</span> <span class="text-gray-400">analyses</span></div><div class="flex justify-between mt-2"><span>Success rate</span><span>98.7%</span></div><div class="health-bar mt-1"><div class="health-fill" style="width:98.7%"></div></div><div class="flex justify-between mt-2"><span>Avg inference</span><span>342ms</span></div></div>
+            <div class="card-bg p-4"><div class="font-semibold mb-2">🖥️ System Health</div><div><span class="stat-number text-2xl">99.8%</span> <span class="text-gray-400">uptime</span></div><div class="health-bar mt-2"><div class="health-fill" style="width:99.8%"></div></div><div class="flex justify-between mt-3"><span>API</span><span class="text-green-400">✅ Healthy</span></div><div class="flex justify-between"><span>Database</span><span class="text-green-400">✅ Healthy</span></div><div class="flex justify-between"><span>Celery</span><span class="text-yellow-400">75% capacity</span></div></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="card-bg p-5"><div class="font-semibold mb-2"><i class="fas fa-lock mr-2"></i> Governance & Permissions</div><div><span class="badge-role">Roles: Admin/Backend/Viewer</span><span class="badge-role ml-2">Actions: CRUD</span></div><div class="mt-3 text-green-400 text-xs">✅ RBAC enforced</div></div>
+            <div class="card-bg p-5"><div class="font-semibold mb-2"><i class="fas fa-charging-station mr-2"></i> Auto‑Scaling</div><div class="flex justify-between"><span>Queue > 20 tasks</span><span class="text-yellow-400">Scale +2 workers</span></div><div class="flex justify-between mt-1"><span>Error rate > 2%</span><span class="text-red-400">Alert #devops</span></div><hr class="border-gray-700 my-3"><div class="flex justify-between"><span>💰 Cost/analysis</span><span>$0.42</span></div><div class="flex justify-between"><span>📊 Monthly revenue</span><span>$12,500</span></div></div>
+        </div>
+        <div class="card-bg p-5 mb-8 overflow-x-auto">
+            <div class="font-semibold mb-3"><i class="fas fa-list-ul mr-2"></i> API Logs</div>
+            <table class="w-full text-sm"><thead class="text-gray-400 border-b border-gray-700"><tr><th class="py-2">Time</th><th>Method</th><th>Endpoint</th><th>Status</th></tr></thead><tbody class="text-gray-300"><tr><td class="py-2">14:23:01</td><td>POST</td><td>/api/v1/upload</td><td class="text-green-400">200</td></tr><tr><td>14:22:36</td><td>POST</td><td>/api/v1/upload</td><td class="text-green-400">200</td></tr><tr><td>14:21:58</td><td>GET</td><td>/admin/metrics</td><td class="text-green-400">200</td></tr></tbody></table>
+        </div>
+        <div class="card-bg p-5 mb-8"><div class="font-semibold mb-3"><i class="fas fa-project-diagram mr-2"></i> Data Pipeline</div><div class="grid grid-cols-4 gap-2 text-center"><div><span class="badge-role">📥 Ingestion</span></div><div><span class="badge-role">⚙️ Preprocess</span></div><div><span class="badge-role">🧠 AI Execution</span></div><div><span class="badge-role">🔒 Audit</span></div></div><div class="mt-3 bg-black/20 p-2 rounded-lg text-xs">Audit Trail: Data Lineage · Anomaly Detection</div></div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card-bg p-5"><div class="font-semibold mb-2">🎫 Open Tickets</div><div><strong>#1234</strong> – Batch timeout <span class="text-yellow-400 text-xs">High</span></div><div class="text-sm text-gray-300">Assignee: Backend · Due 2026-04-15</div></div>
+            <div class="card-bg p-5"><div class="font-semibold mb-2">📋 Daily Checklist</div><div class="flex justify-between"><span>👑 CEO</span><span class="badge-role">KPIs</span></div><div class="flex justify-between mt-2"><span>🔬 CSO</span><span class="badge-role">Model drift</span></div><div class="flex justify-between mt-2"><span>💻 CTO</span><span class="badge-role">Infra health</span></div><div class="flex justify-between mt-2"><span>📊 Data Scientist</span><span class="badge-role">Anomaly audit</span></div></div>
+        </div>
+    </div>
+
+    <!-- Other Tabs (hidden by default) -->
+    <div id="usersTab" class="tab-content hidden"><div class="card-bg p-5"><div class="font-semibold mb-4">User Management</div><div class="space-y-3"><div class="flex justify-between"><span>Dr. Jane</span><span class="text-green-400">Active</span></div><div class="flex justify-between"><span>Prof. John</span><span class="text-green-400">Active</span></div><div class="flex justify-between"><span>Mary Otieno</span><span class="text-yellow-400">Pending</span></div></div></div></div>
+    <div id="analyticsTab" class="tab-content hidden"><div class="card-bg p-5"><div class="font-semibold mb-3">Analytics</div><canvas id="featureChart" height="200"></canvas><div class="mt-4 text-green-400 text-sm">+15% active users MoM</div></div></div>
+    <div id="healthTab" class="tab-content hidden"><div class="card-bg p-5"><div class="font-semibold mb-3">System Health</div><div class="flex justify-between"><span>API Server</span><span class="text-green-400">100% Healthy</span></div><div class="flex justify-between mt-2"><span>Database</span><span class="text-green-400">Healthy</span></div><div class="flex justify-between mt-2"><span>Celery Workers</span><span class="text-yellow-400">75% – Scale recommended</span></div></div></div>
+    <div id="alertsTab" class="tab-content hidden"><div class="card-bg p-5"><div class="font-semibold mb-3">⚠️ Alerts</div><div class="text-red-400">CRITICAL: High CPU on inference pod</div><div class="text-yellow-400 mt-2">WARNING: Celery queue backlog</div><div class="text-blue-400 mt-2">INFO: Daily backup completed</div></div></div>
+    <div id="pipelineTab" class="tab-content hidden"><div class="card-bg p-5"><div class="font-semibold mb-3">Data Pipeline & Trust Engine</div><p>Ingestion → Preprocessing → AI Execution → Audit Output. Guardian integrity active.</p></div></div>
+</div>
+
+<script>
+    // Tab switching
+    const tabs = ['overview','users','analytics','health','alerts','pipeline'];
+    const contents = {
+        overview: document.getElementById('overviewTab'),
+        users: document.getElementById('usersTab'),
+        analytics: document.getElementById('analyticsTab'),
+        health: document.getElementById('healthTab'),
+        alerts: document.getElementById('alertsTab'),
+        pipeline: document.getElementById('pipelineTab')
+    };
+    const navs = document.querySelectorAll('.nav-item');
+    function switchTab(tabId) {
+        Object.keys(contents).forEach(id => { if(contents[id]) contents[id].classList.add('hidden'); });
+        if(contents[tabId]) contents[tabId].classList.remove('hidden');
+        navs.forEach(nav => {
+            nav.classList.remove('text-blue-400', 'border-b-2', 'border-blue-400');
+            nav.classList.add('text-gray-300');
+            if(nav.getAttribute('data-tab') === tabId) {
+                nav.classList.add('text-blue-400', 'border-b-2', 'border-blue-400');
+                nav.classList.remove('text-gray-300');
+            }
+        });
+    }
+    navs.forEach(nav => {
+        nav.addEventListener('click', () => { const t = nav.getAttribute('data-tab'); if(t && contents[t]) switchTab(t); });
+    });
+    // Increment active users (demo control)
+    let active = 12;
+    document.getElementById('incActiveBtn')?.addEventListener('click', () => {
+        active++;
+        document.getElementById('activeCount').innerText = active;
+    });
+
+    const apiBase = "/api/v1";
+    const tokenStorageKey = 'authToken';
+    const emailStorageKey = 'authEmail';
+
+    const loginMessage = document.getElementById('loginMessage');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userEmail = document.getElementById('userEmail');
+    const loginPanel = document.getElementById('loginPanel');
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    function showDashboard() {
+        loginPanel.classList.add('hidden');
+        dashboardContent.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+    }
+
+    function showLogin() {
+        loginPanel.classList.remove('hidden');
+        dashboardContent.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
+    }
+
+    async function loginUser(email, password) {
+        try {
+            const response = await fetch(`${apiBase}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                loginMessage.innerText = error.detail || 'Login failed';
+                return null;
+            }
+
+            return await response.json();
+        } catch (error) {
+            loginMessage.innerText = 'Unable to reach auth service';
+            return null;
+        }
+    }
+
+    async function fetchMetrics() {
+        const authToken = localStorage.getItem(tokenStorageKey);
+        if (!authToken) {
+            showLogin();
+            return;
+        }
+
+        try {
+            const res = await fetch(`${apiBase}/admin/metrics`, {
+                headers: { Authorization: `Bearer ${authToken}` }
+            });
+            if (!res.ok) {
+                localStorage.removeItem(tokenStorageKey);
+                localStorage.removeItem(emailStorageKey);
+                showLogin();
+                return;
+            }
+            const data = await res.json();
+            document.getElementById('activeCount').innerText = data.users.active ?? active;
+            document.querySelectorAll('.card-bg .stat-number')[0].innerText = data.users.total ?? '—';
+            const savedEmail = localStorage.getItem(emailStorageKey);
+            if (savedEmail) userEmail.innerText = savedEmail;
+            showDashboard();
+        } catch (error) {
+            console.error('Failed to load metrics', error);
+            showLogin();
+        }
+    }
+
+    function initMetricsSocket() {
+        const authToken = localStorage.getItem(tokenStorageKey);
+        if (!authToken) {
+            return;
+        }
+
+        const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${scheme}://${window.location.host}/ws/metrics?token=${authToken}`);
+
+        socket.onmessage = (event) => {
+            const payload = JSON.parse(event.data);
+            if (payload.active_users !== undefined) {
+                document.getElementById('activeCount').innerText = payload.active_users;
+            }
+        };
+
+        socket.onopen = () => console.log('Live metrics websocket connected');
+        socket.onerror = (err) => console.error('WebSocket error', err);
+    }
+
+    document.getElementById('loginBtn')?.addEventListener('click', async () => {
+        loginMessage.innerText = '';
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        if (!email || !password) {
+            loginMessage.innerText = 'Email and password are required';
+            return;
+        }
+
+        const tokenData = await loginUser(email, password);
+        if (tokenData?.access_token) {
+            localStorage.setItem(tokenStorageKey, tokenData.access_token);
+            localStorage.setItem(emailStorageKey, email);
+            userEmail.innerText = email;
+            loginMessage.innerText = 'Login successful';
+            await fetchMetrics();
+            initMetricsSocket();
+        }
+    });
+
+    logoutBtn?.addEventListener('click', () => {
+        localStorage.removeItem(tokenStorageKey);
+        localStorage.removeItem(emailStorageKey);
+        userEmail.innerText = 'admin@neuro-genomic.ai';
+        showLogin();
+    });
+
+    // Charts
+    const ctx1 = document.getElementById('userChart')?.getContext('2d');
+    if(ctx1) new Chart(ctx1, { type: 'line', data: { labels: ['W1','W2','W3','W4'], datasets: [{ label: 'Users', data: [20,38,52,47], borderColor: '#3b82f6', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#cbd5e6' } } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } } });
+    const ctx2 = document.getElementById('featureChart')?.getContext('2d');
+    if(ctx2) new Chart(ctx2, { type: 'bar', data: { labels: ['Upload','Clustering','Export','API'], datasets: [{ label: 'Usage', data: [87,65,44,92], backgroundColor: '#22c55e' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#cbd5e6' } } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } } });
+
+    fetchMetrics();
+    initMetricsSocket();
+
+    // Default
+    switchTab('overview');
+</script>
+</body>
+</html>

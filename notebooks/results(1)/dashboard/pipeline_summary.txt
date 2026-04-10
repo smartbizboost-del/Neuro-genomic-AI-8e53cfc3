@@ -1,0 +1,26 @@
+====================================================================================================
+FETAL ECG UNSUPERVISED CLUSTERING PIPELINE - SUMMARY
+====================================================================================================
+
+PHENOTYPES:
+     Cluster          Interpretation  HR (bpm)  RMSSD (ms)  pNN50 (%)               Clinical Significance
+C0: Moderate     Normal/Balanced HRV 140.5±7.9  24.81±7.71  5.23±2.87 Healthy fetal autonomic development
+    C1: High High Autonomic Activity 144.6±7.1 35.20±10.20 11.67±5.11   Enhanced parasympathetic activity
+     C2: Low  Low Autonomic Activity 135.2±6.2  18.17±5.93  2.20±1.76    Reduced parasympathetic activity
+
+VALIDATION:
+                 Metric    Value         Interpretation
+       Silhouette Score   0.1142 Fair (0.10-0.25 range)
+   Davies-Bouldin Index   1.9174   Fair (1.5-2.5 range)
+Calinski-Harabasz Index 378.6000       Excellent (>300)
+
+SPECIFICATIONS:
+         Component                               Method                                                     Parameters
+     Preprocessing                      Bandpass Filter                                                      0.5–40 Hz
+     Preprocessing                         Notch Filter                                                          50 Hz
+     Preprocessing                  Baseline Correction                                       Linear detrend + Z-score
+ Signal Separation Independent Component Analysis (ICA)                     FastICA, 2 components, max 1000 iterations
+ Signal Separation                      Quality Metrics                                   Kurtosis, SNR, Orthogonality
+Feature Extraction                         HRV Features 9 metrics (HR, RMSSD, pNN50, LF, HF, LF/HF, DFA, ApEn, SampEn)
+Feature Extraction                          Window Size                    10 seconds (standard RR interval recording)
+        Clustering         Gaussian Mixture Model (GMM)                                   n_components=3, max_iter=100

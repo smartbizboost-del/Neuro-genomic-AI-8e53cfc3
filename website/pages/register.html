@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Neuro-Genomic AI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo-icon">NG</span>
+                <span class="logo-text">Neuro-Genomic AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="technology.html">Technology</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="login.html" class="btn-outline">Sign In</a>
+                <a href="register.html" class="btn-primary">Register</a>
+            </div>
+        </div>
+    </nav>
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>Create an Account</h1>
+                <p>Register for your Neuro-Genomic AI role-based dashboard.</p>
+            </div>
+        </section>
+        <section class="auth-panel">
+            <div class="container">
+                <div class="auth-grid">
+                    <div class="auth-form">
+                        <h2>Join Neuro-Genomic AI</h2>
+                        <div id="auth-alert" class="form-alert"></div>
+                        <form id="register-form">
+                            <div class="form-group">
+                                <label for="name">Full Name</label>
+                                <input type="text" id="name" name="name" placeholder="Jane Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Create a password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="role">Role</label>
+                                <select id="role" name="role" required>
+                                    <option value="researcher">Researcher</option>
+                                    <option value="clinician">Clinician</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary">Register</button>
+                        </form>
+                        <p>Already have an account? <a href="login.html">Sign in here</a>.</p>
+                    </div>
+                    <div class="auth-summary">
+                        <h2>Setup your access</h2>
+                        <ul>
+                            <li>Secure, role-aware platform access for teams and individuals.</li>
+                            <li>Manage research studies, clinical workflows, and admin settings.</li>
+                            <li>Unlock data visualizations, alerts, and analytics tailored to your role.</li>
+                        </ul>
+                        <p>Registration lets you begin using the Neuro-Genomic AI dashboard and connect to the platform’s secure analytics tools.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        const form = document.getElementById('register-form');
+        const alertEl = document.getElementById('auth-alert');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        function setAlert(message, type = 'info') {
+            alertEl.textContent = message;
+            alertEl.classList.remove('success', 'error', 'warning');
+            if (type === 'success') alertEl.classList.add('success');
+            if (type === 'error') alertEl.classList.add('error');
+            if (type === 'warning') alertEl.classList.add('warning');
+        }
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            setAlert('Submitting registration...', 'info');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+
+            const full_name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            try {
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name, email, password, role })
+                });
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    setAlert(payload.detail || 'Registration failed. Please review your information.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Register';
+                    return;
+                }
+
+                const loginResponse = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const loginPayload = await loginResponse.json();
+
+                if (!loginResponse.ok) {
+                    setAlert('Registration succeeded, but automatic login failed. Please sign in manually.', 'warning');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Register';
+                    return;
+                }
+
+                localStorage.setItem('access_token', loginPayload.access_token);
+                setAlert('Account created successfully. Redirecting to dashboard...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1200);
+            } catch (error) {
+                setAlert('Unable to reach the registration service. Please try again later.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register';
+            }
+        });
+    </script>
+</body>
+</html>
