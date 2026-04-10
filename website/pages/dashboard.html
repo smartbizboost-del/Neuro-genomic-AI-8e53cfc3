@@ -3,166 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Neuro-Genomic AI</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Neuro-Genomic AI Dashboard</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <span class="logo-icon">NG</span>
-                <span class="logo-text">Neuro-Genomic AI</span>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="team.html">Team</a></li>
-                <li><a href="services.html">Services</a></li>
-                <li><a href="technology.html">Technology</a></li>
-                <li><a href="dashboard.html" class="active">Dashboard</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
-            <div class="nav-buttons">
-                <button id="logout-btn" class="btn-outline">Logout</button>
-            </div>
+    <!-- Navbar -->
+    <nav class="dashboard-nav">
+        <a href="../../index.html" class="brand" style="text-decoration: none; color: white;">
+            <span class="logo-icon">≡</span>
+            <span>Neuro-Genomic AI Dashboard</span>
+        </a>
+        <div class="nav-actions">
+            <select class="patient-selector">
+                <option>Patient: Jane Doe</option>
+                <option>Patient: John Smith</option>
+            </select>
+            <button class="btn-header">
+                <span>↑</span> Export
+            </button>
+            <button class="btn-header" id="logout-btn">
+                <span>🚪</span> Sign Out
+            </button>
         </div>
     </nav>
-    <main>
-        <section class="page-header">
-            <div class="container">
-                <h1>Role-Based Dashboard</h1>
-                <p>Choose your role to explore the Neuro-Genomic AI experience.</p>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-indicator">
+            Patient | 32 weeks | Clinical State: <span class="dot"></span> Normal
+        </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-grid">
+        
+        <!-- Column 1: CLINICAL CONTEXT LAYER -->
+        <section class="col">
+            <div class="panel">
+                <div class="panel-title">CLINICAL CONTEXT LAYER</div>
+                <div class="section-header">Patient Overview</div>
+                <div class="data-grid">
+                    <div class="label">Name:</div><div class="value">Jane Doe</div>
+                    <div class="label">Age:</div><div class="value">39</div>
+                    <div class="label">ID:</div><div class="value">PT-032</div>
+                    <div class="label">Gravidity:</div><div class="value">G1P0</div>
+                </div>
+
+                <div class="risk-factor-card">
+                    <h4>Pregnancy Risk Factors</h4>
+                    <ul class="risk-list">
+                        <li>Mild Preeclampsia</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">Metadata</div>
+                <div class="data-grid">
+                    <div class="label">Gestational week:</div><div class="value">32</div>
+                    <div class="label">Data source:</div><div class="value">PhysioNet CTU-UHB</div>
+                    <div class="label">Recording duration:</div><div class="value">1 hour</div>
+                    <div class="label">Signal quality:</div><div class="value"><span class="dot"></span> Good</div>
+                </div>
+            </div>
+
+            <div class="mode-toggle-container">
+                <div class="section-header" style="margin-bottom: 0.5rem;">Mode Toggle</div>
+                <div class="toggle-row">
+                    <span>Clinical Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="research-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Research Mode</span>
+                </div>
             </div>
         </section>
-        <section class="auth-panel">
-            <div class="container">
-                <div class="dashboard-intro">
-                    <h2>Welcome to your analytics cockpit</h2>
-                    <p>Neuro-Genomic AI supports distinct workflows for Researchers, Clinicians, and Administrators. Your dashboard is personalized based on your role and permissions.</p>
+
+        <!-- Column 2: FEATURE LAYER & ANALYSIS -->
+        <section class="col">
+            <div class="panel">
+                <div class="panel-title">FEATURE LAYER & ANALYSIS</div>
+                <div class="section-header">Signal Visualization</div>
+                <p class="metric-desc">Raw Fetal ECG</p>
+                <div class="chart-container">
+                    <canvas id="raw-ecg-chart"></canvas>
                 </div>
-                <div class="role-selector">
-                    <button type="button" class="role-pill active" data-role="researcher">Researcher</button>
-                    <button type="button" class="role-pill" data-role="clinician">Clinician</button>
-                    <button type="button" class="role-pill" data-role="admin">Administrator</button>
+                
+                <p class="metric-desc" style="margin-top: 1rem;">Cleaned Fetal ECG</p>
+                <div class="chart-container">
+                    <canvas id="cleaned-ecg-chart"></canvas>
                 </div>
-                <div class="role-panel" data-role="researcher" style="display:grid;">
-                    <div class="dashboard-card">
-                        <h3>Researcher Analytics</h3>
-                        <p>Explore unsupervised signal discovery, cohort comparisons, and model validation for fetal neurodevelopment.</p>
-                        <ul>
-                            <li>Study-specific cohort views</li>
-                            <li>Data export for publications</li>
-                            <li>Feature importance and visualization</li>
-                        </ul>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">HRV Metrics (Feature Layer)</div>
+                <p class="metric-desc">Biological proxy, time-domain, Frequency-domain</p>
+                <div class="metrics-grid">
+                    <div class="metric-card normal">
+                        <div class="metric-id">RMSSD (35 ms)</div>
+                        <div class="metric-desc">Parasympathetic activity [Normal]</div>
                     </div>
-                    <div class="dashboard-card">
-                        <h3>Research Tools</h3>
-                        <p>Run experiments, compare developmental trajectories, and publish findings with audit-ready metadata.</p>
+                    <div class="metric-card normal">
+                        <div class="metric-id">SDNN (110 ms)</div>
+                        <div class="metric-desc">Overall variability [Normal]</div>
                     </div>
-                </div>
-                <div class="role-panel" data-role="clinician">
-                    <div class="dashboard-card">
-                        <h3>Clinician Workflow</h3>
-                        <p>View patient summaries, risk alerts, and personalized growth signals in one clear interface.</p>
-                        <ul>
-                            <li>Real-time monitoring</li>
-                            <li>Clinical alert dashboard</li>
-                            <li>Patient history and notes</li>
-                        </ul>
+                    <div class="metric-card moderate">
+                        <div class="metric-id">LF/HF Ratio (1.7)</div>
+                        <div class="metric-desc">Sympathetic vs parasympathetic balance [Moderate]</div>
                     </div>
-                    <div class="dashboard-card">
-                        <h3>Care Coordination</h3>
-                        <p>Share secure reports with care teams, review trend lines, and document decisions for each pregnancy.</p>
+                    <div class="metric-card normal">
+                        <div class="metric-id">Sample Entropy (0.91)</div>
+                        <div class="metric-desc">Signal complexity [Within range]</div>
                     </div>
                 </div>
-                <div class="role-panel" data-role="admin">
-                    <div class="dashboard-card">
-                        <h3>Administrator Controls</h3>
-                        <p>Manage user access, configure research projects, and monitor platform health across your organization.</p>
-                        <ul>
-                            <li>User role management</li>
-                            <li>Audit logs and compliance</li>
-                            <li>System performance overview</li>
-                        </ul>
-                    </div>
-                    <div class="dashboard-card">
-                        <h3>Platform Settings</h3>
-                        <p>Adjust access policies, configure dataset permissions, and review deployed AI models in a secure workspace.</p>
-                    </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">HRV Trend Graph</div>
+                <p class="metric-desc">Modeling, trend, developmental trajectory</p>
+                <div class="trend-container">
+                    <canvas id="hrv-trend-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Column 3: INTELLIGENCE LAYER -->
+        <section class="col">
+            <div class="panel">
+                <div class="panel-title">AI INTERPRETATION PANEL (INTELLIGENCE LAYER)</div>
+                <ul class="ai-bullet-list">
+                    <li>Autonomic maturation consistent with 32 weeks</li>
+                    <li>HRV within expected range</li>
+                    <li>Balanced sympathetic/parasympathetic activity</li>
+                </ul>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">RISK SCORE SYSTEM</div>
+                <div class="index-value" style="text-align: center;">Neurodevelopment Index = 14</div>
+                <div class="gauge-container">
+                    <canvas id="risk-gauge" class="gauge-canvas"></canvas>
+                </div>
+                <div style="text-align: center; margin-top: -30px;">
+                    <div style="font-weight: 700;">Normal Development</div>
+                    <div class="metric-desc">Low risk</div>
+                    <div class="metric-desc">Healthy development</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">CLUSTER ANALYSIS <span style="font-size: 0.7rem; font-weight: normal;">(UNSUPERVISED LEARNING VISUALIZATION)</span></div>
+                <div class="pca-container">
+                    <canvas id="pca-cluster-chart"></canvas>
                 </div>
             </div>
         </section>
     </main>
-    <script>
-        async function loadUserData() {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/v1/auth/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    localStorage.removeItem('access_token');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                const user = await response.json();
-                showRolePanel(user.role);
-                
-                // Update welcome message with user name
-                const intro = document.querySelector('.dashboard-intro h2');
-                if (user.full_name) {
-                    intro.textContent = `Welcome back, ${user.full_name}`;
-                }
-                
-            } catch (error) {
-                console.error('Failed to load user data:', error);
-                localStorage.removeItem('access_token');
-                window.location.href = 'login.html';
-            }
-        }
-        
-        function showRolePanel(role) {
-            document.querySelectorAll('.role-panel').forEach(panel => {
-                panel.style.display = panel.dataset.role === role ? 'grid' : 'none';
-            });
-            
-            // Update role selector
-            document.querySelectorAll('.role-pill').forEach(pill => {
-                pill.classList.remove('active');
-                if (pill.dataset.role === role) {
-                    pill.classList.add('active');
-                }
-            });
-        }
-        
-        // Logout functionality
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            localStorage.removeItem('access_token');
-            window.location.href = '../index.html';
-        });
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadUserData();
-        });
-        
-        // Role selector for demo purposes (normally disabled)
-        document.querySelectorAll('.role-pill').forEach(function (button) {
-            button.addEventListener('click', function () {
-                const selectedRole = button.dataset.role;
-                showRolePanel(selectedRole);
-            });
-        });
-    </script>
+
+    <script src="../js/dashboard-charts.js"></script>
 </body>
 </html>
