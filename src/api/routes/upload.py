@@ -11,6 +11,8 @@ import os
 
 from src.api.models.schemas import UploadResponse, FileMetadata
 from src.workers.tasks import process_ecg_file
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -48,39 +50,42 @@ async def upload_ecg(
     
     content = await file.read()
     
-    def process_locally():
-        import os
+    # Upload file to MinIO/S3
+    try:
+        s3_client = boto3.client(
+            's3',
+            endpoint_url=os.getenv('MINIO_ENDPOINT', 'http://minio:9000'),
+            aws_access_key_id=os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+            aws_secret_access_key=os.getenv('MINIO_SECRET_KEY', 'minioadmin')
+        )
+        s3_client.put_object(
+            Bucket=os.getenv('MINIO_BUCKET', 'neuro-genomic-ecg'),
+            Key=s3_key,
+            Body=content
+        )
+    except Exception as e:
+        logger.error(f"Failed to upload to S3: {e}")
+        # Local fallback if S3 isn't available
         temp_path = os.path.join(tempfile.gettempdir(), f"{file_id}.ecg")
         with open(temp_path, "wb") as f:
             f.write(content)
-        try:
-            mixed_signal = extract_raw_signals(temp_path)
-            res = pipeline.process_recording(mixed_signal, 500, gestational_weeks)
-            RESULTS_DB[file_id] = {
-                "file_id": file_id,
-                "features": res["features"],
-                "risk": res["risk"],
-                "interpretation": res["interpretation"],
-                "developmental_index": res["developmental_index"],
-                "gestational_weeks": gestational_weeks or 32,
-                "created_at": "2024-01-01T00:00:00Z",
-                "confidence_intervals": None
-            }
-        except Exception as e:
-            print(f"Error locally processing: {e}")
-            
-    if background_tasks:
-        background_tasks.add_task(process_locally)
-    else:
-        process_locally()
+        s3_key = temp_path # Hack to let worker find it locally
+    
+    # Dispatch Celery Task
+    task = process_ecg_file.delay(
+        file_id=file_id, 
+        s3_key=s3_key, 
+        gestational_weeks=gestational_weeks, 
+        patient_id=patient_id
+    )
     
     return UploadResponse(
         file_id=file_id,
         filename=file.filename,
         size=len(content),
-        task_id="local_sync",
+        task_id=task.id,
         status="processing",
-        message="File uploaded successfully. Processing started."
+        message="File uploaded successfully. Celery processing started."
     )
 
 @router.get("/status/{file_id}")

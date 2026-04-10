@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
+import neurokit2 as nk
 
 
 class WindowedFeatureExtractor:
@@ -73,6 +74,8 @@ class WindowedFeatureExtractor:
                     "fet_high_freq_power": self._spectral_power(f, self.fs, 0.15, 0.40),
                     "mat_signal_std": float(np.std(m)),
                     "fet_signal_std": float(np.std(f)),
+                    "mat_sampen": float(nk.entropy_sample(m)[0]) if len(m) > 0 else np.nan,
+                    "fet_sampen": float(nk.entropy_sample(f)[0]) if len(f) > 0 else np.nan,
                 }
             )
         df = pd.DataFrame(rows).dropna().reset_index(drop=True)
