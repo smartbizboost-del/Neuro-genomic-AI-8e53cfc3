@@ -6,6 +6,7 @@
     <title>Contact | Neuro-Genomic AI</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="../js/api.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -42,7 +43,8 @@
                     <div class="contact-form">
                         <h2>Send us a message</h2>
                         <p>We respond to all inquiries within one business day.</p>
-                        <form action="#" method="POST">
+                        <div id="contact-alert" class="form-alert"></div>
+                        <form id="contact-form">
                             <div class="form-group">
                                 <label for="name">Full Name</label>
                                 <input type="text" id="name" name="name" placeholder="Jane Doe" required>
@@ -130,5 +132,46 @@
             </div>
         </div>
     </footer>
+    <script>
+        const contactForm = document.getElementById('contact-form');
+        const contactAlert = document.getElementById('contact-alert');
+
+        function setContactAlert(message, type = 'info') {
+            contactAlert.textContent = message;
+            contactAlert.classList.remove('success', 'error', 'warning');
+            if (type === 'success') contactAlert.classList.add('success');
+            if (type === 'error') contactAlert.classList.add('error');
+            if (type === 'warning') contactAlert.classList.add('warning');
+        }
+
+        contactForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            setContactAlert('Sending your message...', 'info');
+
+            const full_name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            try {
+                const response = await fetch(getNGAIApiUrl('/contact/messages'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name, email, subject, message })
+                });
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    setContactAlert(payload.detail || 'Message could not be sent.', 'error');
+                    return;
+                }
+
+                setContactAlert(`${payload.message} Reference: ${payload.request_id}`, 'success');
+                contactForm.reset();
+            } catch (error) {
+                setContactAlert('Unable to reach the contact service. Please try again later.', 'error');
+            }
+        });
+    </script>
 </body>
 </html>

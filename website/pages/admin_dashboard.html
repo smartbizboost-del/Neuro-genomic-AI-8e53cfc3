@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="../js/api.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
         body { background: #0b0f1c; }
@@ -137,7 +138,7 @@
         document.getElementById('activeCount').innerText = active;
     });
 
-    const apiBase = "/api/v1";
+    const apiBase = getNGAIApiBaseUrl();
     const tokenStorageKey = 'authToken';
     const emailStorageKey = 'authEmail';
 
