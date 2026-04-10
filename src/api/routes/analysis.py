@@ -3,6 +3,7 @@ Analysis endpoints
 """
 
 from fastapi import APIRouter, HTTPException
+RESULTS_DB = {}
 from typing import Optional
 import uuid
 
