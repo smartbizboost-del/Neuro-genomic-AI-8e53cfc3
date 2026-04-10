@@ -1,0 +1,127 @@
+# infrastructure/kubernetes/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuro-api
+  namespace: neuro-genomic
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: neuro-api
+  template:
+    metadata:
+      labels:
+        app: neuro-api
+    spec:
+      containers:
+      - name: api
+        image: neuro-genomic-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuro-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuro-secrets
+              key: redis-url
+        - name: MINIO_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: neuro-secrets
+              key: minio-endpoint
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuro-worker
+  namespace: neuro-genomic
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: neuro-worker
+  template:
+    metadata:
+      labels:
+        app: neuro-worker
+    spec:
+      containers:
+      - name: worker
+        image: neuro-genomic-worker:latest
+        imagePullPolicy: Always
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuro-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuro-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuro-dashboard
+  namespace: neuro-genomic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neuro-dashboard
+  template:
+    metadata:
+      labels:
+        app: neuro-dashboard
+    spec:
+      containers:
+      - name: dashboard
+        image: neuro-genomic-dashboard:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8501
+        env:
+        - name: API_URL
+          value: "http://neuro-api:8000"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"

@@ -1,0 +1,29 @@
+environment: staging
+debug: false
+log_level: info
+
+database:
+  url: ${DATABASE_URL}
+
+redis:
+  url: ${REDIS_URL}
+
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  access_key: ${MINIO_ACCESS_KEY}
+  secret_key: ${MINIO_SECRET_KEY}
+  bucket: neuro-genomic-ecg
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  workers: 4
+
+celery:
+  concurrency: 4
+  max_tasks_per_child: 150
+
+features:
+  enable_uncertainty_viz: true
+  enable_export_pdf: true
+  enable_batch_processing: true
