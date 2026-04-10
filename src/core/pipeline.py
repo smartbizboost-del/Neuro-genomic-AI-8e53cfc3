@@ -25,7 +25,6 @@ class NeuroGenomicPipeline:
     
     def __init__(self):
         self.feature_extractor = None
-        self.classifier = CognitiveStateClassifier(model_type='gb')
         self.unsupervised_model = GaussianMixture(n_components=3, random_state=42)
         self.scaler = StandardScaler()
         self.model_dir = os.getenv("MODEL_DIR", "data/models")
@@ -127,7 +126,7 @@ class NeuroGenomicPipeline:
         return min(max(index / 100, 0), 1)
     
     def _classify_risk(self, features: Dict[str, float]) -> Dict[str, Any]:
-        """Classify risk using the Supervised Gradient Boosting Model built from Legacy Code"""
+        """Classify risk using the Unsupervised Gaussian Mixture Model"""
         X_test = np.array([[
             features.get("rmssd", 0),
             features.get("sdnn", 0),
@@ -136,32 +135,25 @@ class NeuroGenomicPipeline:
             features.get("pnn50", 0)
         ]])
         
-        prediction = self.classifier.predict(X_test)[0]
-        
-        # Pull probabilities if supported
-        probabilities = [0.0, 0.0, 0.0]
-        try:
-            proba = self.classifier.model.predict_proba(X_test)[0]
-            classes = self.classifier.model.classes_
-            prob_dict = {classes[i]: proba[i] for i in range(len(classes))}
-            normal_p = prob_dict.get("normal", 0.0)
-            suspect_p = prob_dict.get("suspect", 0.0)
-            pathological_p = prob_dict.get("pathological", 0.0)
-        except AttributeError:
-            normal_p, suspect_p, pathological_p = 0.0, 0.0, 0.0
-
         # Unsupervised Risk Assessment
         X_test_scaled = self.scaler.transform(X_test)
         unsupervised_cluster = self.unsupervised_model.predict(X_test_scaled)[0]
         # score_samples returns log-likelihoods. Negative log-likelihood = anomaly score
         anomaly_score = -float(self.unsupervised_model.score_samples(X_test_scaled)[0])
-
+        
+        # Map clusters to risk levels (simplified mapping)
+        cluster_risk_map = {0: "normal", 1: "suspect", 2: "pathological"}
+        predicted_class = cluster_risk_map.get(unsupervised_cluster, "unknown")
+        
+        # Calculate probabilities based on cluster membership
+        cluster_proba = self.unsupervised_model.predict_proba(X_test_scaled)[0]
+        
         return {
-            "normal": float(normal_p),
-            "suspect": float(suspect_p),
-            "pathological": float(pathological_p),
-            "predicted_class": prediction,
-            "model_used": "GradientBoostingClassifier",
+            "normal": float(cluster_proba[0]) if unsupervised_cluster == 0 else 0.0,
+            "suspect": float(cluster_proba[1]) if unsupervised_cluster == 1 else 0.0,
+            "pathological": float(cluster_proba[2]) if unsupervised_cluster == 2 else 0.0,
+            "predicted_class": predicted_class,
+            "model_used": "GaussianMixture",
             "unsupervised_cluster": int(unsupervised_cluster),
             "anomaly_score": anomaly_score
         }

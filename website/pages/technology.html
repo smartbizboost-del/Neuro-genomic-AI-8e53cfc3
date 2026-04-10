@@ -14,9 +14,10 @@
         .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
         .logo-icon { font-size: 1.8rem; }
         .logo-text { background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .nav-links { display: flex; list-style: none; gap: 2rem; }
-        .nav-links a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
-        .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
+        .nav-menu { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; list-style: none; gap: 2rem; }
+        .nav-menu li { display: inline-flex; }
+        .nav-menu a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
+        .nav-menu a:hover, .nav-menu a.active { color: #3b82f6; }
         .btn-outline { padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 8px; color: #3b82f6; text-decoration: none; transition: all 0.3s; }
         .btn-outline:hover { background: #3b82f6; color: white; }
         .btn-primary { padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #a855f7); border-radius: 8px; color: white; text-decoration: none; font-weight: 500; transition: opacity 0.3s; }
@@ -72,11 +73,31 @@
         .footer { background: #0f172a; padding: 3rem 0 2rem; border-top: 1px solid #334155; margin-top: 4rem; }
         .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
         .footer-bottom { text-align: center; padding-top: 2rem; border-top: 1px solid #334155; margin-top: 2rem; color: #64748b; }
-        @media (max-width: 768px) { .nav-links { display: none; } .how-grid, .features-grid, .validation-grid, .footer-grid { grid-template-columns: 1fr; } .pipeline-flow { flex-direction: column; } }
+        @media (max-width: 768px) { .nav-menu { display: none; } .how-grid, .features-grid, .validation-grid, .footer-grid { grid-template-columns: 1fr; } .pipeline-flow { flex-direction: column; } }
     </style>
 </head>
 <body>
-    <nav class="navbar"><div class="container"><div class="logo"><span class="logo-icon">🧬</span><span class="logo-text">Neuro-Genomic AI</span></div><ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="team.html">Team</a></li><li><a href="services.html">Services</a></li><li><a href="technology.html" class="active">Technology</a></li><li><a href="contact.html">Contact</a></li></ul><div><a href="#" class="btn-outline">Sign In</a><a href="#" class="btn-primary">Request Demo</a></div></div></nav>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo-icon">NG</span>
+                <span class="logo-text">Neuro-Genomic AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="technology.html" class="active">Technology</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="login.html" class="btn-outline">Sign In</a>
+                <a href="register.html" class="btn-primary">Register</a>
+            </div>
+        </div>
+    </nav>
 
     <main>
         <section class="page-header"><div class="container"><h1>Our Technology</h1><p>Unsupervised machine learning meets ethical AI for fetal development monitoring</p></div></section>
@@ -91,10 +112,10 @@
 
         <section class="ethics-section"><div class="container"><h2 style="text-align:center;">🛡️ Ethical AI by Design</h2><div class="ethics-toggle"><div class="toggle-btn active" onclick="showEthics('without')">Typical AI</div><div class="toggle-btn" onclick="showEthics('with')">Neuro‑Genomic AI</div></div><div class="ethics-demo" id="ethicsDemo"><div class="without"><p style="color:#ef4444;">⚠️ "Fetus at risk — 87% confidence"</p><p style="color:#94a3b8;">No explanation. No uncertainty. No transparency.</p></div><div class="with"><p style="color:#10b981;">✅ "RMSSD = 28ms (↓15% from expected). LF/HF = 1.3 (↑0.2).</p><p style="color:#10b981;">Confidence: 92% (±3%). Signal quality: Good.</p><p style="color:#94a3b8;">⚠️ Research insights only — not for clinical diagnosis.</p></div></div></div></section>
 
-        <div class="container"><div class="cta-section"><h2>Ready to see the technology in action?</h2><p>Request a live demo or explore our open‑source code.</p><div class="cta-buttons"><a href="contact.html" class="btn-primary">Request Demo →</a><a href="https://github.com/smartbizboost-del/Neuro-genomic-AI-8e53cfc3" class="btn-outline">View on GitHub</a></div></div></div>
+        <div class="container"><div class="cta-section"><h2>Ready to see the technology in action?</h2><p>Request a live demo or explore our open‑source code.</p><div class="cta-buttons"><a href="contact.html" class="btn-primary">Request Demo →</a></div></div></div>
     </main>
 
-    <footer class="footer"><div class="container"><div class="footer-grid"><div><div class="logo" style="margin-bottom:1rem;"><span class="logo-icon">🧬</span><span class="logo-text">Neuro-Genomic AI</span></div><p style="color:#94a3b8">Understanding development by listening to the earliest signals of life.</p></div><div class="footer-links"><h4>Company</h4><a href="about.html">About</a><a href="team.html">Team</a><a href="services.html">Services</a></div><div class="footer-links"><h4>Resources</h4><a href="technology.html">Technology</a><a href="#">Documentation</a><a href="#">API Reference</a></div><div class="footer-links"><h4>Legal</h4><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Ethics Statement</a></div></div><div class="footer-bottom"><p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved. | Kirinyaga University Innovation Hub, Kerugoya, Kenya</p></div></div></footer>
+    <footer class="footer"><div class="container"><div class="footer-grid"><div><div class="logo" style="margin-bottom:1rem;"><span class="logo-icon">🧬</span><span class="logo-text">Neuro-Genomic AI</span></div><p style="color:#94a3b8">Understanding development by listening to the earliest signals of life.</p></div><div class="footer-links"><h4>Company</h4><a href="about.html">About</a><a href="team.html">Team</a><a href="services.html">Services</a></div><div class="footer-links"><h4>Resources</h4><a href="technology.html">Technology</a><a href="#">Documentation</a><a href="#">API Reference</a></div><div class="footer-links"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Ethics Statement</a></div></div><div class="footer-bottom"><p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved. | Kirinyaga University Innovation Hub, Kerugoya, Kenya</p></div></div></footer>
 
     <script>
         function toggleCard(card) { card.classList.toggle('active'); }
