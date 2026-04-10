@@ -10,6 +10,7 @@ import logging
 from src.core.ecg_unsupervised.preprocessing import ECGPreprocessor
 from src.core.ecg_unsupervised.separation import FetalECGSeparator
 from src.core.ecg_unsupervised.features import WindowedFeatureExtractor
+from src.core.features import calculate_t_qrs_ratio, detect_r_peaks
 
 # Import the Core ML Classifiers
 from src.core.classifier import CognitiveStateClassifier
@@ -75,6 +76,14 @@ class NeuroGenomicPipeline:
         maternal_ecg = comps[:, maternal_idx]
         fetal_ecg = comps[:, fetal_idx]
         
+        logger.info("Computing ST analysis metrics...")
+        st_analysis = {}
+        try:
+            r_peaks = detect_r_peaks(fetal_ecg, fs=sampling_rate)
+            st_analysis = calculate_t_qrs_ratio(fetal_ecg, r_peaks, fs=sampling_rate)
+        except Exception as e:
+            logger.warning(f"ST analysis failed: {e}")
+
         logger.info("Extracting windowed features...")
         extractor = WindowedFeatureExtractor(sampling_rate=sampling_rate, window_sec=10)
         features_df = extractor.extract(maternal=maternal_ecg, fetal=fetal_ecg)
@@ -94,6 +103,8 @@ class NeuroGenomicPipeline:
             "hf_power": float(avg_features.get("fet_high_freq_power", 0.0)),
             "pnn50": float(avg_features.get("fet_pnn50", 0.0)),
             "sample_entropy": float(avg_features.get("fet_sampen", 1.15)),
+            "t_qrs_ratio": float(st_analysis.get('t_qrs_ratio')) if st_analysis.get('t_qrs_ratio') is not None else None,
+            "hypoxia_risk": st_analysis.get('hypoxia_risk', 'unknown')
         }
         
         # Calculate LF/HF

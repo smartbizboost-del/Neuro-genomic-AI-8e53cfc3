@@ -10,6 +10,10 @@ import plotly.graph_objects as go
 from typing import Dict, Any
 import os
 
+from src.dashboard.components.reports import generate_report
+from src.dashboard.components.trends import plot_developmental_trend
+from src.dashboard.admin_dashboard import render_admin_dashboard
+
 # Configuration
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
@@ -24,7 +28,7 @@ st.markdown("*Ethical AI for Fetal Development Monitoring*")
 
 # Sidebar
 st.sidebar.header("Navigation")
-page = st.sidebar.radio("Go to", ["Upload & Analyze", "Results Viewer", "Clinical Insights"])
+page = st.sidebar.radio("Go to", ["Upload & Analyze", "Results Viewer", "Export Center", "Clinical Insights", "Admin Dashboard"])
 
 if page == "Upload & Analyze":
     st.header("Upload Fetal ECG File")
@@ -91,6 +95,10 @@ elif page == "Results Viewer":
                         for interp in data['interpretation']:
                             st.write(f"• {interp}")
                         
+                        st.subheader("ST Analysis")
+                        st.write(f"T/QRS Ratio: {data['features'].get('t_qrs_ratio', 'N/A')}")
+                        st.write(f"Hypoxia Risk: {data['features'].get('hypoxia_risk', 'unknown').title()}")
+                        
                         st.subheader("Developmental Index")
                         st.metric("Index", f"{data['developmental_index']:.2f}")
                         
@@ -112,6 +120,35 @@ elif page == "Results Viewer":
             except Exception as e:
                 st.error(f"Error: {e}")
 
+elif page == "Export Center":
+    st.header("Export Center")
+    st.write("Generate clinical reports and batch summaries for your analyses.")
+    file_id = st.text_input("Enter File ID for report generation")
+    output_format = st.selectbox("Output format", ["pdf", "json", "hl7"])
+    if st.button("Generate Report") and file_id:
+        with st.spinner("Generating report..."):
+            try:
+                response = requests.get(f"{API_URL}/api/v1/analysis/{file_id}")
+                if response.status_code == 200:
+                    payload = response.json()
+                    report_bytes = generate_report(payload, output_format=output_format)
+                    if output_format == "pdf":
+                        st.download_button(
+                            label="Download PDF Report",
+                            data=report_bytes,
+                            file_name=f"clinical_report_{file_id}.pdf",
+                            mime="application/pdf"
+                        )
+                    else:
+                        st.code(report_bytes)
+                else:
+                    st.error("Unable to load analysis data for report generation.")
+            except Exception as exc:
+                st.error(f"Export error: {exc}")
+
+elif page == "Admin Dashboard":
+    render_admin_dashboard()
+
 elif page == "Clinical Insights":
     st.header("Clinical Insights & Research")
     
@@ -127,12 +164,13 @@ elif page == "Clinical Insights":
         st.write(f"**{feature}**: {desc}")
     
     st.subheader("Developmental Trajectory")
-    # Placeholder chart
-    weeks = list(range(20, 43))
-    normal_trajectory = [0.3 + 0.02 * (w - 20) for w in weeks]
-    fig = px.line(x=weeks, y=normal_trajectory, 
-                  title="Normal Developmental Trajectory",
-                  labels={'x': 'Gestational Weeks', 'y': 'Developmental Index'})
+    historical_data = [
+        {"gestational_weeks": 24, "developmental_index": 0.35},
+        {"gestational_weeks": 28, "developmental_index": 0.48},
+        {"gestational_weeks": 32, "developmental_index": 0.62},
+        {"gestational_weeks": 36, "developmental_index": 0.78}
+    ]
+    fig = plot_developmental_trend(historical_data)
     st.plotly_chart(fig)
 
 # Footer

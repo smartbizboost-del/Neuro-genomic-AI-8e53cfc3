@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from src.api.middleware.auth import get_current_user
+from src.api.middleware.rbac import require_role
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -140,6 +141,7 @@ async def delete_user(
 
 
 @router.get("/metrics")
+@require_role(["admin", "super_admin"])
 async def get_system_metrics(admin: dict = Depends(require_admin)):
     """Get system health and usage metrics"""
     # This would aggregate from your database and monitoring tools

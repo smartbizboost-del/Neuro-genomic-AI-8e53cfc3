@@ -21,6 +21,8 @@ class FeatureResponse(BaseModel):
     pnn50: Optional[float] = Field(None, description="Percentage of NN50")
     lf_power: Optional[float] = Field(None, description="Low frequency power")
     hf_power: Optional[float] = Field(None, description="High frequency power")
+    t_qrs_ratio: Optional[float] = Field(None, description="T/QRS amplitude ratio for hypoxia screening")
+    hypoxia_risk: Optional[str] = Field(None, description="Hypoxia risk classification from ST analysis")
     developmental_index: Optional[float] = Field(None, description="Composite developmental score")
 
 class RiskAssessment(BaseModel):
