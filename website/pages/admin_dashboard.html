@@ -37,9 +37,32 @@
             <div class="nav-item text-gray-300" data-tab="alerts">Alerts</div>
             <div class="nav-item text-gray-300" data-tab="pipeline">Data Pipeline</div>
         </div>
-        <div class="text-sm"><i class="fas fa-user-shield text-indigo-400"></i> admin@neuro-genomic.ai</div>
+        <div class="flex items-center gap-3 text-sm">
+            <i class="fas fa-user-shield text-indigo-400"></i>
+            <span id="userEmail">admin@neuro-genomic.ai</span>
+            <button id="logoutBtn" class="hidden bg-red-600 px-3 py-1 rounded-lg text-xs">Logout</button>
+        </div>
     </div>
 
+    <div id="loginPanel" class="card-bg p-6 mb-8">
+        <div class="text-lg font-semibold mb-4">Admin Login</div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-2" for="loginEmail">Email</label>
+                <input id="loginEmail" type="email" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white" placeholder="admin@example.com">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-2" for="loginPassword">Password</label>
+                <input id="loginPassword" type="password" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white" placeholder="Password">
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <button id="loginBtn" class="bg-blue-600 px-4 py-2 rounded-lg text-sm font-semibold">Sign In</button>
+                <span id="loginMessage" class="text-sm text-yellow-300"></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardContent" class="hidden">
     <!-- Overview Tab -->
     <div id="overviewTab" class="tab-content">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -107,14 +130,143 @@
     navs.forEach(nav => {
         nav.addEventListener('click', () => { const t = nav.getAttribute('data-tab'); if(t && contents[t]) switchTab(t); });
     });
-    // Increment active users
+    // Increment active users (demo control)
     let active = 12;
-    document.getElementById('incActiveBtn')?.addEventListener('click', () => { active++; document.getElementById('activeCount').innerText = active; });
+    document.getElementById('incActiveBtn')?.addEventListener('click', () => {
+        active++;
+        document.getElementById('activeCount').innerText = active;
+    });
+
+    const apiBase = "/api/v1";
+    const tokenStorageKey = 'authToken';
+    const emailStorageKey = 'authEmail';
+
+    const loginMessage = document.getElementById('loginMessage');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userEmail = document.getElementById('userEmail');
+    const loginPanel = document.getElementById('loginPanel');
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    function showDashboard() {
+        loginPanel.classList.add('hidden');
+        dashboardContent.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+    }
+
+    function showLogin() {
+        loginPanel.classList.remove('hidden');
+        dashboardContent.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
+    }
+
+    async function loginUser(email, password) {
+        try {
+            const response = await fetch(`${apiBase}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                loginMessage.innerText = error.detail || 'Login failed';
+                return null;
+            }
+
+            return await response.json();
+        } catch (error) {
+            loginMessage.innerText = 'Unable to reach auth service';
+            return null;
+        }
+    }
+
+    async function fetchMetrics() {
+        const authToken = localStorage.getItem(tokenStorageKey);
+        if (!authToken) {
+            showLogin();
+            return;
+        }
+
+        try {
+            const res = await fetch(`${apiBase}/admin/metrics`, {
+                headers: { Authorization: `Bearer ${authToken}` }
+            });
+            if (!res.ok) {
+                localStorage.removeItem(tokenStorageKey);
+                localStorage.removeItem(emailStorageKey);
+                showLogin();
+                return;
+            }
+            const data = await res.json();
+            document.getElementById('activeCount').innerText = data.users.active ?? active;
+            document.querySelectorAll('.card-bg .stat-number')[0].innerText = data.users.total ?? '—';
+            const savedEmail = localStorage.getItem(emailStorageKey);
+            if (savedEmail) userEmail.innerText = savedEmail;
+            showDashboard();
+        } catch (error) {
+            console.error('Failed to load metrics', error);
+            showLogin();
+        }
+    }
+
+    function initMetricsSocket() {
+        const authToken = localStorage.getItem(tokenStorageKey);
+        if (!authToken) {
+            return;
+        }
+
+        const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${scheme}://${window.location.host}/ws/metrics?token=${authToken}`);
+
+        socket.onmessage = (event) => {
+            const payload = JSON.parse(event.data);
+            if (payload.active_users !== undefined) {
+                document.getElementById('activeCount').innerText = payload.active_users;
+            }
+        };
+
+        socket.onopen = () => console.log('Live metrics websocket connected');
+        socket.onerror = (err) => console.error('WebSocket error', err);
+    }
+
+    document.getElementById('loginBtn')?.addEventListener('click', async () => {
+        loginMessage.innerText = '';
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        if (!email || !password) {
+            loginMessage.innerText = 'Email and password are required';
+            return;
+        }
+
+        const tokenData = await loginUser(email, password);
+        if (tokenData?.access_token) {
+            localStorage.setItem(tokenStorageKey, tokenData.access_token);
+            localStorage.setItem(emailStorageKey, email);
+            userEmail.innerText = email;
+            loginMessage.innerText = 'Login successful';
+            await fetchMetrics();
+            initMetricsSocket();
+        }
+    });
+
+    logoutBtn?.addEventListener('click', () => {
+        localStorage.removeItem(tokenStorageKey);
+        localStorage.removeItem(emailStorageKey);
+        userEmail.innerText = 'admin@neuro-genomic.ai';
+        showLogin();
+    });
+
     // Charts
     const ctx1 = document.getElementById('userChart')?.getContext('2d');
     if(ctx1) new Chart(ctx1, { type: 'line', data: { labels: ['W1','W2','W3','W4'], datasets: [{ label: 'Users', data: [20,38,52,47], borderColor: '#3b82f6', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#cbd5e6' } } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } } });
     const ctx2 = document.getElementById('featureChart')?.getContext('2d');
     if(ctx2) new Chart(ctx2, { type: 'bar', data: { labels: ['Upload','Clustering','Export','API'], datasets: [{ label: 'Usage', data: [87,65,44,92], backgroundColor: '#22c55e' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#cbd5e6' } } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } } });
+
+    fetchMetrics();
+    initMetricsSocket();
+
     // Default
     switchTab('overview');
 </script>
