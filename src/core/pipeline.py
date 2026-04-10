@@ -11,8 +11,10 @@ from src.core.ecg_unsupervised.preprocessing import ECGPreprocessor
 from src.core.ecg_unsupervised.separation import FetalECGSeparator
 from src.core.ecg_unsupervised.features import WindowedFeatureExtractor
 
-# Import the legacy Cognitive State Classifier
-from src_legacy.legacy.model import CognitiveStateClassifier
+# Import the Core ML Classifiers
+from src.core.classifier import CognitiveStateClassifier
+import joblib
+import os
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 
@@ -26,42 +28,25 @@ class NeuroGenomicPipeline:
         self.classifier = CognitiveStateClassifier(model_type='gb')
         self.unsupervised_model = GaussianMixture(n_components=3, random_state=42)
         self.scaler = StandardScaler()
-        self._bootstrap_model()
+        self.model_dir = os.getenv("MODEL_DIR", "data/models")
+        # Do not bootstrap synchronously anymore
         
-    def _bootstrap_model(self):
-        """Train the GradientBoosting Model on synthetic historical logic limits"""
-        logger.info("Bootstrapping Supervised Gradient Boosting Model...")
-        # Features order: rmssd, sdnn, mean_rr, lf_hf_ratio, pnn50
-        # y format: "normal", "suspect", "pathological"
-        
-        # Synthetic generator matching clinical boundaries
-        X_train = []
-        y_train = []
-        
-        # Generate 100 Normal cases (High RMSSD, good SDNN, balanced LF_HF)
-        for _ in range(100):
-            X_train.append([np.random.normal(45, 10), np.random.normal(50, 15), 
-                            np.random.normal(400, 50), np.random.normal(1.5, 0.3), np.random.normal(15, 5)])
-            y_train.append("normal")
-            
-        # Generate 100 Suspect cases (Medium RMSSD, high LF_HF)
-        for _ in range(100):
-            X_train.append([np.random.normal(25, 8), np.random.normal(35, 10), 
-                            np.random.normal(450, 50), np.random.normal(2.5, 0.4), np.random.normal(8, 3)])
-            y_train.append("suspect")
-            
-        # Generate 100 Pathological cases (Low RMSSD, low SDNN, extreme LF_HF)
-        for _ in range(100):
-            X_train.append([np.random.normal(10, 5), np.random.normal(15, 5), 
-                            np.random.normal(500, 50), np.random.normal(3.5, 0.5), np.random.normal(2, 1)])
-            y_train.append("pathological")
-            
-        self.classifier.train(np.array(X_train), np.array(y_train))
-        
-        # Bootstrap the Unsupervised Model with the synthetic distribution
-        X_train_scaled = self.scaler.fit_transform(np.array(X_train))
-        self.unsupervised_model.fit(X_train_scaled)
-        logger.info("Unsupervised Gaussian Mixture Model Bootstrapped.")
+    def load_models(self):
+        """Load pre-trained models from disk to avoid cold starts"""
+        try:
+            logger.info(f"Loading models from {self.model_dir}...")
+            if os.path.exists(f"{self.model_dir}/classifier.pkl"):
+                self.classifier.model = joblib.load(f"{self.model_dir}/classifier.pkl")
+                self.unsupervised_model = joblib.load(f"{self.model_dir}/unsupervised.pkl")
+                self.scaler = joblib.load(f"{self.model_dir}/scaler.pkl")
+                logger.info("Models directly loaded successfully.")
+                return True
+            else:
+                logger.warning(f"No models found at {self.model_dir}. Please run scripts/train_models.py")
+                return False
+        except Exception as e:
+            logger.error(f"Error loading models: {str(e)}")
+            return False
         
     def process_recording(self, mixed_signal: np.ndarray, sampling_rate: int = 500, gestational_weeks: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -109,7 +94,7 @@ class NeuroGenomicPipeline:
             "lf_power": float(avg_features.get("fet_low_freq_power", 0.0)),
             "hf_power": float(avg_features.get("fet_high_freq_power", 0.0)),
             "pnn50": float(avg_features.get("fet_pnn50", 0.0)),
-            "sample_entropy": 1.15, # Sample Entropy placeholder as not available natively in pipeline features yet
+            "sample_entropy": float(avg_features.get("fet_sampen", 1.15)),
         }
         
         # Calculate LF/HF

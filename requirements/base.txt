@@ -22,3 +22,4 @@ h5py==3.10.0
 psutil==5.9.6
 email-validator==2.1.0
 bcrypt==4.1.2
+joblib==1.3.2
