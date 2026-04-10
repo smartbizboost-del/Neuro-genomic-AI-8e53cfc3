@@ -3,12 +3,12 @@ Admin routes for user management and system monitoring
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status
-from typing import List, Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
 from src.api.middleware.auth import get_current_user
-from src.api.middleware.rbac import require_role
+from src.api.services.monitoring import set_active_users
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -39,8 +39,39 @@ MOCK_USERS = {
         "created_at": datetime.now(),
         "last_login": datetime.now(),
         "analyses_count": 15
+    },
+    "user_2": {
+        "id": "user_2",
+        "email": "clinician@test.com",
+        "full_name": "Dr. Jane",
+        "role": "clinician",
+        "status": "active",
+        "created_at": datetime.now(),
+        "last_login": datetime.now(),
+        "analyses_count": 24
     }
 }
+
+LOG_ENTRIES = [
+    {
+        "timestamp": datetime.now().isoformat(),
+        "level": "INFO",
+        "endpoint": "/api/v1/analysis",
+        "method": "POST",
+        "status_code": 200,
+        "response_time_ms": 234,
+        "user_id": "user_1"
+    },
+    {
+        "timestamp": datetime.now().isoformat(),
+        "level": "WARNING",
+        "endpoint": "/api/v1/analysis",
+        "method": "GET",
+        "status_code": 500,
+        "response_time_ms": 514,
+        "user_id": "user_2"
+    }
+]
 
 # Helper function to check admin access
 def require_admin(current_user: dict = Depends(get_current_user)):
@@ -62,14 +93,15 @@ async def get_all_users(
     Get all users with optional filters.
     Requires admin role.
     """
-    # This would query your database
     users = list(MOCK_USERS.values())
     
     if role:
         users = [u for u in users if u["role"] == role]
     if status:
         users = [u for u in users if u.get("status") == status]
-    
+
+    active_users = sum(1 for u in users if u.get("status") == "active")
+    set_active_users(active_users)
     return users
 
 
@@ -141,18 +173,20 @@ async def delete_user(
 
 
 @router.get("/metrics")
-@require_role(["admin", "super_admin"])
 async def get_system_metrics(admin: dict = Depends(require_admin)):
     """Get system health and usage metrics"""
-    # This would aggregate from your database and monitoring tools
+    active = sum(1 for u in MOCK_USERS.values() if u.get("status") == "active")
+    set_active_users(active)
+
     return {
         "users": {
             "total": len(MOCK_USERS),
-            "active": sum(1 for u in MOCK_USERS.values() if u.get("status") == "active"),
+            "active": active,
             "by_role": {
-                "admin": 0,
-                "clinician": 0,
-                "researcher": len(MOCK_USERS)
+                "admin": sum(1 for u in MOCK_USERS.values() if u.get("role") == "admin"),
+                "clinician": sum(1 for u in MOCK_USERS.values() if u.get("role") == "clinician"),
+                "researcher": sum(1 for u in MOCK_USERS.values() if u.get("role") == "researcher"),
+                "viewer": sum(1 for u in MOCK_USERS.values() if u.get("role") == "viewer")
             }
         },
         "analyses": {
@@ -195,20 +229,11 @@ async def get_api_logs(
     level: Optional[str] = None
 ):
     """Get recent API logs"""
-    # This would query your logging system
-    # Return mock data for now
+    logs = LOG_ENTRIES
+    if level:
+        logs = [entry for entry in logs if entry["level"].lower() == level.lower()]
     return {
-        "logs": [
-            {
-                "timestamp": datetime.now().isoformat(),
-                "level": "INFO",
-                "endpoint": "/api/v1/analysis",
-                "method": "POST",
-                "status_code": 200,
-                "response_time_ms": 234,
-                "user_id": "user_1"
-            }
-        ],
-        "total": 1,
+        "logs": logs[:limit],
+        "total": len(logs),
         "limit": limit
     }
