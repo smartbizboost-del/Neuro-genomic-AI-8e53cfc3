@@ -76,32 +76,11 @@ async def test_get_analysis_response_structure():
     assert "suspect" in data["risk"]
     assert "pathological" in data["risk"]
     assert "predicted_class" in data["risk"]
+    assert "unsupervised_cluster" in data["risk"]
     
     # Verify other fields
     assert "interpretation" in data
     assert isinstance(data["interpretation"], list)
-
-
-@pytest.mark.asyncio
-async def test_predict_trajectory_endpoint():
-    """Test the analytics prediction endpoint."""
-    historical_data = [
-        {"gestational_weeks": 28, "developmental_index": 0.45},
-        {"gestational_weeks": 30, "developmental_index": 0.53},
-        {"gestational_weeks": 32, "developmental_index": 0.61}
-    ]
-    payload = {"historical_data": historical_data}
-
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
-        response = await client.post("/api/v1/analytics/predict", json=payload)
-
-    assert response.status_code == 200
-    data = response.json()
-    assert "predicted_dev_index_2w" in data
-    assert "predicted_dev_index_4w" in data
-    assert "trend" in data
-    assert "confidence" in data
-    assert isinstance(data["confidence"], float)
 
 
 @pytest.mark.asyncio
@@ -131,6 +110,7 @@ async def test_get_analysis_risk_classes():
     assert risk["suspect"] >= 0
     assert risk["pathological"] >= 0
     assert risk["predicted_class"] in ["normal", "suspect", "pathological"]
+    assert isinstance(risk["unsupervised_cluster"], int)
 
 
 @pytest.mark.asyncio

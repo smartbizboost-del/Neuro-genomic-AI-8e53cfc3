@@ -13,7 +13,7 @@ celery_app = Celery(
     'neuro_genomic',
     broker=REDIS_URL,
     backend=REDIS_URL,
-    include=['src.workers.tasks', 'src.workers.alert_worker']
+    include=['src.workers.tasks']
 )
 
 # Celery configuration

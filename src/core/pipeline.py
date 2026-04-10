@@ -6,16 +6,14 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Any, Optional
 import logging
+import os
 
 from src.core.ecg_unsupervised.preprocessing import ECGPreprocessor
 from src.core.ecg_unsupervised.separation import FetalECGSeparator
 from src.core.ecg_unsupervised.features import WindowedFeatureExtractor
-from src.core.features import calculate_t_qrs_ratio, detect_r_peaks
 
-# Import the Core ML Classifiers
-from src.core.classifier import CognitiveStateClassifier
-import joblib
-import os
+# Import the legacy Cognitive State Classifier
+from src_legacy.legacy.model import CognitiveStateClassifier
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 
@@ -26,27 +24,73 @@ class NeuroGenomicPipeline:
     
     def __init__(self):
         self.feature_extractor = None
+        self.classifier = CognitiveStateClassifier(model_type='gb')
         self.unsupervised_model = GaussianMixture(n_components=3, random_state=42)
         self.scaler = StandardScaler()
-        self.model_dir = os.getenv("MODEL_DIR", "data/models")
-        # Do not bootstrap synchronously anymore
-        
-    def load_models(self):
-        """Load pre-trained models from disk to avoid cold starts"""
+        self._is_bootstrapped = False
+        self.confidence_high_threshold = self._read_threshold("CONFIDENCE_HIGH_THRESHOLD", 0.80)
+        self.confidence_medium_threshold = self._read_threshold("CONFIDENCE_MEDIUM_THRESHOLD", 0.60)
+        if self.confidence_medium_threshold > self.confidence_high_threshold:
+            self.confidence_medium_threshold, self.confidence_high_threshold = (
+                self.confidence_high_threshold,
+                self.confidence_medium_threshold,
+            )
+        self._bootstrap_model()
+
+    @staticmethod
+    def _read_threshold(env_name: str, default: float) -> float:
         try:
-            logger.info(f"Loading models from {self.model_dir}...")
-            if os.path.exists(f"{self.model_dir}/classifier.pkl"):
-                self.classifier.model = joblib.load(f"{self.model_dir}/classifier.pkl")
-                self.unsupervised_model = joblib.load(f"{self.model_dir}/unsupervised.pkl")
-                self.scaler = joblib.load(f"{self.model_dir}/scaler.pkl")
-                logger.info("Models directly loaded successfully.")
-                return True
-            else:
-                logger.warning(f"No models found at {self.model_dir}. Please run scripts/train_models.py")
-                return False
-        except Exception as e:
-            logger.error(f"Error loading models: {str(e)}")
-            return False
+            return min(max(float(os.getenv(env_name, str(default))), 0.0), 1.0)
+        except (TypeError, ValueError):
+            return default
+        
+    def _bootstrap_model(self):
+        """Train the GradientBoosting Model on synthetic historical logic limits"""
+        logger.info("Bootstrapping Supervised Gradient Boosting Model...")
+        # Features order: rmssd, sdnn, mean_rr, lf_hf_ratio, pnn50
+        # y format: "normal", "suspect", "pathological"
+        
+        # Synthetic generator matching clinical boundaries
+        X_train = []
+        y_train = []
+        
+        # Generate 100 Normal cases (High RMSSD, good SDNN, balanced LF_HF)
+        for _ in range(100):
+            X_train.append([np.random.normal(45, 10), np.random.normal(50, 15), 
+                            np.random.normal(400, 50), np.random.normal(1.5, 0.3), np.random.normal(15, 5)])
+            y_train.append("normal")
+            
+        # Generate 100 Suspect cases (Medium RMSSD, high LF_HF)
+        for _ in range(100):
+            X_train.append([np.random.normal(25, 8), np.random.normal(35, 10), 
+                            np.random.normal(450, 50), np.random.normal(2.5, 0.4), np.random.normal(8, 3)])
+            y_train.append("suspect")
+            
+        # Generate 100 Pathological cases (Low RMSSD, low SDNN, extreme LF_HF)
+        for _ in range(100):
+            X_train.append([np.random.normal(10, 5), np.random.normal(15, 5), 
+                            np.random.normal(500, 50), np.random.normal(3.5, 0.5), np.random.normal(2, 1)])
+            y_train.append("pathological")
+            
+        self.classifier.train(np.array(X_train), np.array(y_train))
+        
+        # Bootstrap the Unsupervised Model with the synthetic distribution
+        X_train_scaled = self.scaler.fit_transform(np.array(X_train))
+        self.unsupervised_model.fit(X_train_scaled)
+        self._is_bootstrapped = True
+        logger.info("Unsupervised Gaussian Mixture Model Bootstrapped.")
+
+    def train_model(self, force_retrain: bool = False) -> None:
+        """Compatibility hook for API startup lifecycle."""
+        if force_retrain or not self._is_bootstrapped:
+            self._bootstrap_model()
+
+    def _confidence_label(self, confidence: float) -> str:
+        if confidence >= self.confidence_high_threshold:
+            return "high"
+        if confidence >= self.confidence_medium_threshold:
+            return "medium"
+        return "low"
         
     def process_recording(self, mixed_signal: np.ndarray, sampling_rate: int = 500, gestational_weeks: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -76,14 +120,6 @@ class NeuroGenomicPipeline:
         maternal_ecg = comps[:, maternal_idx]
         fetal_ecg = comps[:, fetal_idx]
         
-        logger.info("Computing ST analysis metrics...")
-        st_analysis = {}
-        try:
-            r_peaks = detect_r_peaks(fetal_ecg, fs=sampling_rate)
-            st_analysis = calculate_t_qrs_ratio(fetal_ecg, r_peaks, fs=sampling_rate)
-        except Exception as e:
-            logger.warning(f"ST analysis failed: {e}")
-
         logger.info("Extracting windowed features...")
         extractor = WindowedFeatureExtractor(sampling_rate=sampling_rate, window_sec=10)
         features_df = extractor.extract(maternal=maternal_ecg, fetal=fetal_ecg)
@@ -102,9 +138,7 @@ class NeuroGenomicPipeline:
             "lf_power": float(avg_features.get("fet_low_freq_power", 0.0)),
             "hf_power": float(avg_features.get("fet_high_freq_power", 0.0)),
             "pnn50": float(avg_features.get("fet_pnn50", 0.0)),
-            "sample_entropy": float(avg_features.get("fet_sampen", 1.15)),
-            "t_qrs_ratio": float(st_analysis.get('t_qrs_ratio')) if st_analysis.get('t_qrs_ratio') is not None else None,
-            "hypoxia_risk": st_analysis.get('hypoxia_risk', 'unknown')
+            "sample_entropy": 1.15, # Sample Entropy placeholder as not available natively in pipeline features yet
         }
         
         # Calculate LF/HF
@@ -137,7 +171,7 @@ class NeuroGenomicPipeline:
         return min(max(index / 100, 0), 1)
     
     def _classify_risk(self, features: Dict[str, float]) -> Dict[str, Any]:
-        """Classify risk using the Unsupervised Gaussian Mixture Model"""
+        """Classify risk using the Supervised Gradient Boosting Model built from Legacy Code"""
         X_test = np.array([[
             features.get("rmssd", 0),
             features.get("sdnn", 0),
@@ -146,25 +180,35 @@ class NeuroGenomicPipeline:
             features.get("pnn50", 0)
         ]])
         
+        prediction = self.classifier.predict(X_test)[0]
+        
+        # Pull probabilities if supported
+        probabilities = [0.0, 0.0, 0.0]
+        try:
+            proba = self.classifier.model.predict_proba(X_test)[0]
+            classes = self.classifier.model.classes_
+            prob_dict = {classes[i]: proba[i] for i in range(len(classes))}
+            normal_p = prob_dict.get("normal", 0.0)
+            suspect_p = prob_dict.get("suspect", 0.0)
+            pathological_p = prob_dict.get("pathological", 0.0)
+        except AttributeError:
+            normal_p, suspect_p, pathological_p = 0.0, 0.0, 0.0
+
         # Unsupervised Risk Assessment
         X_test_scaled = self.scaler.transform(X_test)
         unsupervised_cluster = self.unsupervised_model.predict(X_test_scaled)[0]
         # score_samples returns log-likelihoods. Negative log-likelihood = anomaly score
         anomaly_score = -float(self.unsupervised_model.score_samples(X_test_scaled)[0])
-        
-        # Map clusters to risk levels (simplified mapping)
-        cluster_risk_map = {0: "normal", 1: "suspect", 2: "pathological"}
-        predicted_class = cluster_risk_map.get(unsupervised_cluster, "unknown")
-        
-        # Calculate probabilities based on cluster membership
-        cluster_proba = self.unsupervised_model.predict_proba(X_test_scaled)[0]
-        
+
+        confidence_level = float(max(normal_p, suspect_p, pathological_p))
         return {
-            "normal": float(cluster_proba[0]) if unsupervised_cluster == 0 else 0.0,
-            "suspect": float(cluster_proba[1]) if unsupervised_cluster == 1 else 0.0,
-            "pathological": float(cluster_proba[2]) if unsupervised_cluster == 2 else 0.0,
-            "predicted_class": predicted_class,
-            "model_used": "GaussianMixture",
+            "normal": float(normal_p),
+            "suspect": float(suspect_p),
+            "pathological": float(pathological_p),
+            "predicted_class": prediction,
+            "model_used": "GradientBoostingClassifier",
+            "confidence_level": confidence_level,
+            "confidence_label": self._confidence_label(confidence_level),
             "unsupervised_cluster": int(unsupervised_cluster),
             "anomaly_score": anomaly_score
         }

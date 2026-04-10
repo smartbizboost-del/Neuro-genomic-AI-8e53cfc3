@@ -21,8 +21,6 @@ class FeatureResponse(BaseModel):
     pnn50: Optional[float] = Field(None, description="Percentage of NN50")
     lf_power: Optional[float] = Field(None, description="Low frequency power")
     hf_power: Optional[float] = Field(None, description="High frequency power")
-    t_qrs_ratio: Optional[float] = Field(None, description="T/QRS amplitude ratio for hypoxia screening")
-    hypoxia_risk: Optional[str] = Field(None, description="Hypoxia risk classification from ST analysis")
     developmental_index: Optional[float] = Field(None, description="Composite developmental score")
 
 class RiskAssessment(BaseModel):
@@ -30,6 +28,9 @@ class RiskAssessment(BaseModel):
     suspect: float = Field(..., description="Probability of suspect development")
     pathological: float = Field(..., description="Probability of pathological development")
     predicted_class: HealthStatus = Field(..., description="Predicted health status")
+    confidence_level: Optional[float] = Field(None, description="Confidence of predicted class (0-1)")
+    confidence_label: Optional[str] = Field(None, description="Confidence band: high, medium, or low")
+    unsupervised_cluster: Optional[int] = Field(None, description="Unsupervised cluster assignment")
 
 class ClinicalInterpretation(BaseModel):
     text: str = Field(..., description="Interpretation text")

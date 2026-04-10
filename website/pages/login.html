@@ -6,6 +6,7 @@
     <title>Login | Neuro-Genomic AI</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="../js/api.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -76,7 +77,7 @@
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             try {
-                const response = await fetch('/api/v1/auth/login', {
+                const response = await fetch(getNGAIApiUrl('/auth/login'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })

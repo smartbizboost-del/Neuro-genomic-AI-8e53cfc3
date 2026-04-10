@@ -2,12 +2,18 @@
 Authentication routes for user login and registration
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
 from typing import Optional
-from datetime import datetime, timedelta
 
-from src.api.middleware.auth import create_access_token, verify_token, get_current_user, get_password_hash, verify_password
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, EmailStr
+
+from src.api.middleware.auth import (
+    create_access_token,
+    get_current_user,
+    get_password_hash,
+    verify_password,
+)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -88,7 +94,13 @@ async def login_user(login_data: UserLogin):
         )
     
     access_token = create_access_token(
-        data={"sub": user["email"], "role": user["role"], "user_id": user["id"]}
+        data={
+            "sub": user["email"],
+            "email": user["email"],
+            "role": user["role"],
+            "user_id": user["id"],
+            "full_name": user.get("full_name"),
+        }
     )
     
     return TokenResponse(
@@ -100,10 +112,19 @@ async def login_user(login_data: UserLogin):
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user information"""
+    email = current_user.get("email") or current_user.get("sub")
+    user = MOCK_USERS_DB.get(email)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
     return UserResponse(
-        id=current_user["user_id"],
-        email=current_user["email"],
-        full_name=current_user.get("full_name"),
-        role=current_user["role"],
-        created_at=datetime.now()
+        id=user["id"],
+        email=user["email"],
+        full_name=user.get("full_name"),
+        role=user["role"],
+        created_at=user["created_at"],
     )

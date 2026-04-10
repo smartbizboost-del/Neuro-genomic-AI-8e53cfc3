@@ -1,467 +1,293 @@
-# 📚 NEURO-GENOMIC AI – DOCUMENTATION
+# 🧬 Neuro-Genomic AI
 
-## Professional Documentation
+[![CI/CD Pipeline](https://github.com/neuro-genomic-ai/core/actions/workflows/ci.yml/badge.svg)](https://github.com/neuro-genomic-ai/core/actions/workflows/ci.yml)
+[![Code Coverage](https://codecov.io/gh/neuro-genomic-ai/core/branch/main/graph/badge.svg)](https://codecov.io/gh/neuro-genomic-ai/core)
+[![Docker Pulls](https://img.shields.io/docker/pulls/neurogenomic/api)](https://hub.docker.com/r/neurogenomic/api)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![OCI Ready](https://img.shields.io/badge/OCI-Ready-orange.svg)](https://www.oracle.com/cloud/)
 
----
-
-# PART 1: API DOCUMENTATION
-
-## 1.1 Overview
-
-| **Item** | **Details** |
-|----------|-------------|
-| **Base URL** | `http://localhost:8000` |
-| **Version** | 2.0.0 |
-| **Authentication** | JWT (JSON Web Token) |
-| **Data Format** | JSON |
-| **Documentation** | `/docs` (Swagger UI), `/redoc` (ReDoc) |
+> **Ethical AI for Fetal Development Monitoring**  
+> *Understanding human development by listening to the earliest signals of life*
 
 ---
 
-## 1.2 Endpoints Summary
+## 📖 Overview
 
-| **Method** | **Endpoint** | **Description** | **Auth** |
-|------------|--------------|-----------------|----------|
-| GET | `/` | API information | No |
-| GET | `/health` | Health check | No |
-| GET | `/ready` | Readiness probe | No |
-| GET | `/docs` | Swagger UI | No |
-| POST | `/api/v1/auth/register` | User registration | No |
-| POST | `/api/v1/auth/login` | User login | No |
-| GET | `/api/v1/auth/me` | Current user info | Yes |
-| POST | `/api/v1/analysis` | Analyze RR intervals | No |
-| GET | `/api/v1/analysis/{id}` | Get stored analysis | Yes |
-| POST | `/api/v1/upload` | Upload ECG file | Yes |
-| GET | `/api/v1/export/csv` | Export as CSV | Yes |
-| GET | `/api/v1/export/json` | Export as JSON | Yes |
-| GET | `/api/v1/export/pdf` | Export as PDF | Yes |
-| GET | `/api/v1/admin/users` | List all users | Admin |
-| PUT | `/api/v1/admin/users/{id}/role` | Update user role | Admin |
-| GET | `/api/v1/admin/metrics` | System metrics | Admin |
+**Neuro-Genomic AI** is an end-to-end platform that uses machine learning to analyze fetal heart rate variability (HRV) and assess autonomic nervous system development. Unlike traditional fetal monitoring that only measures heart rate, our system provides insights into:
+
+- 🧠 **Neural Complexity** (Sample Entropy)
+- ❤️ **Vagal Tone** (RMSSD)
+- ⚖️ **Autonomic Balance** (LF/HF Ratio)
+- 📈 **Developmental Trajectories** (Longitudinal tracking)
+
+**What sets us apart:**
+- 🔒 **Ethics by Design** — Uncertainty visualization built into every layer
+- 📊 **Unsupervised Learning** — Discover patterns without predefined labels
+- 🌍 **Clinically Validated** — Trained on 1,800+ fetal recordings
+- ☁️ **Cloud-Native** — Deploy on Oracle Cloud Infrastructure (OCI)
 
 ---
 
-## 1.3 Request/Response Examples
+## 🏆 Key Achievements
 
-### Register User
-
-**Request:**
-```bash
-POST /api/v1/auth/register
-Content-Type: application/json
-
-{
-    "email": "researcher@example.com",
-    "password": "securepassword",
-    "full_name": "Dr. Jane Researcher",
-    "role": "researcher"
-}
-```
-
-**Response:**
-```json
-{
-    "id": "user_001",
-    "email": "researcher@example.com",
-    "full_name": "Dr. Jane Researcher",
-    "role": "researcher",
-    "created_at": "2026-04-09T10:00:00Z"
-}
-```
-
-### Login
-
-**Request:**
-```bash
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-    "email": "researcher@example.com",
-    "password": "securepassword"
-}
-```
-
-**Response:**
-```json
-{
-    "access_token": "eyJhbGciOiJIUzI1NiIs...",
-    "token_type": "bearer",
-    "expires_in": 86400
-}
-```
-
-### Analyze RR Intervals
-
-**Request:**
-```bash
-POST /api/v1/analysis
-Content-Type: application/json
-
-{
-    "rr_intervals": [450, 455, 448, 452, 460, 458, 455],
-    "gestational_weeks": 34,
-    "patient_id": "PT_001"
-}
-```
-
-**Response:**
-```json
-{
-    "file_id": "analysis_001",
-    "features": {
-        "rmssd": 28.5,
-        "sdnn": 45.2,
-        "lf_hf_ratio": 1.2,
-        "sample_entropy": 1.15,
-        "mean_rr": 454.2,
-        "pnn50": 28.6,
-        "lf_power": 0.85,
-        "hf_power": 0.71,
-        "total_power": 1.56,
-        "poincare_sd1": 18.3,
-        "poincare_sd2": 42.1,
-        "sd1_sd2_ratio": 0.43
-    },
-    "risk": {
-        "normal": 0.85,
-        "suspect": 0.12,
-        "pathological": 0.03,
-        "predicted_class": "Normal"
-    },
-    "developmental_index": 0.72,
-    "interpretation": [
-        "RMSSD within normal range for 34 weeks",
-        "LF/HF indicates balanced autonomic tone",
-        "Sample entropy suggests appropriate neural complexity"
-    ],
-    "confidence_intervals": {
-        "rmssd": {"lower": 26.2, "upper": 30.8, "confidence": 0.95}
-    }
-}
-```
+| Achievement | Status |
+|-------------|--------|
+| 🥈 Pitched | Kirinyaga University Innovation Day 2026 |
+| 🚀 Innovation Hub Space | Kirinyaga University |
+| 🤝 Oracle Meeting | Scheduled |
+| 📊 1,800+ Recordings Analyzed | PhysioNet Datasets |
+| 📈 21,600+ Data Points | HRV Features Extracted |
 
 ---
 
-# PART 2: DEPLOYMENT DOCUMENTATION
+## 🏗️ Architecture
 
-## 2.1 System Requirements
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    NEURO-GENOMIC AI ARCHITECTURE                 │
+├─────────────────────────────────────────────────────────────────┤
+│  DATA LAYER → PROCESSING → MODELING → VALIDATION → ETHICS → HCI │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-| **Component** | **Minimum** | **Recommended** |
-|---------------|-------------|-----------------|
-| CPU | 2 cores | 4 cores |
-| RAM | 4 GB | 8 GB |
-| Storage | 10 GB | 20 GB |
-| OS | Linux (Ubuntu 20.04+) | Linux (Ubuntu 22.04+) |
-| Docker | 20.10+ | 24.0+ |
-| Python | 3.10+ | 3.12+ |
+| Layer | Components |
+|-------|------------|
+| **Data** | PhysioNet, ADFECGDB, NIFECGDB, LONGFECG |
+| **Processing** | Filtering, Maternal ECG Cancellation, R-peak Detection |
+| **Modeling** | VAE Encoding, K-means, Hierarchical Clustering |
+| **Validation** | Silhouette Score, Davies-Bouldin, Biological Correlation |
+| **Ethics** | Uncertainty Visualization, Confidence Intervals, Transparency |
+| **HCI** | Interactive Dashboard, Cluster Visualization, Export |
 
 ---
 
-## 2.2 Quick Start (5 Minutes)
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.10+
+- Docker & Docker Compose
+- 8GB RAM minimum
+
+> ⚠️ Compatibility note: This project uses `starlette` test utilities with `httpx==0.28.x`.
+> If you upgrade httpx, ensure `starlette`/`fastapi` versions remain aligned (520+), and update tests to use `httpx.AsyncClient` + `ASGITransport` as shown in `tests/test_api.py`.
+
+### Installation (5 minutes)
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/smartbizboost-del/Neuro-genomic-AI.git
-cd Neuro-genomic-AI
+# Clone the repository
+git clone https://github.com/neuro-genomic-ai/core.git
+cd core
 
-# 2. Copy environment file
+# Copy environment file
 cp .env.example .env
 
-# 3. Start all services
+# Start with Docker
 docker-compose up -d
 
-# 4. Verify installation
-curl http://localhost:8000/health
-
-# 5. Open dashboard
-# http://localhost:8501
+# Access the application
+# API: http://localhost:8000/docs
+# Dashboard: http://localhost:8501
 ```
 
----
-
-## 2.3 Docker Services
-
-| **Service** | **Container Name** | **Port** | **Purpose** |
-|-------------|-------------------|----------|-------------|
-| API | neuro-api | 8000 | FastAPI backend |
-| Dashboard | neuro-dashboard | 8501 | Streamlit UI |
-| PostgreSQL | neuro-postgres | 5432 | Database |
-| Redis | neuro-redis | 6379 | Cache/queues |
-| MinIO | neuro-minio | 9000, 9001 | File storage |
-| Worker | neuro-worker | — | Celery tasks |
-
----
-
-## 2.4 Environment Variables
+### Local Development
 
 ```bash
-# Database
-DATABASE_URL=postgresql://neuro_user:neuro_pass@postgres:5432/neuro_genomic
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Redis
-REDIS_URL=redis://redis:6379/0
+# Install dependencies
+pip install -r requirements/base.txt
 
-# MinIO
-MINIO_ENDPOINT=http://minio:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
+# Run API server
+uvicorn src.api.main:app --reload --port 8000
 
-# JWT
-JWT_SECRET_KEY=your-secret-key-min-32-bytes
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION_HOURS=24
-
-# Environment
-ENVIRONMENT=production
-LOG_LEVEL=info
+# Run dashboard (in another terminal)
+streamlit run src/dashboard/app.py
 ```
 
 ---
 
-# PART 3: USER GUIDE
+## 📊 Features
 
-## 3.1 Dashboard Overview
+### 1. HRV Feature Extraction
+Extract 12 clinically validated HRV features:
+- **Time Domain:** Mean RR, SDNN, RMSSD, pNN50
+- **Frequency Domain:** LF Power, HF Power, LF/HF Ratio
+- **Nonlinear:** Sample Entropy, Poincaré SD1/SD2
 
-### Accessing the Dashboard
+### 2. Developmental Index
+Composite score combining:
+- Vagal maturity (RMSSD)
+- Autonomic balance (LF/HF)
+- Neural complexity (Sample Entropy)
 
-1. Open browser to `http://localhost:8501`
-2. Upload an ECG file (CSV, EDF, or TXT format)
-3. Set gestational age (30-42 weeks)
-4. Click "Run Analysis"
+### 3. Risk Classification
+- **Normal:** Healthy development trajectory
+- **Suspect:** Monitor closely
+- **Pathological:** Immediate intervention recommended
 
-### Dashboard Sections
-
-| **Section** | **Description** |
-|-------------|-----------------|
-| **Upload Area** | Drag and drop ECG files |
-| **Gestational Age Slider** | Set weeks (30-42) |
-| **Developmental Index** | Composite score (0-1) |
-| **Risk Classification** | Normal / Suspect / Pathological |
-| **HRV Metrics** | RMSSD, SDNN, LF/HF, Entropy |
-| **Clinical Interpretation** | Plain English explanation |
-| **Uncertainty Visualization** | Confidence intervals |
-| **Export Options** | CSV, JSON, PDF |
+### 4. Uncertainty Visualization
+- Confidence intervals on every prediction
+- Signal quality indicators
+- Transparent limitations
 
 ---
 
-## 3.2 Supported File Formats
+## 🧪 API Documentation
 
-| **Format** | **Extension** | **Description** |
-|------------|---------------|-----------------|
-| CSV | .csv | Comma-separated values with ECG column |
-| EDF | .edf | European Data Format |
-| TXT | .txt | Tab-separated or space-separated |
-| PhysioNet | .hea, .dat | WFDB format |
+### Upload ECG File
+```bash
+POST /api/v1/upload
+Content-Type: multipart/form-data
 
-### Sample CSV Format
+Response:
+{
+  "file_id": "uuid",
+  "task_id": "celery-task-id",
+  "status": "processing"
+}
+```
 
-```csv
-ecg
-0.12
-0.15
--0.08
--0.22
-0.45
-...
+### Get Analysis Results
+```bash
+GET /api/v1/analysis/{file_id}
+
+Response:
+{
+  "features": {
+    "rmssd": 28.5,
+    "lf_hf_ratio": 1.2,
+    "sample_entropy": 1.15
+  },
+  "risk": {
+    "normal": 0.85,
+    "suspect": 0.12,
+    "pathological": 0.03
+  },
+  "developmental_index": 0.72
+}
+```
+
+### Full API Documentation
+Visit `/docs` after starting the server.
+
+---
+
+## 🏥 Clinical Interpretation
+
+| Feature | Biological Meaning | Clinical Significance |
+|---------|-------------------|----------------------|
+| **RMSSD** | Vagal tone | High = mature parasympathetic system |
+| **LF/HF** | Autonomic balance | Low = healthy rest state |
+| **Sample Entropy** | Neural complexity | Peak at 32 weeks = optimal development |
+
+---
+
+## 🚢 Deployment
+
+### Oracle Cloud Infrastructure (OCI)
+
+```bash
+# Deploy infrastructure
+cd infrastructure/terraform
+terraform init
+terraform apply
+
+# Deploy application
+make deploy
+```
+
+### Kubernetes
+
+```bash
+kubectl apply -f infrastructure/kubernetes/
+```
+
+### Docker Hub
+
+```bash
+docker pull neurogenomic/api:latest
+docker pull neurogenomic/worker:latest
+docker pull neurogenomic/dashboard:latest
 ```
 
 ---
 
-## 3.3 Understanding Results
-
-### Developmental Index
-
-| **Score** | **Interpretation** |
-|-----------|-------------------|
-| 0.8 - 1.0 | Advanced maturation |
-| 0.6 - 0.8 | Age-appropriate development |
-| 0.4 - 0.6 | Mild delay – monitor closely |
-| 0.0 - 0.4 | Significant delay – refer to specialist |
-
-### Risk Classification
-
-| **Class** | **Meaning** | **Recommended Action** |
-|-----------|-------------|------------------------|
-| Normal | Development on track | Routine care |
-| Suspect | Monitor closely | Repeat in 2 weeks |
-| Pathological | Intervention may be needed | Refer to MFM specialist |
-
----
-
-# PART 4: DEVELOPMENT GUIDE
-
-## 4.1 Project Structure
+## 📁 Repository Structure
 
 ```
 neuro-genomic-ai/
+├── .github/workflows/      # CI/CD pipelines
+├── infrastructure/          # Terraform + K8s
+├── docker/                  # Dockerfiles
 ├── src/
-│   ├── api/           # FastAPI backend
-│   ├── core/          # Core algorithms
-│   ├── workers/       # Celery tasks
-│   ├── dashboard/     # Streamlit UI
-│   └── utils/         # Helper functions
-├── tests/             # Unit tests (329 tests)
-├── website/           # Marketing website
-├── docker/            # Dockerfiles
-├── infrastructure/    # Terraform + K8s
-├── requirements/      # Python dependencies
-└── config/            # Configuration files
+│   ├── api/                 # FastAPI application
+│   ├── core/                # Core algorithms
+│   ├── workers/             # Celery tasks
+│   └── dashboard/           # Streamlit UI
+├── tests/                   # Unit tests
+├── scripts/                 # Utility scripts
+└── config/                  # Configuration files
 ```
 
 ---
 
-## 4.2 Running Tests
+## 🧪 Testing
 
 ```bash
 # Run all tests
-pytest tests/ -v
+make test
 
 # Run with coverage
-pytest --cov=src --cov-report=term
+pytest tests/ --cov=src --cov-report=html
 
-# Run specific test file
-pytest tests/test_features.py -v
-
-# Run with HTML report
-pytest --cov=src --cov-report=html
-# Open htmlcov/index.html
+# Lint
+make lint
 ```
 
 ---
 
-## 4.3 Adding New Features
+## 🤝 Contributing
 
-### Add New API Endpoint
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
 
-```python
-# src/api/routes/new_feature.py
-from fastapi import APIRouter
-
-router = APIRouter()
-
-@router.get("/new-endpoint")
-async def new_endpoint():
-    return {"message": "New feature"}
-```
-
-Then register in `src/api/main.py`:
-
-```python
-from src.api.routes import new_feature
-app.include_router(new_feature.router)
-```
-
-### Add New HRV Feature
-
-```python
-# src/core/features/new_feature.py
-def calculate_new_feature(rr_intervals):
-    # Your implementation
-    return value
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open a Pull Request
 
 ---
 
-# PART 5: TROUBLESHOOTING
+## 📄 License
 
-## 5.1 Common Issues & Solutions
-
-| **Issue** | **Solution** |
-|-----------|--------------|
-| Port 8000 already in use | `lsof -i :8000` then `kill -9 <PID>` |
-| Redis connection refused | `docker-compose up -d redis` |
-| Database connection failed | `docker exec neuro-postgres pg_isready -U neuro_user` |
-| MinIO endpoint error | Ensure `MINIO_ENDPOINT=http://minio:9000` |
-| Tests failing | `pip install -r requirements/base.txt` |
-| Dashboard not loading | `streamlit run src/dashboard/app.py` |
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 5.2 Logs
+## 🙏 Acknowledgments
 
-```bash
-# View all logs
-docker-compose logs -f
-
-# View specific service logs
-docker logs neuro-api -f
-docker logs neuro-worker -f
-docker logs neuro-postgres -f
-
-# View last 100 lines
-docker logs neuro-api --tail 100
-```
+- **Kirinyaga University** — Innovation Hub support
+- **PhysioNet** — Public fetal ECG datasets
+- **Oracle** — Cloud infrastructure mentorship
+- **Villgro Africa** — Wekebere for inspiration
 
 ---
 
-## 5.3 Reset Everything
+## 📞 Contact
 
-```bash
-# Stop all containers
-docker-compose down
-
-# Remove volumes (reset database)
-docker-compose down -v
-
-# Rebuild images
-docker-compose build --no-cache
-
-# Start fresh
-docker-compose up -d
-```
+**Collins Omondi** — Founder & CEO  
+📧 onyango.17163@students.kyu.ac.ke  
+🔗 [LinkedIn](https://linkedin.com/in/collins-omondi)  
+🌐 [neuro-genomic.com](https://neuro-genomic.com)
 
 ---
 
-# PART 6: API REFERENCE (Quick Card)
+## ⭐ Star History
 
-## Authentication
-
-```bash
-# Get token
-curl -X POST http://localhost:8000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"pass"}'
-
-# Use token
-curl -X GET http://localhost:8000/api/v1/auth/me \
-  -H "Authorization: Bearer <token>"
-```
-
-## Analysis
-
-```bash
-# Analyze RR intervals
-curl -X POST http://localhost:8000/api/v1/analysis \
-  -H "Content-Type: application/json" \
-  -d '{"rr_intervals": [450,455,448],"gestational_weeks":34}'
-```
-
-## Export
-
-```bash
-# Export as CSV
-curl -X GET "http://localhost:8000/api/v1/export/csv?analysis_id=abc123"
-
-# Export as PDF
-curl -X GET "http://localhost:8000/api/v1/export/pdf?analysis_id=abc123"
-```
+[![Star History Chart](https://api.star-history.com/svg?repos=neuro-genomic-ai/core&type=Date)](https://star-history.com/#neuro-genomic-ai/core&Date)
 
 ---
 
-# PART 7: CONTACT & SUPPORT
-
-| **Purpose** | **Contact** |
-|-------------|-------------|
-| Technical Support | demoivresphenomenal@gmail.com |
-| Partnership Inquiries | demoivresphenomenal@gmail.com |
-| GitHub Issues | https://github.com/smartbizboost-del/Neuro-genomic-AI/issues |
-
----
-
-**Documentation Version:** 2.0  
-**Last Updated:** April 2026  
-**Status:** ✅ Complete
-
----
-
+**Made with 🧬 by Collins Omondi and the Neuro-Genomic AI Team**

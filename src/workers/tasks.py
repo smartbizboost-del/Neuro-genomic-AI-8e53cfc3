@@ -1,4 +1,3 @@
-import numpy as np
 """
 Celery tasks for async processing
 """

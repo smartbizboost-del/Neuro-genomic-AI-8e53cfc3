@@ -3,24 +3,18 @@ Analysis endpoints
 """
 
 from fastapi import APIRouter, HTTPException
-RESULTS_DB = {}
 from typing import Optional
 import uuid
 
 from src.api.models.schemas import AnalysisResponse
 
 router = APIRouter()
-import json
-import redis
-import os
-import logging
-
-logger = logging.getLogger(__name__)
+RESULTS_DB = {}
 
 @router.get("/analysis/{file_id}", response_model=AnalysisResponse)
 async def get_analysis(file_id: str):
     """
-    Get analysis results for a processed file via Redis cache
+    Get analysis results for a processed file
     """
     # Validate UUID format
     try:
@@ -28,17 +22,8 @@ async def get_analysis(file_id: str):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid file ID format")
     
-    try:
-        r = redis.Redis.from_url(os.getenv('REDIS_URL', 'redis://redis:6379/0'))
-        result_data = r.get(f"result:{file_id}")
-        
-        if result_data:
-            data = json.loads(result_data)
-            return AnalysisResponse(**data)
-            
-    except Exception as e:
-        logger.error(f"Redis connection error when fetching {file_id}: {e}")
-        raise HTTPException(status_code=500, detail="Internal server cache error")
+    if file_id in RESULTS_DB:
+        return AnalysisResponse(**RESULTS_DB[file_id])
     
     # Mock response - fallback
     return AnalysisResponse(
@@ -52,8 +37,6 @@ async def get_analysis(file_id: str):
             "pnn50": 12.5,
             "lf_power": 245.3,
             "hf_power": 203.6,
-            "t_qrs_ratio": 0.22,
-            "hypoxia_risk": "low",
             "developmental_index": 0.72
         },
         risk={
@@ -61,6 +44,8 @@ async def get_analysis(file_id: str):
             "suspect": 0.12,
             "pathological": 0.03,
             "predicted_class": "normal",
+            "confidence_level": 0.85,
+            "confidence_label": "high",
             "anomaly_score": 0.0,
             "unsupervised_cluster": 0
         },
