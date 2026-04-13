@@ -3,132 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technology | Neuro-Genomic AI</title>
+    <title>Technology | Neuro-Genomic AI | Clinical-Grade Fetal Monitoring</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f8fafc; line-height: 1.6; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            line-height: 1.6;
+        }
         .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
-        .navbar { position: fixed; top: 0; width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 1000; padding: 1rem 0; border-bottom: 1px solid #334155; }
+        
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid #334155;
+        }
         .navbar .container { display: flex; justify-content: space-between; align-items: center; }
         .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
         .logo-icon { font-size: 1.8rem; }
         .logo-text { background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .nav-menu { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; list-style: none; gap: 2rem; }
-        .nav-menu li { display: inline-flex; }
-        .nav-menu a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
-        .nav-menu a:hover, .nav-menu a.active { color: #3b82f6; }
-        .btn-outline { padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 8px; color: #3b82f6; text-decoration: none; transition: all 0.3s; }
-        .btn-outline:hover { background: #3b82f6; color: white; }
-        .btn-primary { padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #a855f7); border-radius: 8px; color: white; text-decoration: none; font-weight: 500; transition: opacity 0.3s; }
-        .btn-primary:hover { opacity: 0.9; }
+        .nav-links { display: flex; list-style: none; gap: 2rem; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
+        .btn-outline { padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 8px; color: #3b82f6; text-decoration: none; }
+        .btn-primary { padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #a855f7); border-radius: 8px; color: white; text-decoration: none; font-weight: 500; }
+        
+        /* Page Header */
         .page-header { padding: 8rem 0 3rem; text-align: center; }
         .page-header h1 { font-size: 3rem; margin-bottom: 1rem; }
-        .page-header p { color: #94a3b8; max-width: 600px; margin: 0 auto; }
-        .pipeline { padding: 3rem 0; background: #1e293b; border-radius: 20px; margin: 2rem 0; }
-        .pipeline h2 { text-align: center; margin-bottom: 2rem; }
-        .pipeline-flow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem; }
-        .pipeline-step { background: #0f172a; padding: 0.75rem 1.25rem; border-radius: 30px; border: 1px solid #3b82f6; cursor: pointer; transition: transform 0.3s; }
-        .pipeline-step:hover { transform: translateY(-5px); background: #3b82f6; }
-        .pipeline-arrow { color: #3b82f6; font-size: 1.5rem; }
-        .how-it-works { padding: 4rem 0; }
-        .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
-        .how-card { background: #1e293b; padding: 1.5rem; border-radius: 16px; border: 1px solid #334155; cursor: pointer; transition: all 0.3s; }
-        .how-card:hover { transform: translateY(-5px); border-color: #3b82f6; }
-        .how-card.active { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
-        .how-card .step-number { font-size: 2rem; font-weight: 800; color: #3b82f6; margin-bottom: 0.5rem; }
-        .how-card h3 { margin-bottom: 0.5rem; }
-        .how-card p { color: #94a3b8; font-size: 0.9rem; display: none; }
-        .how-card.active p { display: block; }
-        .features-section { padding: 4rem 0; background: #1e293b; border-radius: 20px; margin: 2rem 0; }
-        .features-section h2 { text-align: center; margin-bottom: 2rem; }
-        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-        .flip-card { background: transparent; height: 250px; perspective: 1000px; cursor: pointer; }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
-        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
-        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; padding: 1.5rem; }
-        .flip-front { background: #0f172a; border: 1px solid #334155; }
-        .flip-back { background: linear-gradient(135deg, #3b82f6, #a855f7); transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: center; }
-        .flip-front .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-        .flip-front h3 { margin-bottom: 0.5rem; }
-        .flip-front p { color: #94a3b8; font-size: 0.85rem; }
-        .flip-back p { color: white; font-size: 0.9rem; line-height: 1.5; }
-        .validation-section { padding: 4rem 0; }
-        .validation-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 2rem; }
-        .metric-card { background: #1e293b; padding: 1.5rem; border-radius: 16px; text-align: center; }
-        .metric-value { font-size: 2.5rem; font-weight: 800; color: #3b82f6; }
-        .progress-bar { width: 100%; height: 8px; background: #334155; border-radius: 4px; margin: 1rem 0; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #a855f7); width: 0%; transition: width 1s ease; border-radius: 4px; }
-        .ethics-section { padding: 4rem 0; background: #1e293b; border-radius: 20px; margin: 2rem 0; }
-        .ethics-toggle { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
-        .toggle-btn { padding: 0.75rem 1.5rem; background: #0f172a; border: 1px solid #334155; border-radius: 30px; cursor: pointer; transition: all 0.3s; }
-        .toggle-btn.active { background: linear-gradient(135deg, #3b82f6, #a855f7); border-color: transparent; }
-        .ethics-demo { background: #0f172a; padding: 2rem; border-radius: 16px; text-align: center; }
-        .ethics-demo .without { display: block; }
-        .ethics-demo .with { display: none; }
-        .ethics-demo.show-with .without { display: none; }
-        .ethics-demo.show-with .with { display: block; }
-        .cta-section { text-align: center; padding: 4rem; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 20px; margin: 2rem 0; }
-        .cta-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; }
+        .page-header p { color: #94a3b8; max-width: 800px; margin: 0 auto; }
+        
+        /* Gates Badge */
+        .gates-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 40px;
+            padding: 0.5rem 1rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+        }
+        
+        /* Feature Cards */
+        .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin: 3rem 0; }
+        .feature-card {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            transition: transform 0.3s;
+        }
+        .feature-card:hover { transform: translateY(-5px); border-color: #3b82f6; }
+        .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .feature-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: #3b82f6; }
+        .feature-desc { color: #94a3b8; font-size: 0.9rem; }
+        
+        /* Clinical Validation Box */
+        .clinical-box {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid #3b82f6;
+        }
+        .metric-highlight { font-size: 2rem; font-weight: 700; color: #3b82f6; }
+        
+        /* Pipeline */
+        .pipeline { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; background: #1e293b; border-radius: 20px; padding: 2rem; margin: 2rem 0; }
+        .pipeline-step { background: #0f172a; padding: 0.75rem 1.25rem; border-radius: 30px; border: 1px solid #3b82f6; }
+        
+        /* Footer */
         .footer { background: #0f172a; padding: 3rem 0 2rem; border-top: 1px solid #334155; margin-top: 4rem; }
+        .footer-links { display: flex; flex-direction: column; gap: 0.5rem; }
+        .footer-links h4 { margin-bottom: 0.5rem; }
+        .footer-links a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; }
+        .footer-links a:hover { color: #3b82f6; }
         .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
         .footer-bottom { text-align: center; padding-top: 2rem; border-top: 1px solid #334155; margin-top: 2rem; color: #64748b; }
-        @media (max-width: 768px) { .nav-menu { display: none; } .how-grid, .features-grid, .validation-grid, .footer-grid { grid-template-columns: 1fr; } .pipeline-flow { flex-direction: column; } }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <div class="nav-brand">
-                <span class="logo-icon">NG</span>
+            <div class="logo">
+                <span class="logo-icon">🧬</span>
                 <span class="logo-text">Neuro-Genomic AI</span>
             </div>
-            <ul class="nav-menu">
+            <ul class="nav-links">
                 <li><a href="../index.html">Home</a></li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="team.html">Team</a></li>
                 <li><a href="services.html">Services</a></li>
                 <li><a href="technology.html" class="active">Technology</a></li>
-                <li><a href="dashboard.html">Dashboard</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
-            <div class="nav-buttons">
-                <a href="login.html" class="btn-outline">Sign In</a>
-                <a href="register.html" class="btn-primary">Register</a>
-            </div>
+            <div><a href="login.html" class="btn-outline">Sign In</a><a href="contact.html" class="btn-primary" style="margin-left:10px;">Request Demo</a></div>
         </div>
     </nav>
 
     <main>
-        <section class="page-header"><div class="container"><h1>Our Technology</h1><p>Unsupervised machine learning meets ethical AI for fetal development monitoring</p></div></section>
+        <section class="page-header">
+            <div class="container">
+                <div class="gates-badge">OUR TECHNOLOGY</div>
+                <h1>Clinical‑Grade Technology</h1>
+                <p>Cost‑disruptive AI for fetal monitoring — built for LMICs, validated by science</p>
+            </div>
+        </section>
 
-        <div class="container"><div class="pipeline"><h2>🔄 Our 6‑Layer Architecture</h2><div class="pipeline-flow"><div class="pipeline-step" onclick="alert('Data: PhysioNet, ADFECGDB, NIFECGDB, LONGFECG – 1,800+ recordings')">📊 Data</div><span class="pipeline-arrow">→</span><div class="pipeline-step" onclick="alert('Processing: Filtering, maternal ECG cancellation, R‑peak detection (CNN, 96.8% accuracy)')">⚙️ Processing</div><span class="pipeline-arrow">→</span><div class="pipeline-step" onclick="alert('Features: 12 HRV features across time, frequency, and nonlinear domains')">📈 Features</div><span class="pipeline-arrow">→</span><div class="pipeline-step" onclick="alert('Modeling: Unsupervised clustering – K‑means, hierarchical, DBSCAN')">🧠 Modeling</div><span class="pipeline-arrow">→</span><div class="pipeline-step" onclick="alert('Validation: Silhouette score (>0.6), Davies‑Bouldin (<1.0), bootstrap stability (>80%)')">✅ Validation</div><span class="pipeline-arrow">→</span><div class="pipeline-step" onclick="alert('Ethics + HCI: Uncertainty visualization, confidence intervals, interactive dashboard')">🛡️ HCI</div></div><p style="text-align:center; margin-top:1rem; color:#94a3b8;">👇 Click any layer to learn more</p></div></div>
+        <div class="container">
+            <!-- Key Differentiators -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-title">Signal Quality Assessment</div>
+                    <div class="feature-desc">37 SQI features + Random Forest classifier. Output: GOOD / ACCEPTABLE / POOR with per‑channel quality bars. Prevents garbage‑in/garbage‑out.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Uncertainty Visualization</div>
+                    <div class="feature-desc">Every prediction includes 95% confidence intervals. No black box. Clinicians see exactly how sure the AI is.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔬</div>
+                    <div class="feature-title">PRSA (AC/DC) for IUGR</div>
+                    <div class="feature-desc">Phase‑Rectified Signal Averaging – clinically validated IUGR biomarker (Stampalija 2015, AUC 0.87‑0.89).</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <div class="feature-title">Explainable AI (SHAP)</div>
+                    <div class="feature-desc">Feature importance shows why risk score was assigned. Builds clinician trust.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏥</div>
+                    <div class="feature-title">FHIR + KenyaEMR Ready</div>
+                    <div class="feature-desc">Native FHIR R4 export. Maps directly to KenyaEMR and DHIS2 for surveillance integration.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📉</div>
+                    <div class="feature-title">Cost‑Disruptive</div>
+                    <div class="feature-desc">Software‑only. Near‑zero incremental cost per test (&lt;$0.10). Uses existing ECG machines.</div>
+                </div>
+            </div>
 
-        <section class="how-it-works"><div class="container"><h2 style="text-align:center;">⚙️ How It Works</h2><div class="how-grid"><div class="how-card" onclick="toggleCard(this)"><div class="step-number">1</div><h3>Signal Processing</h3><p>Raw abdominal ECG → bandpass filter (3‑45 Hz) → maternal ECG cancellation → R‑peak detection (CNN, 96.8% accuracy) → RR intervals</p></div><div class="how-card" onclick="toggleCard(this)"><div class="step-number">2</div><h3>Feature Extraction</h3><p>RR intervals → 12 HRV features across time, frequency, and nonlinear domains → 21,600+ data points from 1,800+ recordings</p></div><div class="how-card" onclick="toggleCard(this)"><div class="step-number">3</div><h3>AI Modeling</h3><p>Unsupervised clustering (K‑means, hierarchical, DBSCAN) → discovers developmental patterns without predefined labels</p></div></div></div></section>
+            <!-- Clinical Validation Evidence -->
+            <div class="clinical-box">
+                <h2 style="text-align: center; margin-bottom: 1.5rem;">📋 Clinically Validated</h2>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; gap: 1rem;">
+                    <div><span class="metric-highlight">AUC 0.87‑0.89</span><br>IUGR Detection (PRSA)</div>
+                    <div><span class="metric-highlight">AUC 0.81</span><br>High‑Risk Pregnancy (RMSSD)</div>
+                    <div><span class="metric-highlight">>98%</span><br>Maternal Cancellation F1</div>
+                    <div><span class="metric-highlight">96.8%</span><br>R‑Peak Detection Accuracy</div>
+                </div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <small>Sources: Stampalija 2015, FANTE study (University of Pisa), PhysioNet benchmarks</small>
+                </div>
+            </div>
 
-        <section class="features-section"><div class="container"><h2>📊 12 HRV Features We Extract</h2><div class="features-grid"><div class="flip-card"><div class="flip-card-inner"><div class="flip-front"><div class="feature-icon">⏱️</div><h3>Time Domain</h3><p>Mean RR, SDNN, RMSSD, pNN50</p></div><div class="flip-back"><p><strong>RMSSD</strong> = Vagal tone – increases with gestational age<br><strong>SDNN</strong> = Total autonomic variability</p></div></div></div><div class="flip-card"><div class="flip-card-inner"><div class="flip-front"><div class="feature-icon">📡</div><h3>Frequency Domain</h3><p>LF Power, HF Power, LF/HF Ratio, Total Power</p></div><div class="flip-back"><p><strong>LF/HF ratio</strong> decreases with gestational age → shift toward parasympathetic dominance</p></div></div></div><div class="flip-card"><div class="flip-card-inner"><div class="flip-front"><div class="feature-icon">🌀</div><h3>Nonlinear</h3><p>Sample Entropy, Poincaré SD1, Poincaré SD2, SD1/SD2 Ratio</p></div><div class="flip-back"><p><strong>Sample Entropy</strong> peaks at 32 weeks – reflects neural complexity</p></div></div></div></div><p style="text-align:center; margin-top:1rem; color:#94a3b8;">🖱️ Hover any card to see clinical meaning</p></div></section>
+            <!-- Architecture Pipeline -->
+            <h2 style="text-align: center; margin: 2rem 0 1rem;">🔄 End‑to‑End Pipeline</h2>
+            <div class="pipeline">
+                <span class="pipeline-step">📊 Raw ECG</span> → <span class="pipeline-step">⚙️ Preprocessing</span> → <span class="pipeline-step">🛡️ SQA</span> → <span class="pipeline-step">🔧 Maternal Cancel</span> → <span class="pipeline-step">🎯 R‑Peak</span> → <span class="pipeline-step">📈 Features</span> → <span class="pipeline-step">🧠 AI</span> → <span class="pipeline-step">✅ Risk Scores + CI</span>
+            </div>
 
-        <section class="validation-section"><div class="container"><h2 style="text-align:center;">📈 Validation Metrics</h2><div class="validation-grid"><div class="metric-card"><div class="metric-value">>0.6</div><div>Silhouette Score</div><div class="progress-bar"><div class="progress-fill" style="width:85%"></div></div><small>Well‑separated clusters</small></div><div class="metric-card"><div class="metric-value">&lt;1.0</div><div>Davies‑Bouldin Index</div><div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div><small>Minimal cluster overlap</small></div><div class="metric-card"><div class="metric-value">>80%</div><div>Bootstrap Stability</div><div class="progress-bar"><div class="progress-fill" style="width:88%"></div></div><small>Reproducible clusters</small></div><div class="metric-card"><div class="metric-value">p&lt;0.05</div><div>GA Correlation</div><div class="progress-bar"><div class="progress-fill" style="width:95%"></div></div><small>Biologically validated</small></div></div></div></section>
+            <!-- How It Works -->
+            <h2 style="text-align: center; margin: 3rem 0 1rem;">⚙️ How It Works</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="feature-card"><div class="feature-title">1. 5‑10 min ECG</div><div class="feature-desc">4 abdominal electrodes. Uses existing ECG machines – no new hardware.</div></div>
+                <div class="feature-card"><div class="feature-title">2. AI Analysis</div><div class="feature-desc">Signal quality → HRV extraction → PRSA → SHAP explainability → risk scores with CI.</div></div>
+                <div class="feature-card"><div class="feature-title">3. Clinical Output</div><div class="feature-desc">Developmental Index (0‑1), IUGR/Preterm/Hypoxia risks, actionable recommendations, FHIR export.</div></div>
+            </div>
 
-        <section class="ethics-section"><div class="container"><h2 style="text-align:center;">🛡️ Ethical AI by Design</h2><div class="ethics-toggle"><div class="toggle-btn active" onclick="showEthics('without')">Typical AI</div><div class="toggle-btn" onclick="showEthics('with')">Neuro‑Genomic AI</div></div><div class="ethics-demo" id="ethicsDemo"><div class="without"><p style="color:#ef4444;">⚠️ "Fetus at risk — 87% confidence"</p><p style="color:#94a3b8;">No explanation. No uncertainty. No transparency.</p></div><div class="with"><p style="color:#10b981;">✅ "RMSSD = 28ms (↓15% from expected). LF/HF = 1.3 (↑0.2).</p><p style="color:#10b981;">Confidence: 92% (±3%). Signal quality: Good.</p><p style="color:#94a3b8;">⚠️ Research insights only — not for clinical diagnosis.</p></div></div></div></section>
+            <!-- Dashboard Preview -->
+            <h2 style="text-align: center; margin: 2rem 0 1rem;">🖥️ Clinical Dashboard</h2>
+            <div style="background: #1e293b; border-radius: 20px; padding: 1.5rem; text-align: center; border: 1px solid #334155;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div style="background: #0f172a; padding: 1rem; border-radius: 12px;">Developmental Index<br><span style="font-size: 2rem; font-weight: 700;">0.78</span><br>95% CI: 0.75‑0.81</div>
+                    <div style="background: #0f172a; padding: 1rem; border-radius: 12px;">Signal Quality<br><span style="font-size: 2rem; font-weight: 700; color: #10b981;">92%</span><br>GOOD</div>
+                    <div style="background: #0f172a; padding: 1rem; border-radius: 12px;">Confidence<br><span style="font-size: 2rem; font-weight: 700;">95%</span><br>±3%</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div class="risk-low" style="background: #10b981; padding: 0.5rem; border-radius: 8px;">IUGR: Low (12%)</div>
+                    <div class="risk-moderate" style="background: #f59e0b; padding: 0.5rem; border-radius: 8px;">Preterm: Moderate (34%)</div>
+                    <div class="risk-low" style="background: #10b981; padding: 0.5rem; border-radius: 8px;">Hypoxia: Low (8%)*</div>
+                </div>
+                <div style="margin-top: 1rem; padding: 1rem; background: #0f172a; border-radius: 12px; text-align: left;">
+                    <strong>📋 Recommendation:</strong> Continue routine monitoring. Repeat in 2 weeks.
+                </div>
+                <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
+                    <span class="btn-outline" style="cursor: default;">📄 Export PDF</span>
+                    <span class="btn-outline" style="cursor: default;">🏥 FHIR</span>
+                    <span class="btn-outline" style="cursor: default;">🔄 KenyaEMR Sync</span>
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.7rem; color: #94a3b8;">*Hypoxia detection is experimental – research use only</p>
+            </div>
 
-        <div class="container"><div class="cta-section"><h2>Ready to see the technology in action?</h2><p>Request a live demo or explore our open‑source code.</p><div class="cta-buttons"><a href="contact.html" class="btn-primary">Request Demo →</a></div></div></div>
+            <!-- WHO Alignment -->
+            <div class="clinical-box" style="margin-top: 2rem;">
+                <h2 style="text-align: center; margin-bottom: 1rem;">🌍 WHO Digital Health Alignment</h2>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div>✔ Evidence‑based (aligned with WHO MCH guidelines)</div>
+                    <div>✔ Interoperable (FHIR & IEC 80601‑2‑47 standard ECG)</div>
+                    <div>✔ Scalable for universal health coverage</div>
+                    <div>✔ Patient safety & data security first</div>
+                    <div>✔ Equity of access—works offline in resource‑limited settings</div>
+                    <div>✔ Integrates with national health information systems</div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <footer class="footer"><div class="container"><div class="footer-grid"><div><div class="logo" style="margin-bottom:1rem;"><span class="logo-icon">🧬</span><span class="logo-text">Neuro-Genomic AI</span></div><p style="color:#94a3b8">Understanding development by listening to the earliest signals of life.</p></div><div class="footer-links"><h4>Company</h4><a href="about.html">About</a><a href="team.html">Team</a><a href="services.html">Services</a></div><div class="footer-links"><h4>Resources</h4><a href="technology.html">Technology</a><a href="#">Documentation</a><a href="#">API Reference</a></div><div class="footer-links"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Ethics Statement</a></div></div><div class="footer-bottom"><p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved. | Kirinyaga University Innovation Hub, Kerugoya, Kenya</p></div></div></footer>
-
-    <script>
-        function toggleCard(card) { card.classList.toggle('active'); }
-        function showEthics(mode) {
-            const demo = document.getElementById('ethicsDemo');
-            const btns = document.querySelectorAll('.toggle-btn');
-            btns.forEach(btn => btn.classList.remove('active'));
-            if (mode === 'without') { demo.classList.remove('show-with'); btns[0].classList.add('active'); }
-            else { demo.classList.add('show-with'); btns[1].classList.add('active'); }
-        }
-        const progressBars = document.querySelectorAll('.progress-fill');
-        const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { const bar = entry.target; const width = bar.style.width; bar.style.width = width; } }); });
-        progressBars.forEach(bar => observer.observe(bar));
-    </script>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div><div class="logo"><span class="logo-icon">🧬</span><span class="logo-text">Neuro-Genomic AI</span></div><p style="color:#94a3b8; margin-top:0.5rem;">Understanding development by listening to the earliest signals of life.</p></div>
+                <div class="footer-links"><h4>Company</h4><a href="about.html">About</a><a href="team.html">Team</a><a href="services.html">Services</a><a href="contact.html">Contact</a></div>
+                <div class="footer-links"><h4>Resources</h4><a href="technology.html">Technology</a><a href="#">Documentation</a><a href="#">API Reference</a></div>
+                <div class="footer-links"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="#">Ethics Statement</a></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2026 Neuro-Genomic AI Ltd. | Kirinyaga University Innovation Hub, Kerugoya, Kenya | Gates Grand Challenge Applicant</p></div>
+        </div>
+    </footer>
 </body>
 </html>

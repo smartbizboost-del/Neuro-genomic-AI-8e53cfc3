@@ -20,6 +20,10 @@
                 <option>Patient: Jane Doe</option>
                 <option>Patient: John Smith</option>
             </select>
+            <input type="text" id="api-file-id" class="api-file-input" placeholder="Backend File ID" />
+            <button class="btn-header" id="load-data-btn">
+                <span>⟳</span> Load Clinical Data
+            </button>
             <button class="btn-header">
                 <span>↑</span> Export
             </button>
@@ -31,8 +35,26 @@
 
     <!-- Status Bar -->
     <div class="status-bar">
-        <div class="status-indicator">
+        <div class="status-indicator" id="status-indicator">
             Patient | 32 weeks | Clinical State: <span class="dot"></span> Normal
+        </div>
+    </div>
+
+    <div class="summary-row" id="summary-row">
+        <div class="summary-card">
+            <div class="summary-title">Developmental Index</div>
+            <div class="summary-value" id="summary-developmental-index">0.74</div>
+            <div class="summary-note" id="summary-developmental-range">95% CI: 0.72 - 0.78</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">Signal Quality</div>
+            <div class="summary-value" id="summary-signal-quality">92%</div>
+            <div class="summary-note" id="summary-signal-status">Good</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">Confidence</div>
+            <div class="summary-value" id="summary-confidence">92%</div>
+            <div class="summary-note" id="summary-confidence-range">± 3%</div>
         </div>
     </div>
 
@@ -45,10 +67,10 @@
                 <div class="panel-title">CLINICAL CONTEXT LAYER</div>
                 <div class="section-header">Patient Overview</div>
                 <div class="data-grid">
-                    <div class="label">Name:</div><div class="value">Jane Doe</div>
-                    <div class="label">Age:</div><div class="value">39</div>
-                    <div class="label">ID:</div><div class="value">PT-032</div>
-                    <div class="label">Gravidity:</div><div class="value">G1P0</div>
+                    <div class="label">Name:</div><div class="value" id="patient-name">Jane Doe</div>
+                    <div class="label">Age:</div><div class="value" id="patient-age">39</div>
+                    <div class="label">ID:</div><div class="value" id="patient-id">PT-032</div>
+                    <div class="label">Gravidity:</div><div class="value" id="patient-gravidity">G1P0</div>
                 </div>
 
                 <div class="risk-factor-card">
@@ -62,10 +84,10 @@
             <div class="panel">
                 <div class="section-header">Metadata</div>
                 <div class="data-grid">
-                    <div class="label">Gestational week:</div><div class="value">32</div>
-                    <div class="label">Data source:</div><div class="value">PhysioNet CTU-UHB</div>
-                    <div class="label">Recording duration:</div><div class="value">1 hour</div>
-                    <div class="label">Signal quality:</div><div class="value"><span class="dot"></span> Good</div>
+                    <div class="label">Gestational week:</div><div class="value" id="patient-weeks">32</div>
+                    <div class="label">Data source:</div><div class="value" id="data-source">PhysioNet CTU-UHB</div>
+                    <div class="label">Recording duration:</div><div class="value" id="recording-duration">1 hour</div>
+                    <div class="label">Signal quality:</div><div class="value"><span class="dot" id="signal-dot"></span> <span id="signal-quality-text">Good</span></div>
                 </div>
             </div>
 
@@ -102,25 +124,52 @@
                 <div class="section-header">HRV Metrics (Feature Layer)</div>
                 <p class="metric-desc">Biological proxy, time-domain, Frequency-domain</p>
                 <div class="metrics-grid">
-                    <div class="metric-card normal">
-                        <div class="metric-id">RMSSD (35 ms)</div>
-                        <div class="metric-desc">Parasympathetic activity [Normal]</div>
+                    <div class="metric-card normal" id="metric-rmssd">
+                        <div class="metric-id">RMSSD</div>
+                        <div class="metric-value" id="metric-rmssd-value">35 ms</div>
+                        <div class="metric-desc" id="metric-rmssd-desc">Parasympathetic activity [Normal]</div>
                     </div>
-                    <div class="metric-card normal">
-                        <div class="metric-id">SDNN (110 ms)</div>
-                        <div class="metric-desc">Overall variability [Normal]</div>
+                    <div class="metric-card normal" id="metric-sdnn">
+                        <div class="metric-id">SDNN</div>
+                        <div class="metric-value" id="metric-sdnn-value">110 ms</div>
+                        <div class="metric-desc" id="metric-sdnn-desc">Overall variability [Normal]</div>
                     </div>
-                    <div class="metric-card moderate">
-                        <div class="metric-id">LF/HF Ratio (1.7)</div>
-                        <div class="metric-desc">Sympathetic vs parasympathetic balance [Moderate]</div>
+                    <div class="metric-card moderate" id="metric-lfhf">
+                        <div class="metric-id">LF/HF Ratio</div>
+                        <div class="metric-value" id="metric-lfhf-value">1.7</div>
+                        <div class="metric-desc" id="metric-lfhf-desc">Sympathetic vs parasympathetic balance [Moderate]</div>
                     </div>
-                    <div class="metric-card normal">
-                        <div class="metric-id">Sample Entropy (0.91)</div>
-                        <div class="metric-desc">Signal complexity [Within range]</div>
+                    <div class="metric-card normal" id="metric-sample-entropy">
+                        <div class="metric-id">Sample Entropy</div>
+                        <div class="metric-value" id="metric-sample-entropy-value">0.91</div>
+                        <div class="metric-desc" id="metric-sample-entropy-desc">Signal complexity [Within range]</div>
                     </div>
                 </div>
             </div>
 
+            <div class="panel" id="risk-assessment-panel">
+                <div class="section-header">Risk Assessment</div>
+                <div class="risk-grid">
+                    <div class="risk-card" id="iugr-card">
+                        <div class="risk-title">IUGR Risk</div>
+                        <div class="risk-value" id="iugr-value">12%</div>
+                        <div class="risk-label" id="iugr-level">Low</div>
+                        <div class="risk-detail" id="iugr-ci">95% CI: 8-16%</div>
+                    </div>
+                    <div class="risk-card" id="preterm-card">
+                        <div class="risk-title">Preterm Risk</div>
+                        <div class="risk-value" id="preterm-value">34%</div>
+                        <div class="risk-label" id="preterm-level">Moderate</div>
+                        <div class="risk-detail" id="preterm-ci">95% CI: 28-40%</div>
+                    </div>
+                    <div class="risk-card" id="hypoxia-card">
+                        <div class="risk-title">Hypoxia Risk</div>
+                        <div class="risk-value" id="hypoxia-value">8%</div>
+                        <div class="risk-label" id="hypoxia-level">Low</div>
+                        <div class="risk-detail" id="hypoxia-ci">95% CI: 5-11%</div>
+                    </div>
+                </div>
+            </div>
             <div class="panel">
                 <div class="section-header">HRV Trend Graph</div>
                 <p class="metric-desc">Modeling, trend, developmental trajectory</p>
@@ -154,6 +203,18 @@
                 </div>
             </div>
 
+            <div class="panel">
+                <div class="section-header">Explainability & Recommendations</div>
+                <ul class="ai-bullet-list" id="interpretation-list">
+                    <li>Autonomic maturation consistent with 32 weeks</li>
+                    <li>HRV within expected range</li>
+                    <li>Balanced sympathetic/parasympathetic activity</li>
+                </ul>
+                <div class="recommendation-card" id="recommendation-card">
+                    <strong>Recommendation</strong>
+                    <p>Continue routine monitoring. Repeat in 2 weeks.</p>
+                </div>
+            </div>
             <div class="panel">
                 <div class="section-header">CLUSTER ANALYSIS <span style="font-size: 0.7rem; font-weight: normal;">(UNSUPERVISED LEARNING VISUALIZATION)</span></div>
                 <div class="pca-container">

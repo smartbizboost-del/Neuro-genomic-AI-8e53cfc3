@@ -10,6 +10,7 @@ import boto3
 import os
 import pandas as pd
 import wfdb
+import numpy as np
 from typing import Dict, Any
 
 from src.workers.celery_app import celery_app
@@ -95,8 +96,6 @@ def extract_raw_signals(file_path: str) -> np.ndarray:
     """
     Extract raw multi-channel ECG signals into an array
     """
-    import numpy as np
-    import pandas as pd
     try:
         # Attempt standard CSV parsing for uploads
         df = pd.read_csv(file_path)

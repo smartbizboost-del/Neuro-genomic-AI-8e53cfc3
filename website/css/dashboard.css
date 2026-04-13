@@ -60,6 +60,16 @@ body {
     min-width: 200px;
 }
 
+.api-file-input {
+    background: white;
+    color: var(--text-main);
+    border: 1px solid #cbd5e1;
+    padding: 0.45rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    min-width: 200px;
+}
+
 .btn-header {
     background: rgba(255,255,255,0.1);
     color: white;
@@ -101,6 +111,154 @@ body {
     border-radius: 50%;
     background-color: var(--status-success);
     display: inline-block;
+}
+
+.summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    margin: 0 1.5rem;
+    border-radius: 16px;
+}
+
+.summary-card {
+    background: white;
+    border-left: 5px solid #3b82f6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.summary-card:nth-child(2) {
+    border-left-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+}
+
+.summary-card:nth-child(3) {
+    border-left-color: #f59e0b;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);
+}
+
+.summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+}
+
+.summary-card:nth-child(2):hover {
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
+}
+
+.summary-card:nth-child(3):hover {
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
+}
+
+.summary-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    margin-bottom: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.summary-value {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.6rem;
+    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.summary-note {
+    color: #78909c;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.risk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.risk-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.risk-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.risk-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.risk-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.risk-detail {
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.recommendation-card {
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.recommendation-card strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+
+.recommendation-card p {
+    margin: 0;
+    color: #334155;
+}
+
+.metric-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.metric-desc {
+    color: #475569;
+    margin-bottom: 0;
 }
 
 /* Main Layout */
