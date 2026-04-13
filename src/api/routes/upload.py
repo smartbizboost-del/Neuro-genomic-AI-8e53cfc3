@@ -15,7 +15,6 @@ from src.workers.tasks import process_ecg_file
 router = APIRouter()
 
 from src.workers.tasks import extract_raw_signals
-from src.api.routes.analysis import RESULTS_DB
 from fastapi import BackgroundTasks
 import tempfile
 from src.core.pipeline import NeuroGenomicPipeline

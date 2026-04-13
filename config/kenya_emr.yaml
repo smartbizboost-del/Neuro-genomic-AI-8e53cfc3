@@ -1,0 +1,10 @@
+kenya_emr:
+  base_url: "https://emr.kenya.go.ke/fhir"
+  facility_code: "KNH-001"
+  facility_name: "Kenyatta National Hospital"
+  default_department: "Maternal Health"
+
+dhis2:
+  base_url: "https://dhis2.kenya.go.ke/api"
+  dataset_id: "fetal_monitoring_data"
+  period_type: "daily"
