@@ -1,30 +1,211 @@
-// Neuro-Genomic AI Dashboard Charts
+// Neuro-Genomic AI Dashboard Charts and Clinical Data
 
-document.addEventListener('DOMContentLoaded', function() {
-    initRawECG();
-    initCleanedECG();
-    initHRVTrend();
-    initRiskGauge();
-    initPCACluster();
-
-    // Logout functionality
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            localStorage.removeItem('access_token');
-            window.location.href = '../../index.html';
-        });
+const sampleClinicalData = [
+    {
+        patient_id: 'Jane Doe',
+        gestational_weeks: 32,
+        maternal_age: 39,
+        developmental_index: 0.74,
+        confidence_interval: [0.72, 0.78],
+        signal_quality: 92,
+        signal_quality_text: 'GOOD',
+        risk_scores: {
+            IUGR: { value: 12, level: 'Low', ci: [8, 16] },
+            Preterm: { value: 34, level: 'Moderate', ci: [28, 40] },
+            Hypoxia: { value: 8, level: 'Low', ci: [5, 11] }
+        },
+        hrv_metrics: {
+            RMSSD: 35.0,
+            SDNN: 110.0,
+            'LF/HF': 1.7,
+            Sample_Entropy: 0.91,
+            AC_T9: 32.4,
+            DC_T9: 29.8
+        },
+        prsa: { AC_T9: 32.4, DC_T9: 29.8 },
+        feature_importance: [
+            { feature: 'RMSSD', importance: -0.32, direction: 'decreases risk' },
+            { feature: 'LF/HF', importance: 0.28, direction: 'increases risk' },
+            { feature: 'Sample Entropy', importance: -0.15, direction: 'decreases risk' }
+        ],
+        recommendation: 'Continue routine monitoring. Repeat in 2 weeks.',
+        interpretation: [
+            'Autonomic maturation consistent with gestational age',
+            'HRV appears within expected physiological range',
+            'Sympathetic and parasympathetic balance is acceptable'
+        ],
+        cluster_id: 0
+    },
+    {
+        patient_id: 'John Smith',
+        gestational_weeks: 30,
+        maternal_age: 34,
+        developmental_index: 0.66,
+        confidence_interval: [0.63, 0.69],
+        signal_quality: 78,
+        signal_quality_text: 'FAIR',
+        risk_scores: {
+            IUGR: { value: 24, level: 'Moderate', ci: [18, 30] },
+            Preterm: { value: 42, level: 'Moderate', ci: [34, 50] },
+            Hypoxia: { value: 18, level: 'Moderate', ci: [12, 24] }
+        },
+        hrv_metrics: {
+            RMSSD: 22.5,
+            SDNN: 85.0,
+            'LF/HF': 2.1,
+            Sample_Entropy: 0.82,
+            AC_T9: 24.0,
+            DC_T9: 21.4
+        },
+        prsa: { AC_T9: 24.0, DC_T9: 21.4 },
+        feature_importance: [
+            { feature: 'LF/HF', importance: 0.35, direction: 'increases risk' },
+            { feature: 'AC_T9', importance: -0.22, direction: 'decreases risk' },
+            { feature: 'Sample Entropy', importance: -0.12, direction: 'decreases risk' }
+        ],
+        recommendation: 'Signal quality is fair. Consider repeat assessment after improving recording conditions.',
+        interpretation: [
+            'Elevated sympathetic balance compared to expected range',
+            'Reduced complexity suggests developmental stress',
+            'Clinical follow-up recommended with Doppler evaluation'
+        ],
+        cluster_id: 1
     }
-});
+];
 
-// Helper to generate noisy ECG-like data
+let currentPatientIndex = 0;
+let currentPatientData = null;
+let rawEcgChart = null;
+let cleanedEcgChart = null;
+let hrvTrendChart = null;
+let pcaClusterChart = null;
+
+const clinicalApiUrl = 'http://localhost:8000/api/v1';
+
+async function fetchAnalysisFromBackend(fileId) {
+    try {
+        const response = await fetch(`${clinicalApiUrl}/analysis/${fileId}`);
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`Backend error: ${response.status} ${error}`);
+        }
+        const payload = await response.json();
+        return adaptApiResponse(payload, fileId);
+    } catch (error) {
+        console.error('API fetch failed', error);
+        alert('Unable to load backend analysis. Using sample demo data.');
+        return null;
+    }
+}
+
+function adaptApiResponse(payload, fileId) {
+    const features = payload.features || {};
+    const risk = payload.risk || {};
+    const baseValue = payload.developmental_index ?? (features.developmental_index ?? 0.0);
+    const confidenceInterval = payload.confidence_intervals?.developmental_index ?? [baseValue - 0.03, baseValue + 0.03];
+
+    return {
+        patient_id: payload.patient_id || `Backend ${fileId}`,
+        gestational_weeks: payload.gestational_weeks ?? 32,
+        maternal_age: payload.maternal_age ?? 34,
+        developmental_index: baseValue,
+        confidence_interval: confidenceInterval,
+        signal_quality: payload.signal_quality ?? Math.round((features.developmental_index ?? 0.7) * 100),
+        signal_quality_text: payload.signal_quality_text || 'LIVE',
+        risk_scores: {
+            IUGR: { value: Math.round((risk.suspect ?? 0) * 100), level: risk.predicted_class === 'suspect' ? 'Moderate' : 'Low', ci: [0, 0] },
+            Preterm: { value: Math.round((risk.normal ?? 0) * 100), level: risk.predicted_class === 'normal' ? 'Low' : 'Moderate', ci: [0, 0] },
+            Hypoxia: { value: Math.round((risk.pathological ?? 0) * 100), level: risk.predicted_class === 'pathological' ? 'High' : 'Low', ci: [0, 0] }
+        },
+        hrv_metrics: {
+            RMSSD: features.rmssd ?? 0,
+            SDNN: features.sdnn ?? 0,
+            'LF/HF': features.lf_hf_ratio ?? 0,
+            Sample_Entropy: features.sample_entropy ?? 0,
+            AC_T9: features.rmssd ?? 0,
+            DC_T9: features.sdnn ?? 0
+        },
+        prsa: { AC_T9: features.rmssd ?? 0, DC_T9: features.sdnn ?? 0 },
+        feature_importance: [
+            { feature: 'RMSSD', importance: features.rmssd ? -0.2 : 0, direction: 'decreases risk' },
+            { feature: 'LF/HF', importance: features.lf_hf_ratio ? 0.2 : 0, direction: 'increases risk' },
+            { feature: 'Sample Entropy', importance: features.sample_entropy ? -0.1 : 0, direction: 'decreases risk' }
+        ],
+        recommendation: payload.interpretation?.[0] || 'Live backend data loaded.',
+        interpretation: payload.interpretation || [],
+        cluster_id: risk.unsupervised_cluster ?? 0
+    };
+}
+
+function getCurrentData() {
+    return currentPatientData || sampleClinicalData[currentPatientIndex];
+}
+
+function setStatusDot(level) {
+    const dot = document.getElementById('signal-dot');
+    const statusIndicator = document.getElementById('status-indicator');
+    if (dot) {
+        dot.style.backgroundColor = level === 'GOOD' ? 'var(--status-success)' : level === 'FAIR' ? 'var(--status-warning)' : 'var(--status-error)';
+    }
+    if (statusIndicator) {
+        const state = getCurrentData().risk_scores.Preterm.level;
+        statusIndicator.innerHTML = `Patient | ${getCurrentData().gestational_weeks} weeks | Clinical State: <span class="dot"></span> ${state}`;
+    }
+}
+
+function updateDashboardFields() {
+    const data = getCurrentData();
+    document.getElementById('patient-name').textContent = data.patient_id;
+    document.getElementById('patient-age').textContent = data.maternal_age;
+    document.getElementById('patient-id').textContent = data.patient_id.replace(' ', '_');
+    document.getElementById('patient-gravidity').textContent = `G1P0`;
+    document.getElementById('patient-weeks').textContent = data.gestational_weeks;
+    document.getElementById('data-source').textContent = 'PhysioNet CTU-UHB';
+    document.getElementById('recording-duration').textContent = '1 hour';
+    document.getElementById('signal-quality-text').textContent = data.signal_quality_text;
+
+    document.getElementById('summary-developmental-index').textContent = data.developmental_index.toFixed(2);
+    document.getElementById('summary-developmental-range').textContent = `95% CI: ${data.confidence_interval[0].toFixed(2)} - ${data.confidence_interval[1].toFixed(2)}`;
+    document.getElementById('summary-signal-quality').textContent = `${data.signal_quality}%`;
+    document.getElementById('summary-signal-status').textContent = data.signal_quality_text;
+    document.getElementById('summary-confidence').textContent = `${Math.round((data.confidence_interval[1] - data.confidence_interval[0]) / 2 * 100)}%`;
+    document.getElementById('summary-confidence-range').textContent = `± ${Math.round((data.confidence_interval[1] - data.confidence_interval[0]) * 100 / 2)}%`;
+
+    document.getElementById('metric-rmssd-value').textContent = `${data.hrv_metrics.RMSSD.toFixed(1)} ms`;
+    document.getElementById('metric-sdnn-value').textContent = `${data.hrv_metrics.SDNN.toFixed(1)} ms`;
+    document.getElementById('metric-lfhf-value').textContent = `${data.hrv_metrics['LF/HF'].toFixed(2)}`;
+    document.getElementById('metric-sample-entropy-value').textContent = `${data.hrv_metrics.Sample_Entropy.toFixed(2)}`;
+
+    document.getElementById('metric-rmssd-desc').textContent = data.hrv_metrics.RMSSD >= 25 ? 'Parasympathetic activity [Normal]' : 'Parasympathetic activity [Low]';
+    document.getElementById('metric-sdnn-desc').textContent = data.hrv_metrics.SDNN >= 80 ? 'Overall variability [Normal]' : 'Overall variability [Low]';
+    document.getElementById('metric-lfhf-desc').textContent = data.hrv_metrics['LF/HF'] <= 2.0 ? 'Sympathetic vs parasympathetic balance [Acceptable]' : 'Sympathetic dominance [Elevated]';
+    document.getElementById('metric-sample-entropy-desc').textContent = data.hrv_metrics.Sample_Entropy >= 0.85 ? 'Signal complexity [Within range]' : 'Signal complexity [Reduced]';
+
+    document.getElementById('iugr-value').textContent = `${data.risk_scores.IUGR.value}%`;
+    document.getElementById('iugr-level').textContent = data.risk_scores.IUGR.level;
+    document.getElementById('iugr-ci').textContent = `95% CI: ${data.risk_scores.IUGR.ci[0]} - ${data.risk_scores.IUGR.ci[1]}%`;
+
+    document.getElementById('preterm-value').textContent = `${data.risk_scores.Preterm.value}%`;
+    document.getElementById('preterm-level').textContent = data.risk_scores.Preterm.level;
+    document.getElementById('preterm-ci').textContent = `95% CI: ${data.risk_scores.Preterm.ci[0]} - ${data.risk_scores.Preterm.ci[1]}%`;
+
+    document.getElementById('hypoxia-value').textContent = `${data.risk_scores.Hypoxia.value}%`;
+    document.getElementById('hypoxia-level').textContent = data.risk_scores.Hypoxia.level;
+    document.getElementById('hypoxia-ci').textContent = `95% CI: ${data.risk_scores.Hypoxia.ci[0]} - ${data.risk_scores.Hypoxia.ci[1]}%`;
+
+    const interpretationList = document.getElementById('interpretation-list');
+    interpretationList.innerHTML = data.interpretation.map(item => `<li>${item}</li>`).join('');
+    document.getElementById('recommendation-card').innerHTML = `<strong>Recommendation</strong><p>${data.recommendation}</p>`;
+
+    setStatusDot(data.signal_quality_text);
+}
+
 function generateECGData(points, noiseLevel, isCleaned = false) {
     const data = [];
     for (let i = 0; i < points; i++) {
         let val = Math.sin(i * 0.2) * 0.5;
-        // Add periodic peaks
         if (i % 20 === 0) {
-            val += 2.0;
+            val += 1.8;
         }
         if (!isCleaned) {
             val += (Math.random() - 0.5) * noiseLevel;
@@ -35,18 +216,20 @@ function generateECGData(points, noiseLevel, isCleaned = false) {
 }
 
 function initRawECG() {
-    const ctx = document.getElementById('raw-ecg-chart').getContext('2d');
-    new Chart(ctx, {
+    const canvas = document.getElementById('raw-ecg-chart');
+    const ctx = canvas.getContext('2d');
+    if (rawEcgChart) rawEcgChart.destroy();
+    rawEcgChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: Array.from({length: 100}, (_, i) => i),
+            labels: Array.from({ length: 100 }, (_, i) => i),
             datasets: [{
-                data: generateECGData(100, 0.4),
+                data: generateECGData(100, 0.35),
                 borderColor: '#2c5282',
-                borderWidth: 1,
+                borderWidth: 1.5,
                 pointRadius: 0,
                 fill: false,
-                tension: 0.4
+                tension: 0.35
             }]
         },
         options: {
@@ -62,18 +245,20 @@ function initRawECG() {
 }
 
 function initCleanedECG() {
-    const ctx = document.getElementById('cleaned-ecg-chart').getContext('2d');
-    const data = generateECGData(100, 0, true);
-    new Chart(ctx, {
+    const canvas = document.getElementById('cleaned-ecg-chart');
+    const ctx = canvas.getContext('2d');
+    if (cleanedEcgChart) cleanedEcgChart.destroy();
+    const data = generateECGData(100, 0.04, true);
+    cleanedEcgChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: Array.from({length: 100}, (_, i) => i),
+            labels: Array.from({ length: 100 }, (_, i) => i),
             datasets: [{
                 data: data,
                 borderColor: '#2c5282',
-                borderWidth: 1.5,
-                pointRadius: data.map((v, i) => i % 20 === 0 ? 3 : 0),
-                pointBackgroundColor: 'red',
+                borderWidth: 1.8,
+                pointRadius: data.map((_, i) => (i % 20 === 0 ? 3 : 0)),
+                pointBackgroundColor: '#ef4444',
                 fill: false,
                 tension: 0.2
             }]
@@ -91,11 +276,15 @@ function initCleanedECG() {
 }
 
 function initHRVTrend() {
-    const ctx = document.getElementById('hrv-trend-chart').getContext('2d');
-    const weeks = [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
-    const hrvIndices = [21, 22, 25, 24, 28, 32, 28, 30, 35, 38, 40, 42, 48, 52, 55, 62];
+    const data = getCurrentData();
+    const canvas = document.getElementById('hrv-trend-chart');
+    const ctx = canvas.getContext('2d');
+    if (hrvTrendChart) hrvTrendChart.destroy();
 
-    new Chart(ctx, {
+    const weeks = Array.from({ length: 12 }, (_, i) => data.gestational_weeks - 11 + i).map(w => Math.max(20, w));
+    const hrvIndices = weeks.map((week, idx) => data.hrv_metrics.RMSSD + (idx - 6) * 0.9 + (Math.random() - 0.5) * 2);
+
+    hrvTrendChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: weeks,
@@ -103,10 +292,10 @@ function initHRVTrend() {
                 label: 'HRV Index',
                 data: hrvIndices,
                 borderColor: '#2c5282',
-                backgroundColor: 'rgba(44, 82, 130, 0.1)',
+                backgroundColor: 'rgba(44, 82, 130, 0.12)',
                 fill: true,
-                tension: 0.3,
-                pointRadius: 4,
+                tension: 0.25,
+                pointRadius: 3,
                 pointBackgroundColor: '#2c5282'
             }]
         },
@@ -116,13 +305,13 @@ function initHRVTrend() {
             plugins: { legend: { display: false } },
             scales: {
                 x: {
-                    title: { display: true, text: 'Weeks', font: { size: 10 } },
+                    title: { display: true, text: 'Gestational Weeks', font: { size: 10 } },
                     grid: { display: false }
                 },
                 y: {
                     title: { display: true, text: 'HRV Index', font: { size: 10 } },
                     min: 0,
-                    max: 80
+                    max: Math.max(...hrvIndices) + 10
                 }
             }
         }
@@ -130,87 +319,85 @@ function initHRVTrend() {
 }
 
 function initRiskGauge() {
+    const data = getCurrentData();
     const canvas = document.getElementById('risk-gauge');
     const ctx = canvas.getContext('2d');
-    
-    // Draw semi-circle gauge
-    const x = canvas.width / 2;
-    const y = canvas.height - 20;
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const x = width / 2;
+    const y = height - 20;
     const radius = 80;
-    
-    // Draw background arcs
+
     function drawArc(start, end, color) {
         ctx.beginPath();
         ctx.arc(x, y, radius, start * Math.PI, end * Math.PI);
         ctx.strokeStyle = color;
-        ctx.lineWidth = 20;
+        ctx.lineWidth = 18;
         ctx.stroke();
     }
-    
-    // Green (0-0.4), Yellow (0.4-0.7), Red (0.7-1.0)
-    // Map to PI values: 1.0 PI is 180deg (left), 2.0 PI is 360deg (right)
-    drawArc(1.0, 1.4, '#22c55e'); // Green
-    drawArc(1.4, 1.7, '#facc15'); // Yellow
-    drawArc(1.7, 2.0, '#ef4444'); // Red
-    
-    // Draw needle for value 14 (assuming 0-100 scale)
-    const normalizedValue = 14 / 100;
-    const angle = 1.0 + normalizedValue; // simplified mapping
-    
+
+    drawArc(1.0, 1.4, '#22c55e');
+    drawArc(1.4, 1.7, '#facc15');
+    drawArc(1.7, 2.0, '#ef4444');
+
+    const normalized = Math.min(Math.max(data.developmental_index, 0), 1);
+    const angle = 1.0 + normalized;
+
     ctx.beginPath();
     ctx.moveTo(x, y);
-    const nx = x + Math.cos(angle * Math.PI) * (radius - 10);
-    const ny = y + Math.sin(angle * Math.PI) * (radius - 10);
+    const nx = x + Math.cos(angle * Math.PI) * (radius - 8);
+    const ny = y + Math.sin(angle * Math.PI) * (radius - 8);
     ctx.lineTo(nx, ny);
-    ctx.strokeStyle = '#334155';
+    ctx.strokeStyle = '#1f2937';
     ctx.lineWidth = 4;
     ctx.stroke();
-    
-    // Center point
+
     ctx.beginPath();
-    ctx.arc(x, y, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#334155';
+    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1f2937';
     ctx.fill();
-    
-    // Labels
+
     ctx.fillStyle = '#64748b';
     ctx.font = '10px Inter';
-    ctx.fillText('low', x - radius - 10, y + 15);
-    ctx.fillText('normal', x - 15, y - radius - 10);
-    ctx.fillText('high', x + radius - 10, y + 15);
+    ctx.fillText('low', x - radius - 12, y + 16);
+    ctx.fillText('normal', x - 18, y - radius - 14);
+    ctx.fillText('high', x + radius - 16, y + 16);
 }
 
 function initPCACluster() {
-    const ctx = document.getElementById('pca-cluster-chart').getContext('2d');
-    
+    const canvas = document.getElementById('pca-cluster-chart');
+    const ctx = canvas.getContext('2d');
+    if (pcaClusterChart) pcaClusterChart.destroy();
+
+    const current = getCurrentData();
+    const base = current.cluster_id;
+
     function generatePoints(count, centerX, centerY, spread) {
-        return Array.from({length: count}, () => ({
+        return Array.from({ length: count }, () => ({
             x: centerX + (Math.random() - 0.5) * spread,
             y: centerY + (Math.random() - 0.5) * spread
         }));
     }
 
-    new Chart(ctx, {
+    const datasets = [
+        { label: 'Normal', data: generatePoints(100, -10, 0, 15), backgroundColor: '#22c55e' },
+        { label: 'Moderate risk', data: generatePoints(80, 5, 15, 15), backgroundColor: '#facc15' },
+        { label: 'High risk', data: generatePoints(50, 15, -10, 15), backgroundColor: '#ef4444' }
+    ];
+
+    datasets.push({
+        label: 'Patient',
+        data: [{ x: base === 0 ? -10 : base === 1 ? 5 : 15, y: base === 0 ? 0 : base === 1 ? 15 : -10 }],
+        backgroundColor: '#0f172a',
+        pointRadius: 10,
+        pointStyle: 'cross'
+    });
+
+    pcaClusterChart = new Chart(ctx, {
         type: 'scatter',
-        data: {
-            datasets: [
-                {
-                    label: 'Normal',
-                    data: generatePoints(100, -10, 0, 15),
-                    backgroundColor: '#22c55e'
-                },
-                {
-                    label: 'Moderate risk',
-                    data: generatePoints(80, 5, 15, 15),
-                    backgroundColor: '#facc15'
-                },
-                {
-                    label: 'High risk',
-                    data: generatePoints(50, 15, -10, 15),
-                    backgroundColor: '#ef4444'
-                }
-            ]
-        },
+        data: { datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -227,3 +414,93 @@ function initPCACluster() {
         }
     });
 }
+
+function updateCharts() {
+    initRawECG();
+    initCleanedECG();
+    initHRVTrend();
+    initRiskGauge();
+    initPCACluster();
+}
+
+function switchMode(isResearch) {
+    const recCard = document.getElementById('recommendation-card');
+    if (!recCard) return;
+    if (isResearch) {
+        recCard.style.backgroundColor = '#e0f2fe';
+        recCard.querySelector('strong').textContent = 'Research Insight';
+    } else {
+        recCard.style.backgroundColor = '#eef2ff';
+        recCard.querySelector('strong').textContent = 'Recommendation';
+    }
+}
+
+function loadPatientData(index, backendData = null) {
+    currentPatientIndex = index;
+    currentPatientData = backendData;
+    updateDashboardFields();
+    updateCharts();
+}
+
+function initPatientSelector() {
+    const selector = document.querySelector('.patient-selector');
+    if (!selector) return;
+    selector.innerHTML = sampleClinicalData.map((patient, idx) => `<option value="${idx}">Patient: ${patient.patient_id}</option>`).join('');
+    selector.value = currentPatientIndex;
+    selector.addEventListener('change', (event) => {
+        loadPatientData(Number(event.target.value));
+    });
+}
+
+function initButtons() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('access_token');
+            window.location.href = '../../index.html';
+        });
+    }
+
+    const loadDataBtn = document.getElementById('load-data-btn');
+    if (loadDataBtn) {
+        loadDataBtn.addEventListener('click', async function() {
+            const fileIdInput = document.getElementById('api-file-id');
+            const fileId = fileIdInput?.value.trim();
+            if (fileId) {
+                loadDataBtn.textContent = 'Loading...';
+                const backendData = await fetchAnalysisFromBackend(fileId);
+                if (backendData) {
+                    loadPatientData(currentPatientIndex, backendData);
+                    loadDataBtn.textContent = 'Loaded from API';
+                } else {
+                    loadPatientData(currentPatientIndex);
+                    loadDataBtn.textContent = 'Loaded Sample Data';
+                }
+                setTimeout(() => { loadDataBtn.innerHTML = '<span>⟳</span> Load Clinical Data'; }, 1400);
+            } else {
+                loadPatientData(currentPatientIndex);
+                loadDataBtn.textContent = 'Loaded Sample Data';
+                setTimeout(() => { loadDataBtn.innerHTML = '<span>⟳</span> Load Clinical Data'; }, 1200);
+            }
+        });
+    }
+
+    const modeToggle = document.getElementById('research-mode-toggle');
+    if (modeToggle) {
+        modeToggle.addEventListener('change', function() {
+            switchMode(this.checked);
+        });
+    }
+}
+
+function initDashboard() {
+    initPatientSelector();
+    initButtons();
+    updateDashboardFields();
+    updateCharts();
+    switchMode(false);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initDashboard();
+});
