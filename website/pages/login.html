@@ -4,95 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Neuro-Genomic AI</title>
-    <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="../js/api.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            border-bottom: 1px solid #334155;
+        }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
+        .logo-icon { font-size: 1.8rem; }
+        .logo-text { background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nav-links { display: flex; list-style: none; gap: 2rem; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
+        .nav-links a:hover { color: #3b82f6; }
+        .btn-outline { padding: 0.5rem 1rem; border: 1px solid #3b82f6; border-radius: 8px; color: #3b82f6; text-decoration: none; }
+        .btn-primary { padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #3b82f6, #a855f7); border-radius: 8px; color: white; text-decoration: none; font-weight: 500; }
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 1rem 2rem;
+        }
+        .login-card {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid #334155;
+        }
+        .login-card h2 { text-align: center; margin-bottom: 0.5rem; }
+        .login-card p { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            color: #fecaca;
+            display: none;
+        }
+        .footer { text-align: center; padding: 2rem; color: #64748b; }
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <div class="nav-brand">
-                <span class="logo-icon">NG</span>
+            <div class="logo">
+                <span class="logo-icon">🧬</span>
                 <span class="logo-text">Neuro-Genomic AI</span>
             </div>
-            <ul class="nav-menu">
+            <ul class="nav-links">
                 <li><a href="../index.html">Home</a></li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="team.html">Team</a></li>
                 <li><a href="services.html">Services</a></li>
                 <li><a href="technology.html">Technology</a></li>
-                <li><a href="dashboard.html">Dashboard</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
-            <div class="nav-buttons">
+            <div>
                 <a href="login.html" class="btn-outline">Sign In</a>
-                <a href="register.html" class="btn-primary">Register</a>
+                <a href="register.html" class="btn-primary">Sign Up</a>
             </div>
         </div>
     </nav>
-    <main>
-        <section class="page-header">
-            <div class="container">
-                <h1>Sign In</h1>
-                <p>Access your Neuro-Genomic AI dashboard and role-based analytics.</p>
-            </div>
-        </section>
-        <section class="auth-panel">
-            <div class="container">
-                <div class="auth-grid">
-                    <div class="auth-form">
-                        <h2>Log in to your account</h2>
-                        <div id="auth-alert" class="form-alert"></div>
-                        <form id="login-form">
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" id="email" name="email" placeholder="you@example.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="password">Password</label>
-                                <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                            </div>
-                            <button type="submit" class="btn-primary">Sign In</button>
-                        </form>
-                        <p>New to Neuro-Genomic AI? <a href="register.html">Create an account</a>.</p>
-                    </div>
-                    <div class="auth-summary">
-                        <h2>Why sign in?</h2>
-                        <ul>
-                            <li>Role-based dashboards for Researcher, Clinician, and Admin</li>
-                            <li>Secure access to patient analytics and study datasets</li>
-                            <li>Personalized monitoring and alerts for fetal development</li>
-                        </ul>
-                        <p>After signing in, you can access the full platform and manage your organization’s projects from a single dashboard.</p>
-                    </div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2>Welcome Back</h2>
+            <p>Sign in to your account</p>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required>
                 </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn-login">Sign In</button>
+            </form>
+            <div class="footer" style="margin-top: 1rem;">
+                Don't have an account? <a href="register.html">Sign up</a>
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
+
     <script>
-        document.getElementById('login-form').addEventListener('submit', async function (event) {
-            event.preventDefault();
-            const alertEl = document.getElementById('auth-alert');
-            alertEl.textContent = '';
-            const email = document.getElementById('email').value.trim();
+        const API_URL = 'http://localhost:8000';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            
+            errorDiv.style.display = 'none';
+            
             try {
-                const response = await fetch(getNGAIApiUrl('/auth/login'), {
+                const response = await fetch(`${API_URL}/api/v1/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const payload = await response.json();
-                if (!response.ok) {
-                    alertEl.textContent = payload.detail || 'Login failed. Please check your credentials.';
-                    return;
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('access_token', data.access_token);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errorDiv.textContent = data.detail || 'Invalid credentials';
+                    errorDiv.style.display = 'block';
                 }
-                // Store token
-                localStorage.setItem('access_token', payload.access_token);
-                alertEl.textContent = 'Login successful. Redirecting to dashboard...';
-                window.location.href = 'dashboard.html';
             } catch (error) {
-                alertEl.textContent = 'Unable to reach the authentication server. Please try again later.';
+                errorDiv.textContent = 'Cannot reach server. Make sure API is running on port 8000.';
+                errorDiv.style.display = 'block';
             }
         });
     </script>
