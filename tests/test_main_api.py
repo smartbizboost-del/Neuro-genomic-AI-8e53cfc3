@@ -105,8 +105,9 @@ class TestPipelineInitialization:
     """Test pipeline initialization in lifespan"""
     
     def test_pipeline_class_exists(self):
-        """Test pipeline class is imported"""
-        from src.core.pipeline import NeuroGenomicPipeline
+        """Test pipeline function is imported"""
+        from src.core.pipeline import get_pipeline, NeuroGenomicPipeline
+        assert callable(get_pipeline)
         assert NeuroGenomicPipeline is not None
     
     def test_main_imports_pipeline(self):

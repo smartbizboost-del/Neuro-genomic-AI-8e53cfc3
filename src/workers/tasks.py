@@ -1,5 +1,4 @@
 import numpy as np
-import numpy as np
 """
 Celery tasks for async processing
 """
@@ -14,14 +13,14 @@ import numpy as np
 from typing import Dict, Any
 
 from src.workers.celery_app import celery_app
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 from src.utils.logger import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# Initialize pipeline
-pipeline = NeuroGenomicPipeline()
+# Get singleton pipeline instance
+pipeline = get_pipeline()
 
 # S3 client
 s3_client = boto3.client(

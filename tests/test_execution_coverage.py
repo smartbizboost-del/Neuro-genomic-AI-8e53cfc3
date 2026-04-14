@@ -5,7 +5,7 @@ Tests that actually execute code paths
 
 import pytest
 import numpy as np
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 from src.utils.metrics import MetricsCollector
 from src.utils.validators import validate_rr_intervals
 

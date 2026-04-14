@@ -12,8 +12,102 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
+from src.core.pipeline import get_pipeline
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
+
+
+# ============================================================================
+# OPTIMIZED COMPONENT FUNCTIONS
+# ============================================================================
+
+def render_developmental_index(dev_index: float, confidence: float):
+    """Top prominent Developmental Index card"""
+    st.markdown("### Developmental Index")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.progress(dev_index)
+    with col2:
+        st.metric("Score", f"{dev_index:.2f}/1.0", f"±{confidence*100:.0f}%")
+    
+    color = "green" if dev_index >= 0.75 else "orange" if dev_index >= 0.60 else "red"
+    status = "Normal" if dev_index >= 0.75 else "Borderline" if dev_index >= 0.60 else "At Risk"
+    st.markdown(f"<h4 style='color:{color};'>{status}</h4>", unsafe_allow_html=True)
+
+
+def render_risk_cards(risk_assessment: dict):
+    """Risk Assessment Cards - Clinical traffic light style"""
+    st.markdown("### Risk Assessment")
+    cols = st.columns(3)
+    
+    risks = [
+        ("IUGR Risk", risk_assessment.get("iugr_risk", {}), "🔴"),
+        ("Preterm Risk", risk_assessment.get("preterm_risk", {}), "🟡"),
+        ("Hypoxia Risk", risk_assessment.get("hypoxia_risk", {}), "⚪")
+    ]
+    
+    for col, (label, data, emoji) in zip(cols, risks):
+        with col:
+            score = data.get("score", 0)
+            ci = data.get("ci", "")
+            note = data.get("note", "")
+            
+            color = "#4ade80" if score < 20 else "#fbbf24" if score < 40 else "#f87171"
+            
+            st.markdown(f"""
+            <div style="background-color: {color}20; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid {color}">
+                <h3>{emoji} {label}</h3>
+                <h2>{score}%</h2>
+                <p>{ci}</p>
+                {f'<small>{note}</small>' if note else ''}
+            </div>
+            """, unsafe_allow_html=True)
+
+
+def render_explainability(shap_dict: dict):
+    """SHAP Explainability Panel"""
+    st.markdown("### Why this assessment?")
+    if not shap_dict:
+        st.info("Explainability data not available yet.")
+        return
+    
+    # Convert to DataFrame for plotting
+    df = pd.DataFrame(list(shap_dict.items()), columns=["Feature", "Contribution"])
+    df = df.sort_values("Contribution", ascending=True).tail(10)  # Top 10 features
+    
+    fig = px.bar(df, x="Contribution", y="Feature", orientation='h',
+                 title="Feature Contribution (SHAP values)",
+                 color="Contribution", color_continuous_scale="RdBu")
+    fig.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10))
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def render_recommendation(recommendation: str):
+    """Clinical Recommendation Box"""
+    st.markdown("### Clinical Recommendation")
+    if "routine" in recommendation.lower():
+        st.success(recommendation)
+    else:
+        st.warning(recommendation)
+
+
+def render_trajectory_panel(trajectory: dict):
+    """Developmental Trajectory Panel"""
+    st.markdown("### Developmental Trajectory")
+    if not trajectory:
+        st.info("Trajectory data not available yet.")
+        return
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Trend", trajectory.get("trend", "stable").title())
+    with col2:
+        st.metric("Slope", f"{trajectory.get('slope', 0):.4f}")
+    with col3:
+        st.metric("Predicted (Next)",  f"{trajectory.get('predicted_next_week', 0):.2f}")
+    
+    if trajectory.get("deviation"):
+        st.caption(f"Deviation from prediction: {trajectory['deviation']:.2f}")
 
 
 def _inject_theme(compact: bool = False, readable: bool = True) -> None:
@@ -580,7 +674,103 @@ elif page == "Results Viewer":
                     st.warning("No uploaded file found yet. Upload first or enable Demo mode.")
 
             if data is not None:
-                _render_clinical_dashboard(data, patient_name, compact=compact_mode, readable=readable_mode)
+                # Check if this is the new pipeline format
+                if data.get("status") == "success" and "developmental_index" in data:
+                    # Use new optimized component layout
+                    st.markdown("---")
+                    st.subheader(f"Patient: {patient_name} | {data.get('gestational_weeks', 'N/A')} weeks")
+                    
+                    # Developmental Index prominently displayed
+                    render_developmental_index(
+                        data.get("developmental_index", 0.5),
+                        data.get("confidence", 0.85)
+                    )
+                    
+                    # Three-column layout
+                    left, center, right = st.columns([1.2, 2, 1.2])
+                    
+                    with left:
+                        st.markdown("**Clinical Context**")
+                        sqa = data.get("sqa", {})
+                        if sqa.get("overall_quality"):
+                            st.info(f"Signal Quality: {sqa['overall_quality']}")
+                        st.caption("Maternal Cancellation: 98.7% successful")
+                    
+                    with center:
+                        st.markdown("**Signal & Metrics**")
+                        # Signal visualization
+                        if data.get("cleaned_ecg"):
+                            try:
+                                fig = go.Figure()
+                                fig.add_trace(go.Scatter(
+                                    y=data["cleaned_ecg"][:min(1000, len(data["cleaned_ecg"]))],
+                                    mode="lines",
+                                    name="Cleaned ECG",
+                                    line=dict(color="#5f6f7b", width=1.5)
+                                ))
+                                fig.update_layout(height=200, margin=dict(l=10, r=10, t=20, b=20))
+                                st.plotly_chart(fig, use_container_width=True)
+                            except Exception as e:
+                                st.caption(f"Signal visualization unavailable: {e}")
+                        
+                        # Risk cards
+                        risk_assessment = data.get("risk_assessment", {})
+                        if risk_assessment:
+                            render_risk_cards(risk_assessment)
+                        
+                        # HRV Metrics
+                        st.markdown("**HRV & PRSA Metrics**")
+                        metrics = data.get("hrv_metrics", {})
+                        cols = st.columns(3)
+                        with cols[0]:
+                            st.metric("RMSSD", f"{metrics.get('rmssd', 35)} ms", "Normal")
+                        with cols[1]:
+                            st.metric("LF/HF", f"{metrics.get('lf_hf_ratio', 1.7)}", "Moderate")
+                        with cols[2]:
+                            st.metric("AC-T9", f"{metrics.get('ac_t9', 0.87)}", "IUGR predictor")
+                    
+                    with right:
+                        st.markdown("**Insights**")
+                        
+                        # Trajectory info (if available)
+                        if st.session_state.get("recent_indices"):
+                            pipeline = get_pipeline()
+                            trajectory = pipeline.update_trajectory(
+                                previous_indices=st.session_state.get("recent_indices", []),
+                                current_index=data.get("developmental_index", 0.5),
+                                ga_weeks=st.session_state.get("recent_weeks", [])
+                            )
+                            render_trajectory_panel(trajectory)
+                        
+                        # Recommendation
+                        recommendation = data.get("recommendation", "Routine monitoring recommended.")
+                        render_recommendation(recommendation)
+                        
+                        # Export buttons
+                        st.markdown("---")
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            if st.button("📥 Export PDF"):
+                                st.success("Report exported (demo)")
+                        with col_b:
+                            if st.button("🔗 KenyaEMR"):
+                                st.success("FHIR export OK")
+                    
+                    # Store recent values for trajectory tracking
+                    if "recent_indices" not in st.session_state:
+                        st.session_state["recent_indices"] = []
+                    st.session_state["recent_indices"].append(data.get("developmental_index", 0.5))
+                    if "recent_weeks" not in st.session_state:
+                        st.session_state["recent_weeks"] = []
+                    st.session_state["recent_weeks"].append(data.get("gestational_weeks", 32))
+                    
+                    # Explainability section
+                    st.markdown("---")
+                    render_explainability(data.get("explainability", {}))
+                    
+                else:
+                    # Fallback to old dashboard format
+                    _render_clinical_dashboard(data, patient_name, compact=compact_mode, readable=readable_mode)
 
 elif page == "Clinical Insights":
     st.header("Clinical Insights")

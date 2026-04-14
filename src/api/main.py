@@ -13,26 +13,22 @@ from contextlib import asynccontextmanager
 from src.api.routes import health, upload, analysis, export, auth, contact
 from src.api.middleware.auth import auth_middleware
 from src.api.middleware.logging import log_requests
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 from src.utils.logger import setup_logging
 
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# Global pipeline instance
-pipeline = NeuroGenomicPipeline()
+# Get singleton pipeline instance
+pipeline = get_pipeline()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
     logger.info("Starting Neuro-Genomic AI API")
-    try:
-        pipeline.train_model()  # Load trained model if available
-        logger.info("Model loaded successfully")
-    except Exception as e:
-        logger.warning(f"Model not loaded: {e}")
+    logger.info("Pipeline ready. Models will be lazy-loaded on first analysis request.")
     yield
     # Shutdown
     logger.info("Shutting down Neuro-Genomic AI API")

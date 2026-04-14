@@ -4,11 +4,11 @@ Feature extraction tests
 
 import pytest
 import numpy as np
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 
 @pytest.fixture
 def pipeline():
-    return NeuroGenomicPipeline()
+    return get_pipeline()
 
 @pytest.fixture
 def sample_rr_intervals():

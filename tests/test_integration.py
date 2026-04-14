@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 from httpx import AsyncClient, ASGITransport
 from src.api.main import app
 import numpy as np
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 
 
 class TestAPIIntegration:

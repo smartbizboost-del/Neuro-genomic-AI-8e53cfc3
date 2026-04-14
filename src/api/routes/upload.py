@@ -18,9 +18,9 @@ router = APIRouter()
 from src.workers.tasks import extract_raw_signals
 from fastapi import BackgroundTasks
 import tempfile
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 
-pipeline = NeuroGenomicPipeline()
+pipeline = get_pipeline()
 
 @router.post("/upload", response_model=UploadResponse)
 async def upload_ecg(

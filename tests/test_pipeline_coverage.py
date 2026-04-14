@@ -5,7 +5,7 @@ Tests for pipeline training and initialization
 
 import pytest
 from unittest.mock import patch, MagicMock
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 import numpy as np
 
 

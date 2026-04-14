@@ -23,7 +23,7 @@ os.environ.setdefault("JWT_SECRET_KEY", TEST_JWT_SECRET_KEY)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from src.api.main import app
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 
 
 @pytest.fixture(autouse=True)

@@ -123,20 +123,20 @@ class TestPipelineFeatureExtraction:
     
     def test_extract_hrv_features_method(self):
         """Test HRV feature extraction method exists"""
-        from src.core.pipeline import NeuroGenomicPipeline
-        pipeline = NeuroGenomicPipeline()
-        assert hasattr(pipeline, '_extract_hrv_features')
+        from src.core.pipeline import get_pipeline
+        pipeline = get_pipeline()
+        assert hasattr(pipeline, '_extract_features')
     
     def test_feature_extraction_returns_dict(self):
         """Test feature extraction returns feature dictionary"""
-        from src.core.pipeline import NeuroGenomicPipeline
+        from src.core.pipeline import get_pipeline
         import numpy as np
         
-        pipeline = NeuroGenomicPipeline()
+        pipeline = get_pipeline()
         rr_intervals = [600, 610, 595, 605, 600, 590, 615, 600, 605, 595]
         
         try:
-            features = pipeline._extract_hrv_features(rr_intervals)
+            features = pipeline._extract_features(np.array(rr_intervals), 250, 32)
             assert isinstance(features, dict)
             assert len(features) > 0
         except Exception:
@@ -145,14 +145,14 @@ class TestPipelineFeatureExtraction:
     
     def test_calculate_developmental_index(self):
         """Test developmental index calculation"""
-        from src.core.pipeline import NeuroGenomicPipeline
-        pipeline = NeuroGenomicPipeline()
+        from src.core.pipeline import get_pipeline
+        pipeline = get_pipeline()
         
         # Test with sample features
-        features = {"rmssd": 50, "lf_hf_ratio": 1.5, "sample_entropy": 1.2}
+        features = {"rmssd": 50, "lf_hf_ratio": 1.5, "sample_entropy": 1.2, "ac_t9": 0.87, "dc_t9": 0.89}
         
         try:
-            index = pipeline._calculate_developmental_index(features, gestational_weeks=32)
+            index = pipeline._compute_developmental_index(features)
             # Should return a float
             assert isinstance(index, (int, float)) or index is not None
         except Exception:
@@ -164,20 +164,20 @@ class TestCoreModuleIntegration:
     
     def test_pipeline_can_be_instantiated(self):
         """Test pipeline can be created"""
-        from src.core.pipeline import NeuroGenomicPipeline
-        pipeline = NeuroGenomicPipeline()
+        from src.core.pipeline import get_pipeline
+        pipeline = get_pipeline()
         assert pipeline is not None
     
     def test_pipeline_has_model_attribute(self):
         """Test pipeline initializes model attribute"""
-        from src.core.pipeline import NeuroGenomicPipeline
-        pipeline = NeuroGenomicPipeline()
-        assert hasattr(pipeline, 'model')
+        from src.core.pipeline import get_pipeline
+        pipeline = get_pipeline()
+        assert hasattr(pipeline, '_rf_model')
     
     def test_pipeline_has_feature_extractor(self):
         """Test pipeline has feature extractor"""
-        from src.core.pipeline import NeuroGenomicPipeline
-        pipeline = NeuroGenomicPipeline()
+        from src.core.pipeline import get_pipeline
+        pipeline = get_pipeline()
         assert hasattr(pipeline, 'feature_extractor')
 
 

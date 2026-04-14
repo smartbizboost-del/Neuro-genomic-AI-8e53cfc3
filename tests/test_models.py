@@ -3,13 +3,13 @@ Model tests
 """
 
 import pytest
-from src.core.pipeline import NeuroGenomicPipeline
+from src.core.pipeline import get_pipeline
 
 def test_pipeline_initialization():
     """Test pipeline initialization"""
-    pipeline = NeuroGenomicPipeline()
-    assert pipeline.model is None
-    assert pipeline.feature_extractor is None
+    pipeline = get_pipeline()
+    assert pipeline._rf_model is None or pipeline._model_loaded
+    assert pipeline._sqa is None or pipeline._model_loaded
 
 def test_risk_classification():
     """Test risk classification logic"""
