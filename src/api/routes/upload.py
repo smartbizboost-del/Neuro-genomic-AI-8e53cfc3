@@ -10,6 +10,7 @@ from botocore.exceptions import ClientError
 import os
 
 from src.api.models.schemas import UploadResponse, FileMetadata
+from src.api.routes import analysis as analysis_routes
 from src.workers.tasks import process_ecg_file
 
 router = APIRouter()
@@ -55,7 +56,7 @@ async def upload_ecg(
         try:
             mixed_signal = extract_raw_signals(temp_path)
             res = pipeline.process_recording(mixed_signal, 500, gestational_weeks)
-            RESULTS_DB[file_id] = {
+            analysis_routes.RESULTS_DB[file_id] = {
                 "file_id": file_id,
                 "features": res["features"],
                 "risk": res["risk"],
@@ -65,6 +66,7 @@ async def upload_ecg(
                 "created_at": "2024-01-01T00:00:00Z",
                 "confidence_intervals": None
             }
+            analysis_routes.LATEST_FILE_ID = file_id
         except Exception as e:
             print(f"Error locally processing: {e}")
             

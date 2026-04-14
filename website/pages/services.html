@@ -3,15 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Services | Neuro-Genomic AI</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Services & Pricing | Neuro-Genomic AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #0b1220 0%, #121c33 65%, #111827 100%);
+            color: #eef2ff;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .navbar {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 18, 32, 0.94);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            z-index: 1000;
+        }
+        .navbar .container { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; }
+        .logo-icon { font-size: 1.45rem; }
+        .logo-text { font-size: 1.1rem; letter-spacing: 0.03em; color: #e2e8f0; }
+        .nav-menu { display: flex; gap: 1.5rem; list-style: none; flex-wrap: wrap; }
+        .nav-menu a { color: #cbd5e1; text-decoration: none; font-size: 0.95rem; transition: color 0.25s ease; }
+        .nav-menu a.active, .nav-menu a:hover { color: #7dd3fc; }
+        .nav-buttons { display: flex; gap: 0.75rem; align-items: center; }
+        .btn-outline, .btn-primary { border-radius: 999px; font-weight: 600; transition: all 0.2s ease; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-outline { padding: 0.75rem 1.2rem; border: 1px solid rgba(125, 211, 252, 0.7); color: #cbd5e1; background: rgba(255,255,255,0.04); }
+        .btn-outline:hover { background: rgba(255,255,255,0.08); }
+        .btn-primary { padding: 0.75rem 1.4rem; background: linear-gradient(135deg, #38bdf8, #8b5cf6); color: white; }
+        .btn-primary:hover { filter: brightness(1.05); }
+        
+        .hero {
+            padding: 6rem 0 2rem;
+            text-align: center;
+        }
+        .hero h1 { font-size: clamp(2.5rem, 4vw, 4rem); line-height: 1.05; max-width: 760px; margin: 0 auto 1rem; }
+        .hero p { color: #94a3b8; font-size: 1.05rem; max-width: 720px; margin: 0 auto; }
+        .hero-note {
+            margin: 1.75rem auto 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.24);
+            color: #bae6fd;
+            padding: 0.85rem 1rem;
+            border-radius: 999px;
+            font-size: 0.95rem;
+        }
+        .hero-note strong { color: #f8fafc; }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.5rem;
+            margin: 3.5rem 0;
+        }
+        .pricing-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 30px;
+            padding: 2rem;
+            box-shadow: 0 24px 80px rgba(15,23,42,0.18);
+            overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        }
+        .pricing-card:hover { transform: translateY(-8px); border-color: rgba(59, 130, 246, 0.45); background: rgba(15, 23, 42, 1); }
+        .pricing-card.featured { border: 2px solid #3b82f6; background: linear-gradient(180deg, rgba(15,23,42,0.95), rgba(30, 41, 59,0.95)); }
+        .pricing-badge {
+            display: inline-flex;
+            padding: 0.65rem 1rem;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.14);
+            color: #bfdbfe;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+            margin-bottom: 1.2rem;
+        }
+        .pricing-card h3 { font-size: 1.35rem; margin-bottom: 0.85rem; color: #eff6ff; }
+        .pricing-price { font-size: 3rem; font-weight: 800; color: #e2e8f0; line-height: 1; }
+        .pricing-price span { display: block; font-size: 1rem; color: #94a3b8; margin-top: 0.5rem; }
+        .pricing-features { list-style: none; margin: 1.75rem 0 2rem; padding: 0; display: grid; gap: 0.9rem; }
+        .pricing-features li { display: flex; align-items: flex-start; gap: 0.8rem; color: #cbd5e1; font-size: 0.98rem; line-height: 1.6; }
+        .pricing-features li::before { content: '✔'; color: #38bdf8; margin-top: 0.15rem; font-size: 0.85rem; }
+        .pricing-card .btn-primary { width: 100%; justify-content: center; }
+
+        .highlight-panel {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.14), rgba(99, 102, 241, 0.12));
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 28px;
+            padding: 2rem;
+            margin: 2rem 0;
+            display: grid;
+            gap: 1.25rem;
+        }
+        .highlight-panel h2 { margin-bottom: 0.85rem; font-size: 1.8rem; }
+        .highlight-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+        .highlight-item {
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 20px;
+            padding: 1.25rem 1.5rem;
+            color: #e2e8f0;
+            line-height: 1.7;
+        }
+        .highlight-item strong { display: block; margin-bottom: 0.75rem; color: #7dd3fc; }
+
+        .grid-two {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.25rem;
+            margin: 2.5rem 0;
+        }
+        .feature-panel {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 24px;
+            padding: 1.75rem;
+        }
+        .feature-panel h3 { margin-bottom: 0.8rem; font-size: 1.25rem; color: #e2e8f0; }
+        .feature-panel p { color: #cbd5e1; line-height: 1.75; }
+        .feature-panel ul { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.85rem; }
+        .feature-panel li { display: flex; gap: 0.7rem; align-items: flex-start; color: #cbd5e1; }
+        .feature-panel li::before { content: '•'; color: #38bdf8; margin-top: 0.3rem; }
+
+        .faq-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin: 1.75rem 0 3.5rem; }
+        .faq-item {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 22px;
+            padding: 1.5rem;
+        }
+        .faq-item h4 { margin-bottom: 0.85rem; font-size: 1rem; color: #e2e8f0; }
+        .faq-item p { color: #cbd5e1; line-height: 1.75; }
+
+        .footer {
+            position: relative;
+            background: rgba(7, 10, 23, 0.98);
+            border-top: 1px solid rgba(148, 163, 184, 0.12);
+            padding: 3rem 0 1.5rem;
+            overflow: hidden;
+        }
+        .footer::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url('../images/footer.jpg.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem; position: relative; z-index: 1; }
+        .footer-links h4 { margin-bottom: 0.85rem; color: #e2e8f0; font-size: 0.95rem; }
+        .footer-links a { display: block; color: #94a3b8; text-decoration: none; margin-bottom: 0.65rem; font-size: 0.92rem; }
+        .footer-links a:hover { color: #7dd3fc; }
+        .footer-bottom { color: #94a3b8; text-align: center; margin-top: 2rem; font-size: 0.9rem; }
+
+        @media (max-width: 1024px) { .pricing-grid, .grid-two, .faq-grid, .footer-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .hero { padding-top: 5rem; } .nav-menu { display: none; } .nav-buttons { width: 100%; justify-content: flex-end; } }
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <div class="nav-brand">
-                <span class="logo-icon">NG</span>
+            <div class="logo">
+                <span class="logo-icon">🧬</span>
                 <span class="logo-text">Neuro-Genomic AI</span>
             </div>
             <ul class="nav-menu">
@@ -25,16 +187,17 @@
             </ul>
             <div class="nav-buttons">
                 <a href="login.html" class="btn-outline">Sign In</a>
-                <a href="register.html" class="btn-primary">Register</a>
+                <a href="contact.html" class="btn-primary">Request Demo</a>
             </div>
         </div>
     </nav>
 
     <main>
-        <section class="page-header">
+        <section class="hero">
             <div class="container">
-                <h1>Services & Pricing</h1>
-                <p>Choose the right edition for your needs</p>
+                <p class="hero-note"><strong>Clinical software for fetal monitoring.</strong> Signal quality assurance, PRSA risk detection, FHIR compatibility, and LMIC-ready deployment.</p>
+                <h1>Flexible editions for research, clinical care, and developer integration</h1>
+                <p>One platform for fetal ECG analysis, maternal-fetal decision support, and secure health system interoperability.</p>
             </div>
         </section>
 
@@ -46,44 +209,97 @@
                         <h3>For Universities & Labs</h3>
                         <div class="pricing-price">$5,000<span>/year</span></div>
                         <ul class="pricing-features">
-                            <li>✅ Upload and process fetal ECG data</li>
-                            <li>✅ Automated HRV feature extraction</li>
-                            <li>✅ Unsupervised ML clustering</li>
-                            <li>✅ Interactive visualization dashboard</li>
-                            <li>✅ Export data for publications</li>
-                            <li>✅ REST API access</li>
+                            <li>Upload and process fetal ECG recordings</li>
+                            <li>Automated HRV + PRSA feature extraction</li>
+                            <li>Unsupervised clustering and cohort analysis</li>
+                            <li>Clinical and research dashboards</li>
+                            <li>Export CSV, JSON, FHIR-ready data packages</li>
+                            <li>REST API access for analytics workflows</li>
+                            <li>Signal Quality Assessment (SQA)</li>
+                            <li>95% confidence interval visualization</li>
                         </ul>
                         <a href="contact.html" class="btn-primary">Get Started</a>
                     </div>
+
                     <div class="pricing-card featured">
                         <div class="pricing-badge">Clinical Edition</div>
                         <h3>For Hospitals & Clinics</h3>
                         <div class="pricing-price">$15,000<span>/year</span></div>
                         <ul class="pricing-features">
-                            <li>✅ All Research Edition features</li>
-                            <li>✅ Real-time risk classification</li>
-                            <li>✅ Longitudinal patient tracking</li>
-                            <li>✅ Clinical reporting (PDF/CSV)</li>
-                            <li>✅ EMR/EHR integration</li>
-                            <li>✅ Multi-clinician user management</li>
+                            <li>All Research Edition capabilities</li>
+                            <li>Real-time risk classification for IUGR, preterm, hypoxia</li>
+                            <li>PRSA-based fetal risk biomarkers</li>
+                            <li>SHAP explainability and clinician-friendly summaries</li>
+                            <li>FHIR R4 export for KenyaEMR, DHIS2, Epic, Cerner</li>
+                            <li>Offline-capable deployment for low-connectivity settings</li>
+                            <li>Multi-user clinician workflows and audit logs</li>
+                            <li>Priority support and implementation assistance</li>
                         </ul>
                         <a href="contact.html" class="btn-primary">Contact Sales</a>
                     </div>
+
                     <div class="pricing-card">
                         <div class="pricing-badge">Developer Edition</div>
                         <h3>For MedTech Partners</h3>
                         <div class="pricing-price">Custom</div>
                         <ul class="pricing-features">
-                            <li>✅ Full API access</li>
-                            <li>✅ White-labeling options</li>
-                            <li>✅ Scalable cloud infrastructure</li>
-                            <li>✅ Dedicated technical support</li>
-                            <li>✅ Volume-based pricing</li>
-                            <li>✅ SLA guarantees</li>
+                            <li>Full API access with production-grade docs</li>
+                            <li>White-label user interface options</li>
+                            <li>Scalable cloud or on-prem deployment</li>
+                            <li>Dedicated integration and support team</li>
+                            <li>Volume-based pricing from $0.10/test</li>
+                            <li>Enterprise SLA and uptime guarantees</li>
                         </ul>
                         <a href="contact.html" class="btn-primary">Contact Sales</a>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="highlight-panel">
+            <div class="container">
+                <h2>Designed for clinical deployment and public health surveillance</h2>
+                <div class="highlight-grid">
+                    <div class="highlight-item">
+                        <strong>Cost disruptive</strong>
+                        Software-only platform with a per-test marginal cost below $0.10. Uses existing ECG capture hardware, avoiding consumables and cold chain.
+                    </div>
+                    <div class="highlight-item">
+                        <strong>LMIC ready</strong>
+                        Offline-capable analytics, lightweight hardware compatibility, and heat/dust tolerant deployment for front-line clinics.
+                    </div>
+                    <div class="highlight-item">
+                        <strong>FHIR & EMR integration</strong>
+                        Native export to FHIR R4 and KenyaEMR-compatible payloads for surveillance and national health systems.
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Clinical quality assurance</strong>
+                        Per-record signal quality scoring with SQA, data confidence, and audit-ready visibility for clinicians.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid-two">
+            <div class="feature-panel">
+                <h3>Clinical Edition Highlights</h3>
+                <p>Clinical teams receive a complete fetal monitoring workflow with risk stratification, physician notes, and export-ready patient summaries.</p>
+                <ul>
+                    <li>Risk outputs for IUGR, preterm birth, and fetal hypoxia</li>
+                    <li>Clinical dashboard view with gestational-age context</li>
+                    <li>SHAP explainability for AI-driven decisions</li>
+                    <li>Report generation, audit trails, and clinician handoff support</li>
+                </ul>
+            </div>
+            <div class="feature-panel">
+                <h3>Research Edition Highlights</h3>
+                <p>Academic users get deep access to signal features, unsupervised discovery, and export pipelines for publications and grant studies.</p>
+                <ul>
+                    <li>PRSA biomarkers for IUGR research</li>
+                    <li>Unsupervised clustering across fetal cohorts</li>
+                    <li>Data export for longitudinal analysis</li>
+                    <li>API-first architecture for custom analytics</li>
+                </ul>
             </div>
         </section>
 
@@ -92,20 +308,20 @@
                 <h2>Frequently Asked Questions</h2>
                 <div class="faq-grid">
                     <div class="faq-item">
-                        <h4>What data do I need to use the platform?</h4>
-                        <p>Fetal ECG recordings (CSV, EDF, or PhysioNet formats).</p>
+                        <h4>What inputs does the system support?</h4>
+                        <p>Fetal ECG data from CSV, EDF, or PhysioNet collection formats. Compatible with existing abdominal ECG capture devices.</p>
                     </div>
                     <div class="faq-item">
-                        <h4>Is my data secure?</h4>
-                        <p>Yes. Encryption at rest and in transit. We use only de-identified public data.</p>
+                        <h4>How does the system ensure signal quality?</h4>
+                        <p>Built-in SQA evaluates each recording, highlights noisy channels, and prevents analysis if quality is insufficient.</p>
                     </div>
                     <div class="faq-item">
-                        <h4>Do I need regulatory approval?</h4>
-                        <p>Research Edition requires no approval. Clinical Edition requires FDA clearance (in progress).</p>
+                        <h4>Can this integrate with national systems?</h4>
+                        <p>Yes. We support FHIR R4 export and KenyaEMR-ready payloads, enabling surveillance and health information exchange.</p>
                     </div>
                     <div class="faq-item">
-                        <h4>Can I integrate with my existing system?</h4>
-                        <p>Yes. Our REST API allows seamless integration.</p>
+                        <h4>How low is the per-test cost?</h4>
+                        <p>The platform is software-first, with marginal test cost designed below $0.10 using existing ECG hardware and no consumables.</p>
                     </div>
                 </div>
             </div>
@@ -115,10 +331,12 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
-                <div class="footer-brand">
-                    <span class="logo-icon">🧬</span>
-                    <span class="logo-text">Neuro-Genomic AI</span>
-                    <p>Understanding development by listening to the earliest signals of life.</p>
+                <div>
+                    <div class="logo" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <span class="logo-icon">🧬</span>
+                        <span class="logo-text">Neuro-Genomic AI</span>
+                    </div>
+                    <p style="color: #94a3b8; max-width: 320px; line-height: 1.8;">Understanding fetal development through ECG, HRV, and explainable AI for global maternal healthcare.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Company</h4>
@@ -130,19 +348,17 @@
                 <div class="footer-links">
                     <h4>Resources</h4>
                     <a href="technology.html">Technology</a>
-                    <a href="#">Documentation</a>
-                    <a href="#">API Reference</a>
+                    <a href="terms.html">Terms of Service</a>
+                    <a href="privacy.html">Privacy Policy</a>
                 </div>
                 <div class="footer-links">
-                    <h4>Legal</h4>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
-                    <a href="#">Ethics Statement</a>
+                    <h4>Support</h4>
+                    <a href="contact.html">Request Demo</a>
+                    <a href="contact.html">Integration Support</a>
+                    <a href="contact.html">Technical FAQ</a>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved.</p>
-            </div>
+            <div class="footer-bottom">&copy; 2026 Neuro-Genomic AI Ltd. | Kirinyaga University Innovation Hub, Kerugoya, Kenya</div>
         </div>
     </footer>
 </body>

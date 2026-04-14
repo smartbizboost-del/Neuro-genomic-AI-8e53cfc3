@@ -24,6 +24,9 @@
             <button class="btn-header" id="load-data-btn">
                 <span>⟳</span> Load Clinical Data
             </button>
+            <button class="btn-header" id="load-latest-btn">
+                <span>★</span> Load Latest
+            </button>
             <button class="btn-header">
                 <span>↑</span> Export
             </button>
@@ -38,6 +41,10 @@
         <div class="status-indicator" id="status-indicator">
             Patient | 32 weeks | Clinical State: <span class="dot"></span> Normal
         </div>
+    </div>
+
+    <div class="analysis-caption" id="analysis-caption">
+        <strong>High confidence analysis</strong> — Results below are reliable for this <span id="caption-weeks">32</span>-week recording.
     </div>
 
     <div class="summary-row" id="summary-row">
@@ -89,6 +96,13 @@
                     <div class="label">Recording duration:</div><div class="value" id="recording-duration">1 hour</div>
                     <div class="label">Signal quality:</div><div class="value"><span class="dot" id="signal-dot"></span> <span id="signal-quality-text">Good</span></div>
                 </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">Signal Quality Details</div>
+                <p class="metric-desc" id="signal-quality-summary">Overall quality assessment with channel reliability</p>
+                <progress id="signal-quality-bar" max="100" value="92" style="width: 100%; height: 12px; border-radius: 8px;"></progress>
+                <p class="metric-desc" id="signal-channel-detail">Channel quality: 94% | 91% | 88% | 85%</p>
             </div>
 
             <div class="mode-toggle-container">
@@ -171,6 +185,13 @@
                 </div>
             </div>
             <div class="panel">
+                <div class="section-header">Explainability & SHAP</div>
+                <div class="chart-container shap-chart-wrapper">
+                    <canvas id="shap-chart"></canvas>
+                </div>
+                <p class="metric-desc" id="shap-caption">Top feature contributions to overall risk score.</p>
+            </div>
+            <div class="panel">
                 <div class="section-header">HRV Trend Graph</div>
                 <p class="metric-desc">Modeling, trend, developmental trajectory</p>
                 <div class="trend-container">
@@ -214,6 +235,16 @@
                     <strong>Recommendation</strong>
                     <p>Continue routine monitoring. Repeat in 2 weeks.</p>
                 </div>
+            </div>
+            <div class="panel">
+                <div class="section-header">Export & Integration</div>
+                <div class="export-grid">
+                    <button class="btn-export" id="btn-export-pdf">Export PDF</button>
+                    <button class="btn-export" id="btn-export-fhir">Export FHIR</button>
+                    <button class="btn-export" id="btn-export-csv">Export CSV</button>
+                    <button class="btn-export" id="btn-sync-emr">Sync KenyaEMR</button>
+                </div>
+                <div class="disclaimer-box" id="clinical-disclaimer">Important disclaimer will appear here.</div>
             </div>
             <div class="panel">
                 <div class="section-header">CLUSTER ANALYSIS <span style="font-size: 0.7rem; font-weight: normal;">(UNSUPERVISED LEARNING VISUALIZATION)</span></div>

@@ -10,6 +10,20 @@ from src.api.models.schemas import AnalysisResponse
 
 router = APIRouter()
 RESULTS_DB = {}
+LATEST_FILE_ID: Optional[str] = None
+
+@router.get("/analysis/latest", response_model=AnalysisResponse)
+async def get_latest_analysis():
+    """
+    Get the latest processed analysis result.
+    """
+    global LATEST_FILE_ID
+    if LATEST_FILE_ID and LATEST_FILE_ID in RESULTS_DB:
+        return AnalysisResponse(**RESULTS_DB[LATEST_FILE_ID])
+    if not RESULTS_DB:
+        raise HTTPException(status_code=404, detail="No analysis available")
+    latest_id = next(reversed(RESULTS_DB))
+    return AnalysisResponse(**RESULTS_DB[latest_id])
 
 @router.get("/analysis/{file_id}", response_model=AnalysisResponse)
 async def get_analysis(file_id: str):

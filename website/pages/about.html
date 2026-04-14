@@ -4,14 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About Us | Neuro-Genomic AI</title>
-    <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #0a1218 0%, #121c33 65%, #111827 100%);
+            color: #e2e8f0;
+            line-height: 1.7;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .navbar {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 18, 32, 0.94);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            z-index: 1000;
+        }
+        .navbar .container { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; gap: 1rem; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; }
+        .logo-icon { font-size: 1.45rem; }
+        .logo-text { font-size: 1.1rem; letter-spacing: 0.03em; color: #e2e8f0; }
+        .nav-menu { display: flex; list-style: none; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-menu a { color: #cbd5e1; text-decoration: none; font-size: 0.95rem; transition: color 0.25s ease; }
+        .nav-menu a.active, .nav-menu a:hover { color: #7dd3fc; }
+        .nav-buttons { display: flex; gap: 0.75rem; }
+        .btn-outline, .btn-primary { border-radius: 999px; font-weight: 600; padding: 0.75rem 1.2rem; transition: all 0.2s ease; text-decoration: none; }
+        .btn-outline { border: 1px solid rgba(125, 211, 252, 0.7); color: #cbd5e1; background: rgba(255,255,255,0.04); }
+        .btn-outline:hover { background: rgba(255,255,255,0.08); }
+        .btn-primary { background: linear-gradient(135deg, #38bdf8, #8b5cf6); color: white; }
+        .btn-primary:hover { filter: brightness(1.05); }
+
+        .page-header { padding: 6rem 0 2rem; text-align: center; }
+        .page-header h1 { font-size: clamp(2.5rem, 4vw, 4rem); line-height: 1.1; margin-bottom: 1rem; }
+        .page-header p { color: #94a3b8; font-size: 1.05rem; }
+
+        section { padding: 3.5rem 0; border-bottom: 1px solid rgba(148, 163, 184, 0.12); }
+        section h2 { font-size: 2.2rem; margin-bottom: 1.5rem; }
+
+        .mission-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .mission-content, .vision-content { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 24px; padding: 2rem; }
+        .mission-content h2, .vision-content h2 { font-size: 1.6rem; margin-bottom: 1rem; }
+        .mission-content p, .vision-content p { color: #cbd5e1; margin-bottom: 1rem; line-height: 1.8; }
+
+        .serve-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; align-items: center; }
+        .serve-list { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+        .serve-item { display: flex; gap: 1rem; }
+        .serve-icon { font-size: 2rem; }
+        .serve-item h3 { font-size: 1rem; margin-bottom: 0.5rem; color: #e2e8f0; }
+        .serve-item p { color: #cbd5e1; font-size: 0.95rem; }
+        .serve-image { border-radius: 20px; overflow: hidden; }
+        .serve-image img { width: 100%; height: auto; display: block; }
+
+        .unique-intro { color: #94a3b8; font-size: 1.1rem; margin-bottom: 2rem; }
+        .unique-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+        .unique-card { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 22px; padding: 1.75rem; transition: transform 0.3s ease, border-color 0.3s ease; }
+        .unique-card:hover { transform: translateY(-4px); border-color: rgba(59, 130, 246, 0.5); }
+        .unique-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .unique-card h3 { font-size: 1.2rem; margin-bottom: 0.85rem; color: #e2e8f0; }
+        .unique-card p { color: #cbd5e1; margin-bottom: 1rem; }
+        .unique-value { background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; padding: 1rem; border-radius: 8px; font-size: 0.95rem; color: #bfdbfe; }
+
+        .value-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+        .value-card { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 20px; padding: 1.75rem; }
+        .value-icon { font-size: 2rem; display: inline-block; margin-bottom: 0.75rem; }
+        .value-card h3 { font-size: 1.1rem; margin-bottom: 1rem; color: #e2e8f0; }
+        .value-card ul { list-style: none; display: grid; gap: 0.75rem; }
+        .value-card li { color: #cbd5e1; font-size: 0.95rem; display: flex; align-items: flex-start; gap: 0.7rem; }
+        .value-card li::before { content: '→'; color: #38bdf8; margin-top: 0.15rem; }
+
+        .timeline { position: relative; margin-top: 2rem; }
+        .timeline-item { background: rgba(15, 23, 42, 0.95); border-left: 3px solid #38bdf8; border-radius: 12px; padding: 1.75rem; margin-bottom: 1.5rem; }
+        .timeline-year { font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .timeline-item h4 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #e2e8f0; }
+        .timeline-item p { color: #cbd5e1; }
+
+        .cta-section { background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(99, 102, 241, 0.1)); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 28px; padding: 3rem; }
+        .cta-section h2 { text-align: center; }
+        .cta-section p { text-align: center; color: #cbd5e1; margin-bottom: 2rem; }
+        .cta-buttons { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+
+        .footer {
+            position: relative;
+            background: rgba(7, 10, 23, 0.98);
+            border-top: 1px solid rgba(148, 163, 184, 0.12);
+            padding: 3rem 0 1.5rem;
+            overflow: hidden;
+        }
+        .footer::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url('../images/footer.jpg.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem; position: relative; z-index: 1; }
+        .footer-brand .logo { gap: 0.65rem; margin-bottom: 1rem; }
+        .footer-brand p { color: #94a3b8; line-height: 1.8; max-width: 340px; }
+        .footer-links h4 { margin-bottom: 0.85rem; color: #e2e8f0; font-size: 0.95rem; }
+        .footer-links a { display: block; color: #94a3b8; text-decoration: none; margin-bottom: 0.65rem; font-size: 0.92rem; transition: color 0.25s; }
+        .footer-links a:hover { color: #7dd3fc; }
+        .footer-bottom { color: #94a3b8; text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(148, 163, 184, 0.12); font-size: 0.9rem; position: relative; z-index: 1; }
+
+        @media (max-width: 1024px) { .mission-grid, .serve-grid, .value-grid { grid-template-columns: 1fr; } .unique-grid { grid-template-columns: 1fr; } .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 640px) { .page-header { padding: 4rem 0 1.5rem; } .nav-menu { display: none; } .cta-buttons { flex-direction: column; } }
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <div class="nav-brand">
-                <span class="logo-icon">NG</span>
+            <div class="logo">
+                <span class="logo-icon">🧬</span>
                 <span class="logo-text">Neuro-Genomic AI</span>
             </div>
             <ul class="nav-menu">
@@ -20,27 +129,26 @@
                 <li><a href="team.html">Team</a></li>
                 <li><a href="services.html">Services</a></li>
                 <li><a href="technology.html">Technology</a></li>
-                <li><a href="dashboard.html">Dashboard</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
             <div class="nav-buttons">
                 <a href="login.html" class="btn-outline">Sign In</a>
-                <a href="register.html" class="btn-primary">Register</a>
+                <a href="contact.html" class="btn-primary">Request Demo</a>
             </div>
         </div>
     </nav>
 
     <main>
         <!-- Page Header -->
-        <section class="page-header">
-            <div class="container">
-                <h1>About Neuro-Genomic AI</h1>
-                <p>Understanding development by listening to the earliest signals of life.</p>
+        <section style="padding: 6rem 0 2rem; border-bottom: none;">
+            <div class="container" style="text-align: center;">
+                <h1 style="font-size: clamp(2.5rem, 4vw, 4rem); line-height: 1.1; margin-bottom: 1rem;">Understanding fetal development through AI and heart rate signals</h1>
+                <p style="color: #94a3b8; font-size: 1.05rem;">Clinical-grade analytics, research-ready transparency, and equitable access to prenatal intelligence.</p>
             </div>
         </section>
 
-        <!-- Our Mission -->
-        <section class="mission-section">
+        <!-- Our Mission & Vision -->
+        <section>
             <div class="container">
                 <div class="mission-grid">
                     <div class="mission-content">
@@ -49,7 +157,7 @@
                         <p>We believe that every heartbeat contains information. By unlocking the patterns within heart rate variability, we can detect developmental trajectories, identify potential concerns earlier, and ultimately improve outcomes for mothers and babies worldwide.</p>
                     </div>
                     <div class="vision-content">
-                        <h2>Our Vision</h2>
+                        <h2 style="font-size: 1.6rem; margin-bottom: 1rem;">Our Vision</h2>
                         <p>To become the global standard for AI-powered fetal nervous system assessment — deployed in every major hospital, research institution, and medical device platform across the world.</p>
                         <p>We envision a future where no parent has to wonder if their baby's nervous system is developing normally, because the data will be clear, transparent, and actionable.</p>
                     </div>
@@ -57,14 +165,13 @@
             </div>
         </section>
 
-        <!-- Who We Serve + Image Section -->
-        <section class="who-we-serve">
+        <!-- Who We Serve -->
+        <section>
             <div class="container">
+                <h2>Who We Serve</h2>
                 <div class="serve-grid">
-                    <div class="serve-content">
-                        <h2>Who We Serve</h2>
-                        <p>Neuro-Genomic AI is built for the entire prenatal care ecosystem — from researchers discovering new patterns to clinicians making real-time decisions.</p>
-
+                    <div>
+                        <p style="color: #cbd5e1; margin-bottom: 1.5rem;">Neuro-Genomic AI is built for the entire prenatal care ecosystem — from researchers discovering new patterns to clinicians making real-time decisions.</p>
                         <div class="serve-list">
                             <div class="serve-item">
                                 <span class="serve-icon">🔬</span>
@@ -97,57 +204,48 @@
                         </div>
                     </div>
                     <div class="serve-image">
-                        <img src="../images/team-collaborating.jpg.png" alt="Neuro-Genomic AI team collaborating" style="width:100%; border-radius:16px;">
+                        <img src="../images/team-collaborating.jpg.png" alt="Neuro-Genomic AI team collaborating">
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- What Makes Us Unique -->
-        <section class="unique-section">
+        <section>
             <div class="container">
                 <h2>What Makes Us Unique</h2>
                 <p class="unique-intro">We're not just another AI health startup. Here's what sets Neuro-Genomic AI apart.</p>
-
                 <div class="unique-grid">
                     <div class="unique-card">
                         <div class="unique-icon">🧠</div>
                         <h3>Unsupervised Discovery, Not Just Prediction</h3>
                         <p>Most AI models are supervised — they learn to predict what you already know. Our unsupervised approach discovers patterns no one has seen before, revealing novel developmental trajectories.</p>
-                        <div class="unique-value">
-                            <strong>Value to you:</strong> Discover what you didn't know to look for.
-                        </div>
+                        <div class="unique-value"><strong>The benefit:</strong> Discover what you didn't know to look for.</div>
                     </div>
                     <div class="unique-card">
                         <div class="unique-icon">🛡️</div>
                         <h3>Ethical AI Built Into Every Layer</h3>
                         <p>We don't treat ethics as a compliance checkbox. Uncertainty visualization, confidence intervals, and transparent limitations are core features — not afterthoughts.</p>
-                        <div class="unique-value">
-                            <strong>Value to you:</strong> Trust what the AI tells you. Know when it's uncertain.
-                        </div>
+                        <div class="unique-value"><strong>The benefit:</strong> Trust what the AI tells you. Know when it's uncertain.</div>
                     </div>
                     <div class="unique-card">
                         <div class="unique-icon">📈</div>
                         <h3>Longitudinal Tracking, Not Snapshots</h3>
                         <p>Other tools give you a point-in-time risk score. We track individual developmental trajectories across gestation — showing how each fetus is progressing over time.</p>
-                        <div class="unique-value">
-                            <strong>Value to you:</strong> See development as a journey, not just a moment.
-                        </div>
+                        <div class="unique-value"><strong>The benefit:</strong> See development as a journey, not just a moment.</div>
                     </div>
                     <div class="unique-card">
                         <div class="unique-icon">☁️</div>
                         <h3>Software-Only, Scalable by Design</h3>
                         <p>No hardware costs. No manufacturing delays. Our cloud-native platform deploys instantly and scales to thousands of hospitals.</p>
-                        <div class="unique-value">
-                            <strong>Value to you:</strong> Lower costs, faster deployment, global reach.
-                        </div>
+                        <div class="unique-value"><strong>The benefit:</strong> Lower costs, faster deployment, global reach.</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- The Value We Add -->
-        <section class="value-add">
+        <!-- Value We Add -->
+        <section>
             <div class="container">
                 <h2>The Value We Add to Your Work</h2>
                 <div class="value-grid">
@@ -157,8 +255,8 @@
                         <ul>
                             <li>Publish faster with automated HRV analysis</li>
                             <li>Access publication-ready visualizations</li>
-                            <li>Replicate results with documented, open-source code</li>
-                            <li>Generate novel hypotheses through unsupervised discovery</li>
+                            <li>Replicate results with documented code</li>
+                            <li>Generate novel hypotheses through discovery</li>
                         </ul>
                     </div>
                     <div class="value-card">
@@ -186,7 +284,7 @@
         </section>
 
         <!-- Our Journey -->
-        <section class="journey-section">
+        <section>
             <div class="container">
                 <h2>Our Journey</h2>
                 <div class="timeline">
@@ -230,13 +328,13 @@
         </section>
 
         <!-- CTA -->
-        <section class="cta-section">
+        <section class="cta-section" style="border-bottom: none;">
             <div class="container">
                 <h2>Ready to transform fetal monitoring?</h2>
                 <p>Join researchers and clinicians using Neuro-Genomic AI to understand development from the earliest signals of life.</p>
                 <div class="cta-buttons">
-                    <a href="contact.html" class="btn-primary">Request a Demo</a>
-                    <a href="services.html" class="btn-outline">View Services</a>
+                    <a href="contact.html" class="btn-primary" style="display: inline-block; text-align: center;">Request a Demo</a>
+                    <a href="services.html" class="btn-outline" style="display: inline-block; text-align: center;">View Services</a>
                 </div>
             </div>
         </section>
@@ -265,21 +363,17 @@
                 <div class="footer-links">
                     <h4>Resources</h4>
                     <a href="technology.html">Technology</a>
-                    <a href="#">Documentation</a>
-                    <a href="#">API Reference</a>
-                    <a href="#">Research Papers</a>
+                    <a href="terms.html">Terms of Service</a>
+                    <a href="privacy.html">Privacy Policy</a>
                 </div>
                 <div class="footer-links">
-                    <h4>Legal</h4>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
-                    <a href="#">Ethics Statement</a>
+                    <h4>Support</h4>
+                    <a href="contact.html">Request Demo</a>
+                    <a href="contact.html">Integration Support</a>
+                    <a href="contact.html">Technical FAQ</a>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved.</p>
-                <p>📍 Kirinyaga University Innovation Hub, Kerugoya, Kenya</p>
-            </div>
+            <div class="footer-bottom">&copy; 2026 Neuro-Genomic AI Ltd. | Kirinyaga University Innovation Hub, Kerugoya, Kenya</div>
         </div>
     </footer>
 

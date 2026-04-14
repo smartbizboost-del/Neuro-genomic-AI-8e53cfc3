@@ -81,13 +81,14 @@
         .pipeline-step { background: #0f172a; padding: 0.75rem 1.25rem; border-radius: 30px; border: 1px solid #3b82f6; }
         
         /* Footer */
-        .footer { background: #0f172a; padding: 3rem 0 2rem; border-top: 1px solid #334155; margin-top: 4rem; }
+        .footer { position: relative; background: #0f172a; padding: 3rem 0 2rem; border-top: 1px solid #334155; margin-top: 4rem; overflow: hidden; }
+        .footer::before { content: ''; position: absolute; inset: 0; background-image: url(../images/footer.jpg.png); background-repeat: no-repeat; background-size: cover; background-position: center; opacity: 0.8; pointer-events: none; }
         .footer-links { display: flex; flex-direction: column; gap: 0.5rem; }
         .footer-links h4 { margin-bottom: 0.5rem; }
         .footer-links a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; }
         .footer-links a:hover { color: #3b82f6; }
-        .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
-        .footer-bottom { text-align: center; padding-top: 2rem; border-top: 1px solid #334155; margin-top: 2rem; color: #64748b; }
+        .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; position: relative; z-index: 1; }
+        .footer-bottom { text-align: center; padding-top: 2rem; border-top: 1px solid #334155; margin-top: 2rem; color: #64748b; position: relative; z-index: 1; }
         
         @media (max-width: 768px) {
             .nav-links { display: none; }
