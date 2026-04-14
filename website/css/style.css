@@ -25,8 +25,15 @@ body {
     background: rgba(15, 23, 42, 0.9);
     backdrop-filter: blur(10px);
     z-index: 1000;
-    padding: 1rem 0;
+    padding: 0.6rem 0;
     border-bottom: 1px solid #334155;
+    height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+body {
+    padding-top: 60px;
 }
 
 .navbar .container {
@@ -38,9 +45,12 @@ body {
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 1.25rem;
+    gap: 6px;
+    font-size: 1.1rem;
     font-weight: 700;
+    flex: 0 0 auto;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .logo-icon {
@@ -53,6 +63,15 @@ body {
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
+}
+
+.logo-image {
+    height: 28px;
+    width: 28px;
+    display: block;
+    object-fit: cover;
+    flex: 0 0 28px;
+    object-position: center;
 }
 
 .nav-menu {

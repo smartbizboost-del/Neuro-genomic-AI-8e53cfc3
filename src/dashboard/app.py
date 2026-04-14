@@ -40,24 +40,39 @@ def render_risk_cards(risk_assessment: dict):
     st.markdown("### Risk Assessment")
     cols = st.columns(3)
     
-    risks = [
-        ("IUGR Risk", risk_assessment.get("iugr_risk", {}), "🔴"),
-        ("Preterm Risk", risk_assessment.get("preterm_risk", {}), "🟡"),
-        ("Hypoxia Risk", risk_assessment.get("hypoxia_risk", {}), "⚪")
-    ]
+    # Handle both new format (risk_assessment with iugr_risk, etc.)
+    # and old format (risk with predicted_class, etc.)
+    if "iugr_risk" in risk_assessment:
+        # New format
+        risks = [
+            ("IUGR Risk", risk_assessment.get("iugr_risk", {}), "🔴"),
+            ("Preterm Risk", risk_assessment.get("preterm_risk", {}), "🟡"),
+            ("Hypoxia Risk", risk_assessment.get("hypoxia_risk", {}), "⚪")
+        ]
+    else:
+        # Old format - convert from predicted probabilities
+        normal_score = risk_assessment.get("normal", 0.78) * 100
+        suspect_score = risk_assessment.get("suspect", 0.17) * 100
+        pathological_score = risk_assessment.get("pathological", 0.05) * 100
+        
+        risks = [
+            ("Normal", {"score": normal_score, "ci": "±8%", "note": ""}, "🟢"),
+            ("Suspect", {"score": suspect_score, "ci": "±12%", "note": ""}, "🟡"),
+            ("Pathological", {"score": pathological_score, "ci": "±5%", "note": ""}, "🔴")
+        ]
     
     for col, (label, data, emoji) in zip(cols, risks):
         with col:
-            score = data.get("score", 0)
-            ci = data.get("ci", "")
-            note = data.get("note", "")
+            score = data.get("score", 0) if isinstance(data, dict) else 0
+            ci = data.get("ci", "") if isinstance(data, dict) else ""
+            note = data.get("note", "") if isinstance(data, dict) else ""
             
             color = "#4ade80" if score < 20 else "#fbbf24" if score < 40 else "#f87171"
             
             st.markdown(f"""
             <div style="background-color: {color}20; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid {color}">
                 <h3>{emoji} {label}</h3>
-                <h2>{score}%</h2>
+                <h2>{score:.1f}%</h2>
                 <p>{ci}</p>
                 {f'<small>{note}</small>' if note else ''}
             </div>
@@ -71,15 +86,21 @@ def render_explainability(shap_dict: dict):
         st.info("Explainability data not available yet.")
         return
     
-    # Convert to DataFrame for plotting
-    df = pd.DataFrame(list(shap_dict.items()), columns=["Feature", "Contribution"])
-    df = df.sort_values("Contribution", ascending=True).tail(10)  # Top 10 features
-    
-    fig = px.bar(df, x="Contribution", y="Feature", orientation='h',
-                 title="Feature Contribution (SHAP values)",
-                 color="Contribution", color_continuous_scale="RdBu")
-    fig.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10))
-    st.plotly_chart(fig, use_container_width=True)
+    try:
+        # Convert to DataFrame for plotting
+        if isinstance(shap_dict, dict) and len(shap_dict) > 0:
+            df = pd.DataFrame(list(shap_dict.items()), columns=["Feature", "Contribution"])
+            df = df.sort_values("Contribution", ascending=True).tail(10)  # Top 10 features
+            
+            fig = px.bar(df, x="Contribution", y="Feature", orientation='h',
+                         title="Feature Contribution (SHAP values)",
+                         color="Contribution", color_continuous_scale="RdBu")
+            fig.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.caption("No explainability features available")
+    except Exception as e:
+        st.warning(f"Could not display explainability: {e}")
 
 
 def render_recommendation(recommendation: str):
@@ -395,13 +416,20 @@ def _render_top_action_bar(patient_id: str) -> None:
     with c2:
         st.selectbox("Patient", [patient_id, "Jane Doe", "PT-032", "PT-041"], label_visibility="collapsed")
     with c3:
-        with st.popover("Export"):
-            st.download_button("Clinical report export", "Report export placeholder", file_name="clinical_report.txt")
-            st.download_button("Validation results", "Validation export placeholder", file_name="validation_results.txt")
+        if st.button("📥 Export", use_container_width=True, key="btn_export"):
+            st.info("Export options:")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.download_button("Clinical Report", "Report export placeholder", file_name="clinical_report.txt", use_container_width=True)
+            with col_b:
+                st.download_button("Validation", "Validation export placeholder", file_name="validation_results.txt", use_container_width=True)
     with c4:
-        with st.popover("Report (PDF)"):
-            st.button("Generate PDF", use_container_width=True)
-            st.button("Open last report", use_container_width=True)
+        if st.button("📄 PDF Report", use_container_width=True, key="btn_pdf"):
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.button("Generate PDF", use_container_width=True, key="btn_gen_pdf")
+            with col_b:
+                st.button("Open Last", use_container_width=True, key="btn_open_pdf")
 
 
 def _feature_card(title: str, value_text: str, subtitle: str, color: str) -> str:
@@ -570,19 +598,33 @@ if "latest_weeks" not in st.session_state:
     st.session_state["latest_weeks"] = 32
 if "auto_fetch_latest" not in st.session_state:
     st.session_state["auto_fetch_latest"] = False
-if "nav_page" not in st.session_state:
-    st.session_state["nav_page"] = "Upload & Analyze"
+if "_page_nav" not in st.session_state:
+    st.session_state["_page_nav"] = "Upload & Analyze"
 
 st.sidebar.header("Display")
 readable_mode = st.sidebar.toggle("Readable mode (larger UI)", value=True)
 compact_mode = st.sidebar.toggle("Compact one-screen mode", value=not readable_mode)
 
 _inject_theme(compact=compact_mode, readable=readable_mode)
-st.title("Neuro-Genomic AI Dashboard")
-st.markdown("Clinical intelligence view for fetal ECG analysis")
+
+# Display logo and title at the top
+col_logo, col_title = st.columns([0.05, 1])
+with col_logo:
+    st.image("logo.png", width=28, use_column_width=False)
+with col_title:
+    st.title("Neuro-Genomic AI Dashboard")
+    st.markdown("**Clinical intelligence view for fetal ECG analysis**")
 
 st.sidebar.header("Navigation")
-page = st.sidebar.radio("Go to", ["Upload & Analyze", "Results Viewer", "Clinical Insights"], key="nav_page")
+# Get the index of the current page from session state
+page_options = ["Upload & Analyze", "Results Viewer", "Clinical Insights"]
+current_page = st.session_state.get("_page_nav", "Upload & Analyze")
+current_index = page_options.index(current_page) if current_page in page_options else 0
+
+page = st.sidebar.radio("Go to", page_options, index=current_index)
+
+# Update internal state when radio selection changes
+st.session_state["_page_nav"] = page
 
 if page == "Upload & Analyze":
     st.header("Upload Fetal ECG File")
@@ -607,7 +649,7 @@ if page == "Upload & Analyze":
                     st.info("Processing started. Dashboard will use this file for results.")
                     if auto_open:
                         st.session_state["auto_fetch_latest"] = True
-                        st.session_state["nav_page"] = "Results Viewer"
+                        st.session_state["_page_nav"] = "Results Viewer"
                         st.rerun()
                 else:
                     st.error(f"Upload failed: {response.text}")
@@ -674,8 +716,8 @@ elif page == "Results Viewer":
                     st.warning("No uploaded file found yet. Upload first or enable Demo mode.")
 
             if data is not None:
-                # Check if this is the new pipeline format
-                if data.get("status") == "success" and "developmental_index" in data:
+                # Use new optimized layout if data has developmental_index (all formats)
+                if "developmental_index" in data:
                     # Use new optimized component layout
                     st.markdown("---")
                     st.subheader(f"Patient: {patient_name} | {data.get('gestational_weeks', 'N/A')} weeks")
@@ -714,20 +756,21 @@ elif page == "Results Viewer":
                                 st.caption(f"Signal visualization unavailable: {e}")
                         
                         # Risk cards
-                        risk_assessment = data.get("risk_assessment", {})
+                        risk_assessment = data.get("risk_assessment", {}) or data.get("risk", {})
                         if risk_assessment:
                             render_risk_cards(risk_assessment)
                         
                         # HRV Metrics
                         st.markdown("**HRV & PRSA Metrics**")
-                        metrics = data.get("hrv_metrics", {})
-                        cols = st.columns(3)
-                        with cols[0]:
-                            st.metric("RMSSD", f"{metrics.get('rmssd', 35)} ms", "Normal")
-                        with cols[1]:
-                            st.metric("LF/HF", f"{metrics.get('lf_hf_ratio', 1.7)}", "Moderate")
-                        with cols[2]:
-                            st.metric("AC-T9", f"{metrics.get('ac_t9', 0.87)}", "IUGR predictor")
+                        metrics = data.get("hrv_metrics", {}) or data.get("features", {})
+                        if metrics:
+                            cols = st.columns(3)
+                            with cols[0]:
+                                st.metric("RMSSD", f"{metrics.get('rmssd', 35)} ms", "Normal")
+                            with cols[1]:
+                                st.metric("LF/HF", f"{metrics.get('lf_hf_ratio', metrics.get('lf_hf', 1.7))}", "Moderate")
+                            with cols[2]:
+                                st.metric("AC-T9", f"{metrics.get('ac_t9', metrics.get('sample_entropy', 0.87))}", "IUGR predictor")
                     
                     with right:
                         st.markdown("**Insights**")
@@ -742,18 +785,25 @@ elif page == "Results Viewer":
                             )
                             render_trajectory_panel(trajectory)
                         
-                        # Recommendation
-                        recommendation = data.get("recommendation", "Routine monitoring recommended.")
+                        # Recommendation  
+                        if data.get("recommendation"):
+                            recommendation = data.get("recommendation")
+                        elif data.get("interpretation"):
+                            # Use first interpretation line as recommendation in old format
+                            recommendations = data.get("interpretation", [])
+                            recommendation = recommendations[0] if recommendations else "Routine monitoring recommended."
+                        else:
+                            recommendation = "Routine monitoring recommended."
                         render_recommendation(recommendation)
                         
                         # Export buttons
                         st.markdown("---")
                         col_a, col_b = st.columns(2)
                         with col_a:
-                            if st.button("📥 Export PDF"):
+                            if st.button("📥 Export PDF", key="btn_exp_pdf"):
                                 st.success("Report exported (demo)")
                         with col_b:
-                            if st.button("🔗 KenyaEMR"):
+                            if st.button("🔗 KenyaEMR", key="btn_emr"):
                                 st.success("FHIR export OK")
                     
                     # Store recent values for trajectory tracking
@@ -766,7 +816,8 @@ elif page == "Results Viewer":
                     
                     # Explainability section
                     st.markdown("---")
-                    render_explainability(data.get("explainability", {}))
+                    explainability = data.get("explainability", {}) or data.get("features", {})
+                    render_explainability(explainability)
                     
                 else:
                     # Fallback to old dashboard format

@@ -27,9 +27,10 @@
             border-bottom: 1px solid #334155;
         }
         .navbar .container { display: flex; justify-content: space-between; align-items: center; }
-        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
-        .logo-icon { font-size: 1.8rem; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; flex: 0 0 auto; overflow: hidden; }
         .logo-text { background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .logo-image { height: 28px; width: 28px; display: block; object-fit: cover; flex: 0 0 28px; object-position: center; }
+        body { padding-top: 60px; }
         .nav-links { display: flex; list-style: none; gap: 2rem; }
         .nav-links a { color: #cbd5e1; text-decoration: none; transition: color 0.3s; }
         .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
@@ -101,8 +102,7 @@
     <nav class="navbar">
         <div class="container">
             <div class="logo">
-                <span class="logo-icon">🧬</span>
-                <span class="logo-text">Neuro-Genomic AI</span>
+                <img src="../images/logo.png" alt="Neuro-Genomic AI" class="logo-image">
             </div>
             <ul class="nav-links">
                 <li><a href="../index.html">Home</a></li>
@@ -230,7 +230,7 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
-                <div><div class="logo"><span class="logo-icon">🧬</span><span class="logo-text">Neuro-Genomic AI</span></div><p style="color:#94a3b8; margin-top:0.5rem;">Understanding development by listening to the earliest signals of life.</p></div>
+                <div><div class="logo"><img src="../images/logo.png" alt="Neuro-Genomic AI" class="logo-image" style="height: 40px; width: 40px; object-fit: cover; flex: 0 0 40px;"></div><p style="color:#94a3b8; margin-top:0.5rem; font-weight:600;">Neuro-Genomic AI</p><p style="color:#94a3b8;">Understanding development by listening to the earliest signals of life.</p></div>
                 <div class="footer-links"><h4>Company</h4><a href="about.html">About</a><a href="team.html">Team</a><a href="services.html">Services</a><a href="contact.html">Contact</a></div>
                 <div class="footer-links"><h4>Resources</h4><a href="technology.html">Technology</a><a href="#">Documentation</a><a href="#">API Reference</a></div>
                 <div class="footer-links"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="#">Ethics Statement</a></div>

@@ -24,9 +24,11 @@
             z-index: 1000;
         }
         .navbar .container { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; gap: 1rem; }
-        .logo { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; flex: 0 0 auto; overflow: hidden; }
         .logo-icon { font-size: 1.45rem; }
         .logo-text { font-size: 1.1rem; letter-spacing: 0.03em; color: #e2e8f0; }
+        .logo-image { height: 28px; width: 28px; display: block; object-fit: cover; flex: 0 0 28px; object-position: center; }
+        body { padding-top: 60px; }
         .nav-menu { display: flex; list-style: none; gap: 1.5rem; flex-wrap: wrap; }
         .nav-menu a { color: #cbd5e1; text-decoration: none; font-size: 0.95rem; transition: color 0.25s ease; }
         .nav-menu a.active, .nav-menu a:hover { color: #7dd3fc; }
@@ -120,8 +122,7 @@
     <nav class="navbar">
         <div class="container">
             <div class="logo">
-                <span class="logo-icon">🧬</span>
-                <span class="logo-text">Neuro-Genomic AI</span>
+                <img src="../images/logo.png" alt="Neuro-Genomic AI" class="logo-image">
             </div>
             <ul class="nav-menu">
                 <li><a href="../index.html">Home</a></li>
@@ -344,9 +345,11 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <span class="logo-icon">🧬</span>
-                    <span class="logo-text">Neuro-Genomic AI</span>
-                    <p>Understanding development by listening to the earliest signals of life.</p>
+                    <img src="../images/logo.png" alt="Neuro-Genomic AI" class="logo-image" style="height: 50px; width: 50px; object-fit: cover; flex: 0 0 50px;">
+                    <div>
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Neuro-Genomic AI</p>
+                        <p>Understanding development by listening to the earliest signals of life.</p>
+                    </div>
                     <div class="footer-trust">
                         <span>Partner: Kirinyaga University Innovation Hub</span>
                         <span>Recognition: #2 Innovators</span>
