@@ -610,8 +610,9 @@ _inject_theme(compact=compact_mode, readable=readable_mode)
 # Display logo and title at the top
 col_logo, col_title = st.columns([0.05, 1])
 with col_logo:
-    st.image("logo.png", width=28, use_column_width=False)
+    # st.image("logo.png", width=28, use_column_width=False)
 with col_title:
+        pass
     st.title("Neuro-Genomic AI Dashboard")
     st.markdown("**Clinical intelligence view for fetal ECG analysis**")
 
