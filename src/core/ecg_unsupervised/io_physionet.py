@@ -62,11 +62,15 @@ def resolve_dataset_name(name: str) -> str:
     normalized = ALIASES.get(normalized, normalized)
     if normalized not in PHYSIONET_DATASETS:
         supported = ", ".join(sorted(PHYSIONET_DATASETS))
-        raise ValueError(f"Unsupported dataset '{name}'. Supported datasets: {supported}")
+        raise ValueError(
+            f"Unsupported dataset '{name}'. Supported datasets: {supported}")
     return normalized
 
 
-def get_record_candidates(dataset: str, explicit_record: str | None = None, limit: int = 20) -> list[str]:
+def get_record_candidates(
+        dataset: str,
+        explicit_record: str | None = None,
+        limit: int = 20) -> list[str]:
     if explicit_record:
         return [explicit_record]
     if wfdb is None:
@@ -82,16 +86,21 @@ def get_record_candidates(dataset: str, explicit_record: str | None = None, limi
 
     candidates: list[str] = []
     for rec in records[:limit]:
-        for candidate in [str(rec), str(rec).replace(".hea", ""), str(rec).replace(".dat", "")]:
+        for candidate in [str(rec), str(rec).replace(
+                ".hea", ""), str(rec).replace(".dat", "")]:
             candidate = candidate.strip()
             if candidate and candidate not in candidates:
                 candidates.append(candidate)
     return candidates or ["100"]
 
 
-def download_record_dataframe(dataset: str, record: str, channels: list[int] | None = None) -> pd.DataFrame:
+def download_record_dataframe(
+        dataset: str,
+        record: str,
+        channels: list[int] | None = None) -> pd.DataFrame:
     if wfdb is None:
-        raise ImportError("wfdb is not installed. Install dependencies from requirements.txt first.")
+        raise ImportError(
+            "wfdb is not installed. Install dependencies from requirements.txt first.")
 
     wf_record = wfdb.rdrecord(record, pn_dir=dataset, channels=channels)
     values = wf_record.p_signal

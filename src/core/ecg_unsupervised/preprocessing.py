@@ -5,10 +5,12 @@ from scipy import signal
 
 
 class ECGPreprocessor:
-    def __init__(self, sampling_rate: int = 500, lowcut: float = 0.5, highcut: float = 45.0, order: int = 4):
+    def __init__(self, sampling_rate: int = 500, lowcut: float = 0.5,
+                 highcut: float = 45.0, order: int = 4):
         self.fs = sampling_rate
         nyquist = self.fs / 2.0
-        self.band_b, self.band_a = signal.butter(order, [lowcut / nyquist, highcut / nyquist], btype="band")
+        self.band_b, self.band_a = signal.butter(
+            order, [lowcut / nyquist, highcut / nyquist], btype="band")
 
     def bandpass(self, x: np.ndarray) -> np.ndarray:
         if x.ndim == 1:
@@ -18,7 +20,8 @@ class ECGPreprocessor:
             out[:, i] = signal.filtfilt(self.band_b, self.band_a, x[:, i])
         return out
 
-    def notch(self, x: np.ndarray, freq: float = 50.0, q: float = 30.0) -> np.ndarray:
+    def notch(self, x: np.ndarray, freq: float = 50.0,
+              q: float = 30.0) -> np.ndarray:
         w0 = freq / (self.fs / 2.0)
         b, a = signal.iirnotch(w0=w0, Q=q)
         if x.ndim == 1:
@@ -28,7 +31,8 @@ class ECGPreprocessor:
             out[:, i] = signal.filtfilt(b, a, x[:, i])
         return out
 
-    def remove_baseline(self, x: np.ndarray, window_samples: int | None = None) -> np.ndarray:
+    def remove_baseline(self, x: np.ndarray,
+                        window_samples: int | None = None) -> np.ndarray:
         if window_samples is None:
             window_samples = max(5, int(self.fs * 0.2) | 1)
         if x.ndim == 1:

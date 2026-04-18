@@ -12,6 +12,7 @@ router = APIRouter()
 RESULTS_DB = {}
 LATEST_FILE_ID: Optional[str] = None
 
+
 @router.get("/analysis/latest", response_model=AnalysisResponse)
 async def get_latest_analysis():
     """
@@ -25,6 +26,7 @@ async def get_latest_analysis():
     latest_id = next(reversed(RESULTS_DB))
     return RESULTS_DB[latest_id]
 
+
 @router.get("/analysis/{file_id}", response_model=AnalysisResponse)
 async def get_analysis(file_id: str):
     """
@@ -36,14 +38,16 @@ async def get_analysis(file_id: str):
         uuid.UUID(file_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid file ID format")
-    
+
     # Return actual result if available (preliminary or complete)
     if file_id in RESULTS_DB:
         result_data = RESULTS_DB[file_id]
         return result_data
-    
+
     # If not found, return 404 (don't return mock)
-    raise HTTPException(status_code=404, detail="Analysis not found. Please check file_id.")
+    raise HTTPException(
+        status_code=404,
+        detail="Analysis not found. Please check file_id.")
 
 
 @router.get("/analysis/{file_id}/status")
@@ -51,7 +55,7 @@ async def get_analysis_status(file_id: str):
     """
     Get processing status of an analysis.
     Useful for polling to know when full results are ready.
-    
+
     Returns:
     - status: "processing", "completed", "error"
     - is_preliminary: boolean indicating if results are preliminary or final
@@ -62,10 +66,10 @@ async def get_analysis_status(file_id: str):
         uuid.UUID(file_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid file ID format")
-    
+
     if file_id not in RESULTS_DB:
         raise HTTPException(status_code=404, detail="File not found")
-    
+
     result_data = RESULTS_DB[file_id]
     return {
         "file_id": file_id,

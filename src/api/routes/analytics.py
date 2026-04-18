@@ -25,11 +25,16 @@ class BenchmarkRequest(BaseModel):
 async def predict_trajectory(request: AnalyticsRequest):
     """Predict future developmental trajectory based on historical data."""
     if len(request.historical_data) < 2:
-        raise HTTPException(status_code=400, detail="At least two historical points are required for prediction")
-    return predict_developmental_trajectory([d.model_dump() for d in request.historical_data])
+        raise HTTPException(
+            status_code=400,
+            detail="At least two historical points are required for prediction")
+    return predict_developmental_trajectory(
+        [d.model_dump() for d in request.historical_data])
 
 
 @router.post("/analytics/benchmark")
 async def benchmark_patient(request: BenchmarkRequest):
     """Benchmark patient features against a matched cohort."""
-    return benchmark_against_cohort(request.patient_features, [d.model_dump() for d in request.cohort_data])
+    return benchmark_against_cohort(
+        request.patient_features, [
+            d.model_dump() for d in request.cohort_data])

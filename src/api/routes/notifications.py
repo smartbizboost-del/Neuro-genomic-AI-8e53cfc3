@@ -35,7 +35,8 @@ async def list_notifications(current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/notifications/send")
-async def send_notification(payload: NotificationRequest, current_user: dict = Depends(get_current_user)):
+async def send_notification(payload: NotificationRequest,
+                            current_user: dict = Depends(get_current_user)):
     """Send a notification to a clinician or care team."""
     # In a production system, this would enqueue a delivery task
     return {

@@ -45,19 +45,21 @@ if 'analysis_complete' not in st.session_state:
 with st.sidebar:
     st.markdown("### 🧬 Neuro-Genomic AI")
     st.markdown("---")
-    
+
     # Patient Information
     st.markdown("#### 👤 Patient Information")
     patient_id = st.text_input("Patient ID", "PT_001")
     gestational_weeks = st.slider("Gestational Age (weeks)", 24, 42, 34)
     maternal_age = st.number_input("Maternal Age", 18, 45, 28)
-    
+
     st.markdown("---")
-    
+
     # Upload or Demo
-    uploaded_file = st.file_uploader("Upload ECG Recording", type=['csv', 'edf', 'txt'])
+    uploaded_file = st.file_uploader(
+        "Upload ECG Recording", type=[
+            'csv', 'edf', 'txt'])
     demo_mode = st.button("🎮 Run Demo Analysis", use_container_width=True)
-    
+
     st.markdown("---")
     st.markdown("### 📊 Signal Quality")
     st.info("No recording loaded")
@@ -69,7 +71,7 @@ st.caption("Clinical Decision Support for Fetal Development Monitoring")
 # If demo mode or file uploaded
 if demo_mode or uploaded_file:
     st.session_state.analysis_complete = True
-    
+
     # Simulate analysis results (replace with actual API call)
     st.session_state.results = {
         'developmental_index': 0.78,
@@ -91,9 +93,11 @@ if demo_mode or uploaded_file:
         },
         'prsa': {'AC_T9': 32.4, 'DC_T9': 29.8},
         'feature_importance': [
-            {'feature': 'RMSSD', 'importance': -0.32, 'direction': 'decreases risk'},
+            {'feature': 'RMSSD', 'importance': -
+                0.32, 'direction': 'decreases risk'},
             {'feature': 'LF/HF', 'importance': 0.28, 'direction': 'increases risk'},
-            {'feature': 'Sample Entropy', 'importance': -0.15, 'direction': 'decreases risk'}
+            {'feature': 'Sample Entropy', 'importance': -
+                0.15, 'direction': 'decreases risk'}
         ],
         'recommendation': "Continue routine monitoring. Repeat in 2 weeks."
     }
@@ -101,13 +105,16 @@ if demo_mode or uploaded_file:
 # Display results if available
 if st.session_state.analysis_complete and st.session_state.results:
     results = st.session_state.results
-    
+
     st.markdown("### Clinical Decision Support for Fetal Development Monitoring")
-    st.caption(f"**High confidence analysis** — Results below are reliable for this {gestational_weeks}-week recording. Signal Quality: {results['signal_quality']}% ({results['signal_quality_text']})")
-    
+    st.caption(
+        f"**High confidence analysis** — Results below are reliable for this {gestational_weeks}-week recording. Signal Quality: {
+            results['signal_quality']}% ({
+            results['signal_quality_text']})")
+
     st.markdown("---")
     col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
-    
+
     with col1:
         st.markdown(f"""
         <div class="metric-card">
@@ -115,7 +122,7 @@ if st.session_state.analysis_complete and st.session_state.results:
             <div><strong>{patient_id}</strong> | {gestational_weeks} weeks</div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col2:
         dev_index = results['developmental_index']
         ci_low, ci_high = results['confidence_interval']
@@ -127,7 +134,7 @@ if st.session_state.analysis_complete and st.session_state.results:
             <div>Normal range: 0.65-0.85</div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col3:
         sq = results['signal_quality']
         sq_class = "quality-excellent" if sq >= 85 else "quality-good" if sq >= 70 else "quality-poor"
@@ -139,7 +146,7 @@ if st.session_state.analysis_complete and st.session_state.results:
             <small>Per-channel: 94% | 91% | 88% | 85%</small>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col4:
         st.markdown(f"""
         <div class="metric-card">
@@ -148,16 +155,18 @@ if st.session_state.analysis_complete and st.session_state.results:
             <small>±3%</small>
         </div>
         """, unsafe_allow_html=True)
-    
+
     st.markdown("---")
-    
+
     # ==================== RISK ASSESSMENT PANEL ====================
     st.markdown("### 🎯 Risk Assessment")
     dev_index = results['developmental_index']
-    st.caption(f"Based on Developmental Index **{dev_index:.2f}** (Normal range for **{gestational_weeks} weeks**: 0.65–0.85)")
-    
+    st.caption(
+        f"Based on Developmental Index **{
+            dev_index:.2f}** (Normal range for **{gestational_weeks} weeks**: 0.65–0.85)")
+
     risk_col1, risk_col2, risk_col3 = st.columns(3)
-    
+
     # IUGR Risk Card
     with risk_col1:
         iugr = results['risk_scores']['IUGR']
@@ -170,7 +179,7 @@ if st.session_state.analysis_complete and st.session_state.results:
             <small>95% CI: {iugr['ci'][0]}-{iugr['ci'][1]}%</small>
         </div>
         """, unsafe_allow_html=True)
-    
+
     # Preterm Risk Card
     with risk_col2:
         preterm = results['risk_scores']['Preterm']
@@ -183,7 +192,7 @@ if st.session_state.analysis_complete and st.session_state.results:
             <small>95% CI: {preterm['ci'][0]}-{preterm['ci'][1]}%</small>
         </div>
         """, unsafe_allow_html=True)
-    
+
     # Hypoxia Risk Card
     with risk_col3:
         hypoxia = results['risk_scores']['Hypoxia']
@@ -197,41 +206,43 @@ if st.session_state.analysis_complete and st.session_state.results:
             <small style="display:block;">⚠️ Experimental – research use only</small>
         </div>
         """, unsafe_allow_html=True)
-    
+
     st.markdown("---")
-    
+
     # ==================== SIGNAL QUALITY GATING ====================
     st.markdown("### 🛡️ Signal Quality Details")
     sq_col1, sq_col2 = st.columns([3, 1])
-    
+
     with sq_col1:
         sq = results['signal_quality']
         st.progress(sq / 100, text=f"Overall Signal Quality: {sq}%")
         st.caption("Per-channel quality: 94% | 91% | 88% | 85%")
-    
+
     with sq_col2:
         if sq < 80:
             st.error("❌ Recording may be unreliable")
-            if st.button("Recommend Repeat Recording", type="primary", use_container_width=True):
+            if st.button("Recommend Repeat Recording",
+                         type="primary", use_container_width=True):
                 st.warning("Repeat recording scheduled")
         else:
             st.success("✅ Recording acceptable")
-    
+
     st.markdown("---")
     col_metrics, col_prsa = st.columns(2)
-    
+
     with col_metrics:
         st.markdown("### 📊 HRV Metrics")
-        st.caption(f"Gestational age-specific normal values for **{gestational_weeks} weeks**")
+        st.caption(
+            f"Gestational age-specific normal values for **{gestational_weeks} weeks**")
         metrics = results['hrv_metrics']
-        
+
         # GA-specific reference ranges (based on gestational age)
         ga_ranges = {
             'RMSSD': (25, 45) if gestational_weeks >= 32 else (15, 35),
             'LF/HF': (0.8, 1.5),
             'Sample Entropy': (1.0, 1.5)
         }
-        
+
         for metric, value in metrics.items():
             if metric in ['AC_T9', 'DC_T9']:
                 continue
@@ -242,20 +253,25 @@ if st.session_state.analysis_complete and st.session_state.results:
                 value=f"{value:.1f}",
                 delta=f"Normal range: {range_low}-{range_high}" if metric in ga_ranges else None
             )
-    
+
     with col_prsa:
         st.markdown("### 📈 PRSA (IUGR Predictor)")
         st.caption("Validated IUGR detection metrics (Stampalija, AJOG 2015)")
         prsa = results['prsa']
-        st.metric("AC-T9 (Acceleration Capacity)", f"{prsa['AC_T9']:.1f}", help=">30 = normal, <20 = IUGR risk")
-        st.metric("DC-T9 (Deceleration Capacity)", f"{prsa['DC_T9']:.1f}", help=">30 = normal, <20 = IUGR risk")
-        st.info("AC/DC are clinically validated IUGR predictors (Stampalija 2015, AUC 0.87-0.89)")
-    
+        st.metric("AC-T9 (Acceleration Capacity)",
+                  f"{prsa['AC_T9']:.1f}",
+                  help=">30 = normal, <20 = IUGR risk")
+        st.metric("DC-T9 (Deceleration Capacity)",
+                  f"{prsa['DC_T9']:.1f}",
+                  help=">30 = normal, <20 = IUGR risk")
+        st.info(
+            "AC/DC are clinically validated IUGR predictors (Stampalija 2015, AUC 0.87-0.89)")
+
     st.markdown("---")
-    
+
     # ==================== EXPLAINABILITY PANEL (ENHANCED) ====================
     st.markdown("### 🔍 Why This Assessment? (SHAP Explainability)")
-    
+
     # Create structured SHAP data for visualization
     shap_data = []
     for feat in results['feature_importance']:
@@ -264,9 +280,9 @@ if st.session_state.analysis_complete and st.session_state.results:
             "SHAP Impact": feat['importance'],
             "Effect": "Decreases Risk" if feat['direction'] == 'decreases risk' else "Increases Risk"
         })
-    
+
     shap_df = pd.DataFrame(shap_data)
-    
+
     # Create interactive Plotly chart
     fig = px.bar(
         shap_df,
@@ -274,85 +290,90 @@ if st.session_state.analysis_complete and st.session_state.results:
         y="Feature",
         color="Effect",
         orientation="h",
-        color_discrete_map={"Decreases Risk": "#22c55e", "Increases Risk": "#ef4444"},
+        color_discrete_map={
+            "Decreases Risk": "#22c55e",
+            "Increases Risk": "#ef4444"},
         title="Feature Contribution to Overall Risk Score",
         labels={"SHAP Impact": "Contribution to Risk"}
     )
     fig.update_layout(height=340, showlegend=True, hovermode="closest")
     st.plotly_chart(fig, use_container_width=True)
-    
+
     st.markdown("---")
-    
+
     # ==================== CLINICAL RECOMMENDATIONS ====================
     st.markdown("### 📋 Clinical Recommendations")
-    
+
     recommendation = results['recommendation']
     preterm_risk = results['risk_scores']['Preterm']['level']
-    
+
     if preterm_risk == 'Moderate':
         recommendation = "⚠️ **Moderate preterm risk detected.** Consider closer follow-up with Doppler ultrasound and repeat HRV assessment in 1 week."
     elif preterm_risk == 'High':
         recommendation = "🚨 **High preterm risk.** Refer to maternal-fetal medicine specialist. Consider steroids for lung maturation and delivery planning."
     else:
         recommendation = "✅ **Low risk.** Continue routine monitoring. Repeat in 2 weeks."
-    
+
     st.info(f"**Actionable Recommendation:**\n{recommendation}")
-    
+
     st.warning("""
-    **Important Disclaimer**  
-    This is an investigational/research tool only. Not for standalone clinical diagnosis.  
+    **Important Disclaimer**
+    This is an investigational/research tool only. Not for standalone clinical diagnosis.
     Always correlate with standard clinical methods (ultrasound, CTG, maternal assessment).""")
-    
+
     st.markdown("---")
-    
+
     # ==================== EXPORT OPTIONS ====================
     st.markdown("### 📎 Export & Integration")
-    
+
     export_col1, export_col2, export_col3, export_col4 = st.columns(4)
-    
+
     with export_col1:
         if st.button("📄 Export PDF", use_container_width=True):
             st.info("PDF report generated")
-    
+
     with export_col2:
         if st.button("🏥 Export FHIR", use_container_width=True):
             st.info("FHIR bundle ready for KenyaEMR")
-    
+
     with export_col3:
         if st.button("📊 Export CSV", use_container_width=True):
             st.info("CSV exported")
-    
+
     with export_col4:
         if st.button("🔄 Sync with KenyaEMR", use_container_width=True):
             st.success("Data synced with KenyaEMR")
-    
+
     st.markdown("---")
-    
+
     # ==================== MODE TOGGLE ====================
     st.markdown("### ⚙️ View Mode")
-    view_mode = st.radio("", ["Clinical View (Default)", "Research View (Detailed)"], horizontal=True)
-    
+    view_mode = st.radio("",
+                         ["Clinical View (Default)",
+                          "Research View (Detailed)"],
+                         horizontal=True)
+
     if view_mode == "Research View (Detailed)":
         with st.expander("🔬 Detailed Research Data"):
             st.json(results)
-    
+
     st.markdown("---")
     st.caption("© 2026 Neuro-Genomic AI | Research Use Only | Not FDA Cleared")
 
 else:
     # Welcome screen
     st.info("👈 Upload an ECG recording or click 'Run Demo Analysis' to get started")
-    
+
     st.markdown("""
     ### 🧬 Neuro-Genomic AI – Clinical Decision Support
-    
+
     **For Maternal-Fetal Medicine Specialists**
-    
+
     This dashboard provides AI-powered analysis of fetal heart rate variability to assess:
     - **IUGR Risk** (Intrauterine Growth Restriction)
     - **Preterm Birth Risk**
     - **Fetal Hypoxia** (experimental)
-    
+
     **Features:**
     - ✅ Signal Quality Assessment with confidence
     - ✅ Uncertainty visualization (95% CI)

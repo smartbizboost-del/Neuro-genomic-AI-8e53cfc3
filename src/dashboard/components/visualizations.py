@@ -7,11 +7,21 @@ import plotly.express as px
 import streamlit as st
 import pandas as pd
 
+
 def plot_risk_assessment(risk_data: dict):
     """Plot risk assessment as a bar chart"""
-    df = pd.DataFrame.from_dict(risk_data, orient='index', columns=['Probability'])
-    fig = px.bar(df, title="Risk Assessment", labels={'index': 'Category', 'value': 'Probability'})
+    df = pd.DataFrame.from_dict(
+        risk_data,
+        orient='index',
+        columns=['Probability'])
+    fig = px.bar(
+        df,
+        title="Risk Assessment",
+        labels={
+            'index': 'Category',
+            'value': 'Probability'})
     return fig
+
 
 def plot_developmental_gauge(index: float):
     """Plot developmental index as a gauge"""
@@ -30,6 +40,7 @@ def plot_developmental_gauge(index: float):
         }
     ))
     return fig
+
 
 def plot_feature_comparison(features: dict):
     """Plot HRV features comparison"""

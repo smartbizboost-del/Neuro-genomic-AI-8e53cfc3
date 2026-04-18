@@ -18,14 +18,19 @@ def generate_clinical_note(analysis_results: dict) -> str:
         "{recommendations}\n"
     )
 
-    findings = '\n'.join([f"- {item}" for item in analysis_results.get('interpretation', [])])
-    recommendations = analysis_results.get('recommendations', 'Follow up in accordance with clinical protocol.')
+    findings = '\n'.join(
+        [f"- {item}" for item in analysis_results.get('interpretation', [])])
+    recommendations = analysis_results.get(
+        'recommendations',
+        'Follow up in accordance with clinical protocol.')
 
     return note_template.format(
         date=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
         ga=analysis_results.get('gestational_weeks', 0),
         dev_index=analysis_results.get('developmental_index', 0.0),
-        risk_class=analysis_results.get('risk', {}).get('predicted_class', 'unknown'),
+        risk_class=analysis_results.get(
+            'risk', {}).get(
+            'predicted_class', 'unknown'),
         confidence=analysis_results.get('risk', {}).get('normal', 0.0) * 100.0,
         findings=findings,
         recommendations=recommendations
@@ -33,9 +38,11 @@ def generate_clinical_note(analysis_results: dict) -> str:
 
 
 @celery_app.task(name='send_alert_if_pathological')
-def send_alert_if_pathological(analysis_id: str, patient_id: str, clinician_email: str) -> dict:
+def send_alert_if_pathological(
+        analysis_id: str, patient_id: str, clinician_email: str) -> dict:
     """Auto-send alert for pathological findings."""
-    # In a production system, this would send email/SMS and create notification records.
+    # In a production system, this would send email/SMS and create
+    # notification records.
     return {
         'analysis_id': analysis_id,
         'patient_id': patient_id,

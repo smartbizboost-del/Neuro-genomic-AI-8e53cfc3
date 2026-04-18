@@ -13,9 +13,11 @@ def generate_fhir_id() -> str:
     return str(uuid.uuid4())
 
 
-def create_patient_resource(patient_id: str, gestational_weeks: int,
-                           maternal_age: Optional[int] = None,
-                           maternal_bmi: Optional[float] = None) -> Dict[str, Any]:
+def create_patient_resource(patient_id: str,
+                            gestational_weeks: int,
+                            maternal_age: Optional[int] = None,
+                            maternal_bmi: Optional[float] = None) -> Dict[str,
+                                                                          Any]:
     """
     Create FHIR Patient resource
     """
@@ -61,15 +63,28 @@ def create_observation_resource(patient_id: str,
     """
     feature_key = feature_name.upper().replace(" ", "_")
     loinc_codes = {
-        'RMSSD': {'code': '80456-6', 'display': 'Heart rate variability - RMSSD'},
-        'SDNN': {'code': '80455-8', 'display': 'Heart rate variability - SDNN'},
-        'LF_HF': {'code': '80458-2', 'display': 'LF/HF ratio'},
-        'SAMPLE_ENTROPY': {'code': '80457-4', 'display': 'Sample entropy'},
-        'AC_T9': {'code': '80459-0', 'display': 'Acceleration capacity (PRSA)'},
-        'DC_T9': {'code': '80460-8', 'display': 'Deceleration capacity (PRSA)'}
-    }
+        'RMSSD': {
+            'code': '80456-6',
+            'display': 'Heart rate variability - RMSSD'},
+        'SDNN': {
+            'code': '80455-8',
+            'display': 'Heart rate variability - SDNN'},
+        'LF_HF': {
+            'code': '80458-2',
+            'display': 'LF/HF ratio'},
+        'SAMPLE_ENTROPY': {
+            'code': '80457-4',
+                    'display': 'Sample entropy'},
+        'AC_T9': {
+            'code': '80459-0',
+            'display': 'Acceleration capacity (PRSA)'},
+        'DC_T9': {
+            'code': '80460-8',
+            'display': 'Deceleration capacity (PRSA)'}}
 
-    loinc = loinc_codes.get(feature_key, {'code': '83000-0', 'display': 'Fetal HRV parameter'})
+    loinc = loinc_codes.get(
+        feature_key, {
+            'code': '83000-0', 'display': 'Fetal HRV parameter'})
 
     return {
         "resourceType": "Observation",

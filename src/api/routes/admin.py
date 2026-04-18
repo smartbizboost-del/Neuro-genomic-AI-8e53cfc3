@@ -13,6 +13,8 @@ from src.api.services.monitoring import set_active_users
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 # Models
+
+
 class UserResponse(BaseModel):
     id: str
     email: str
@@ -22,11 +24,14 @@ class UserResponse(BaseModel):
     last_login: Optional[datetime]
     analyses_count: int
 
+
 class UserRoleUpdate(BaseModel):
     role: str
 
+
 class UserStatusUpdate(BaseModel):
     status: str  # active, suspended, pending
+
 
 # Mock database (replace with real DB)
 MOCK_USERS = {
@@ -74,6 +79,8 @@ LOG_ENTRIES = [
 ]
 
 # Helper function to check admin access
+
+
 def require_admin(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise HTTPException(
@@ -94,7 +101,7 @@ async def get_all_users(
     Requires admin role.
     """
     users = list(MOCK_USERS.values())
-    
+
     if role:
         users = [u for u in users if u["role"] == role]
     if status:
@@ -125,16 +132,17 @@ async def update_user_role(
     """Update a user's role"""
     if user_id not in MOCK_USERS:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     valid_roles = ["admin", "clinician", "researcher", "viewer"]
     if role_update.role not in valid_roles:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=f"Invalid role. Must be one of: {valid_roles}"
         )
-    
+
     MOCK_USERS[user_id]["role"] = role_update.role
-    return {"message": "User role updated", "user_id": user_id, "new_role": role_update.role}
+    return {"message": "User role updated",
+            "user_id": user_id, "new_role": role_update.role}
 
 
 @router.put("/users/{user_id}/status")
@@ -146,16 +154,17 @@ async def update_user_status(
     """Activate, suspend, or approve a user"""
     if user_id not in MOCK_USERS:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     valid_statuses = ["active", "suspended", "pending"]
     if status_update.status not in valid_statuses:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid status. Must be one of: {valid_statuses}"
         )
-    
+
     MOCK_USERS[user_id]["status"] = status_update.status
-    return {"message": "User status updated", "user_id": user_id, "new_status": status_update.status}
+    return {"message": "User status updated",
+            "user_id": user_id, "new_status": status_update.status}
 
 
 @router.delete("/users/{user_id}")
@@ -166,7 +175,7 @@ async def delete_user(
     """Delete a user (soft delete)"""
     if user_id not in MOCK_USERS:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Soft delete - mark as deleted instead of removing
     MOCK_USERS[user_id]["status"] = "deleted"
     return {"message": f"User {user_id} has been deleted"}
@@ -231,7 +240,8 @@ async def get_api_logs(
     """Get recent API logs"""
     logs = LOG_ENTRIES
     if level:
-        logs = [entry for entry in logs if entry["level"].lower() == level.lower()]
+        logs = [entry for entry in logs if entry["level"].lower() ==
+                level.lower()]
     return {
         "logs": logs[:limit],
         "total": len(logs),

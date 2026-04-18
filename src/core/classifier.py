@@ -11,12 +11,15 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 
+
 class CognitiveStateClassifier:
     def __init__(self, model_type='rf'):
         if model_type == 'rf':
-            self.model = RandomForestClassifier(n_estimators=100, random_state=42)
+            self.model = RandomForestClassifier(
+                n_estimators=100, random_state=42)
         elif model_type == 'gb':
-            self.model = GradientBoostingClassifier(n_estimators=100, random_state=42)
+            self.model = GradientBoostingClassifier(
+                n_estimators=100, random_state=42)
         elif model_type == 'nn':
             self.model = Pipeline([
                 ('scaler', StandardScaler()),

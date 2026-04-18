@@ -7,7 +7,11 @@ from sklearn.decomposition import FastICA
 class FetalECGSeparator:
     def __init__(self, n_components: int = 2, random_state: int = 42):
         self.n_components = n_components
-        self.ica = FastICA(n_components=n_components, whiten="unit-variance", random_state=random_state, max_iter=1000)
+        self.ica = FastICA(
+            n_components=n_components,
+            whiten="unit-variance",
+            random_state=random_state,
+            max_iter=1000)
         self.components_: np.ndarray | None = None
 
     def fit_transform(self, mixed: np.ndarray) -> np.ndarray:
@@ -31,14 +35,20 @@ class FetalECGSeparator:
 
     def infer_maternal_fetal_indices(self, fs: int) -> tuple[int, int]:
         if self.components_ is None:
-            raise ValueError("Call fit_transform before inferring maternal/fetal components.")
+            raise ValueError(
+                "Call fit_transform before inferring maternal/fetal components.")
 
-        freqs = {idx: self.dominant_frequency_hz(self.components_[:, idx], fs) for idx in range(self.components_.shape[1])}
+        freqs = {
+            idx: self.dominant_frequency_hz(
+                self.components_[
+                    :, idx], fs) for idx in range(
+                self.components_.shape[1])}
         maternal_idx = min(freqs, key=freqs.get)
         fetal_idx = max(freqs, key=freqs.get)
         return maternal_idx, fetal_idx
 
-    def estimate_quality(self, original: np.ndarray, reconstructed: np.ndarray) -> dict[str, float]:
+    def estimate_quality(self, original: np.ndarray,
+                         reconstructed: np.ndarray) -> dict[str, float]:
         nmse = np.mean((original - reconstructed) ** 2) / np.var(original)
         corr = np.corrcoef(original.flatten(), reconstructed.flatten())[0, 1]
         return {"nmse": nmse, "correlation": corr}

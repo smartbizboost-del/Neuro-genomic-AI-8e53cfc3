@@ -10,7 +10,8 @@ class WindowedFeatureExtractor:
         self.fs = sampling_rate
         self.window_samples = sampling_rate * window_sec
 
-    def _detect_peaks(self, x: np.ndarray, distance_sec: float = 0.30) -> np.ndarray:
+    def _detect_peaks(self, x: np.ndarray,
+                      distance_sec: float = 0.30) -> np.ndarray:
         threshold = np.mean(np.abs(x)) + 1.5 * np.std(np.abs(x))
         distance = int(self.fs * distance_sec)
         peaks, _ = find_peaks(np.abs(x), height=threshold, distance=distance)
@@ -31,12 +32,22 @@ class WindowedFeatureExtractor:
         hr = 60.0 / (rr_ms / 1000.0)
         rr_diff = np.diff(rr_ms)
         return {
-            "num_beats": float(len(peaks)),
-            "hr_mean": float(np.mean(hr)),
-            "rr_mean": float(np.mean(rr_ms)),
-            "rr_std": float(np.std(rr_ms)),
-            "rmssd": float(np.sqrt(np.mean(rr_diff ** 2))) if len(rr_diff) else 0.0,
-            "pnn50": float(100.0 * np.mean(np.abs(rr_diff) > 50.0)) if len(rr_diff) else 0.0,
+            "num_beats": float(
+                len(peaks)),
+            "hr_mean": float(
+                np.mean(hr)),
+            "rr_mean": float(
+                np.mean(rr_ms)),
+            "rr_std": float(
+                np.std(rr_ms)),
+            "rmssd": float(
+                np.sqrt(
+                    np.mean(
+                        rr_diff ** 2))) if len(rr_diff) else 0.0,
+            "pnn50": float(
+                100.0 *
+                np.mean(
+                    np.abs(rr_diff) > 50.0)) if len(rr_diff) else 0.0,
         }
 
     @staticmethod
@@ -67,13 +78,30 @@ class WindowedFeatureExtractor:
                     "fet_pnn50": f_hrv["pnn50"],
                     "mat_rr_std": m_hrv["rr_std"],
                     "fet_rr_std": f_hrv["rr_std"],
-                    "mat_low_freq_power": self._spectral_power(m, self.fs, 0.04, 0.15),
-                    "mat_high_freq_power": self._spectral_power(m, self.fs, 0.15, 0.40),
-                    "fet_low_freq_power": self._spectral_power(f, self.fs, 0.04, 0.15),
-                    "fet_high_freq_power": self._spectral_power(f, self.fs, 0.15, 0.40),
-                    "mat_signal_std": float(np.std(m)),
-                    "fet_signal_std": float(np.std(f)),
-                }
-            )
+                    "mat_low_freq_power": self._spectral_power(
+                        m,
+                        self.fs,
+                        0.04,
+                        0.15),
+                    "mat_high_freq_power": self._spectral_power(
+                        m,
+                        self.fs,
+                        0.15,
+                        0.40),
+                    "fet_low_freq_power": self._spectral_power(
+                        f,
+                        self.fs,
+                        0.04,
+                        0.15),
+                    "fet_high_freq_power": self._spectral_power(
+                        f,
+                        self.fs,
+                        0.15,
+                        0.40),
+                    "mat_signal_std": float(
+                        np.std(m)),
+                    "fet_signal_std": float(
+                        np.std(f)),
+                })
         df = pd.DataFrame(rows).dropna().reset_index(drop=True)
         return df

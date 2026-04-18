@@ -8,6 +8,7 @@ GA_THRESHOLDS = {
     '35-38w': {'RMSSD': 4.8, 'HF': 3.5, 'LF/HF': 5.5},
 }
 
+
 def get_ga_bin(gestational_weeks):
     """Return GA bin for threshold lookup"""
     if gestational_weeks < 27:
@@ -18,6 +19,7 @@ def get_ga_bin(gestational_weeks):
         return '31-34w'
     else:
         return '35-38w'
+
 
 def normalize_by_ga(features, gestational_weeks):
     """Normalize HRV features using GA-specific thresholds"""

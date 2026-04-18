@@ -27,11 +27,17 @@ ACTIVE_USERS_GAUGE = Gauge(
 LAST_REQUEST_LATENCY_MS = 0.0
 
 
-def record_request(method: str, endpoint: str, status_code: int, elapsed_seconds: float):
+def record_request(method: str, endpoint: str,
+                   status_code: int, elapsed_seconds: float):
     """Record Prometheus metrics for an API request."""
     global LAST_REQUEST_LATENCY_MS
-    REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=str(status_code)).inc()
-    REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(elapsed_seconds)
+    REQUEST_COUNT.labels(
+        method=method,
+        endpoint=endpoint,
+        status=str(status_code)).inc()
+    REQUEST_LATENCY.labels(
+        method=method,
+        endpoint=endpoint).observe(elapsed_seconds)
     LAST_REQUEST_LATENCY_MS = elapsed_seconds * 1000
 
 

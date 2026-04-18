@@ -13,15 +13,25 @@ from .unsupervised_model import UnsupervisedFetalECGModel
 
 
 def _numeric_signal_columns(df: pd.DataFrame) -> list[str]:
-    excluded = {"sample_index", "time_sec", "record_name", "dataset", "sampling_rate"}
-    return [c for c in df.columns if c not in excluded and pd.api.types.is_numeric_dtype(df[c])]
+    excluded = {
+        "sample_index",
+        "time_sec",
+        "record_name",
+        "dataset",
+        "sampling_rate"}
+    return [
+        c for c in df.columns if c not in excluded and pd.api.types.is_numeric_dtype(
+            df[c])]
 
 
-def _load_one_dataset(dataset_name: str, explicit_record: str | None = None) -> tuple[pd.DataFrame, str, str]:
+def _load_one_dataset(dataset_name: str, explicit_record: str |
+                      None = None) -> tuple[pd.DataFrame, str, str]:
     dataset = resolve_dataset_name(dataset_name)
-    for rec in get_record_candidates(dataset=dataset, explicit_record=explicit_record):
+    for rec in get_record_candidates(
+            dataset=dataset, explicit_record=explicit_record):
         try:
-            return download_record_dataframe(dataset=dataset, record=rec), dataset, rec
+            return download_record_dataframe(
+                dataset=dataset, record=rec), dataset, rec
         except Exception:
             continue
     raise ValueError(f"No readable record found for dataset: {dataset}")
@@ -42,31 +52,42 @@ def run_unsupervised_pipeline(
     sources: list[dict[str, str]] = []
 
     for dataset_name in datasets:
-        raw_df, resolved_dataset, selected_record = _load_one_dataset(dataset_name, explicit_record=record)
+        raw_df, resolved_dataset, selected_record = _load_one_dataset(
+            dataset_name, explicit_record=record)
         raw_df = raw_df.copy()
         raw_df["source_dataset"] = resolved_dataset
         raw_df["source_record"] = selected_record
         parts.append(raw_df)
-        sources.append({"dataset": resolved_dataset, "record": selected_record, "rows": str(len(raw_df))})
+        sources.append({"dataset": resolved_dataset,
+                        "record": selected_record,
+                        "rows": str(len(raw_df))})
 
     merged = pd.concat(parts, ignore_index=True, sort=False)
     numeric_cols = _numeric_signal_columns(merged)
     if len(numeric_cols) < 1:
-        raise ValueError("No numeric ECG channels found in downloaded records.")
+        raise ValueError(
+            "No numeric ECG channels found in downloaded records.")
 
     primary_col = numeric_cols[0]
     secondary_col = numeric_cols[1] if len(numeric_cols) > 1 else None
 
-    x1 = pd.to_numeric(merged[primary_col], errors="coerce").interpolate(limit_direction="both")
+    x1 = pd.to_numeric(
+        merged[primary_col],
+        errors="coerce").interpolate(
+        limit_direction="both")
     if secondary_col is None:
         x2 = x1.shift(1).fillna(method="bfill") * 0.95
     else:
-        x2 = pd.to_numeric(merged[secondary_col], errors="coerce").interpolate(limit_direction="both")
+        x2 = pd.to_numeric(
+            merged[secondary_col],
+            errors="coerce").interpolate(
+            limit_direction="both")
 
     x1 = x1.fillna(method="ffill").fillna(method="bfill").to_numpy(dtype=float)
     x2 = x2.fillna(method="ffill").fillna(method="bfill").to_numpy(dtype=float)
 
-    fs = int(float(merged["sampling_rate"].dropna().iloc[0])) if "sampling_rate" in merged.columns else 500
+    fs = int(float(merged["sampling_rate"].dropna().iloc[0])
+             ) if "sampling_rate" in merged.columns else 500
 
     mixed = np.column_stack([x1, x2])
     preprocessor = ECGPreprocessor(sampling_rate=fs)
@@ -79,14 +100,19 @@ def run_unsupervised_pipeline(
     maternal = comps[:, maternal_idx]
     fetal = comps[:, fetal_idx]
 
-    extractor = WindowedFeatureExtractor(sampling_rate=fs, window_sec=window_sec)
+    extractor = WindowedFeatureExtractor(
+        sampling_rate=fs, window_sec=window_sec)
     features = extractor.extract(maternal=maternal, fetal=fetal)
     if len(features) < 8:
         raise ValueError(
-            f"Only {len(features)} windows produced after preprocessing. Use longer records or smaller window_sec."
+            f"Only {
+                len(features)} windows produced after preprocessing. Use longer records or smaller window_sec."
         )
 
-    model = UnsupervisedFetalECGModel(method=method, n_clusters=n_clusters, random_state=42)
+    model = UnsupervisedFetalECGModel(
+        method=method,
+        n_clusters=n_clusters,
+        random_state=42)
     labels, x_pca = model.fit_predict(features)
     metrics = model.evaluate_clusters(x=x_pca, labels=labels)
 

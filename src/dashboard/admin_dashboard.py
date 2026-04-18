@@ -25,7 +25,11 @@ def render_admin_dashboard():
             st.write(metrics["system"])
 
             st.subheader("Role Distribution")
-            st.write(pd.DataFrame.from_dict(metrics["users"]["by_role"], orient='index', columns=['Count']))
+            st.write(
+                pd.DataFrame.from_dict(
+                    metrics["users"]["by_role"],
+                    orient='index',
+                    columns=['Count']))
         else:
             st.warning("Unable to fetch admin metrics from API.")
     except Exception as exc:

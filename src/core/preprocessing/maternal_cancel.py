@@ -5,18 +5,19 @@ from typing import Tuple, Dict, Optional
 from scipy.signal import find_peaks
 
 
-def hybrid_maternal_cancellation(raw_ecg: np.ndarray, 
+def hybrid_maternal_cancellation(raw_ecg: np.ndarray,
                                  sampling_rate: int = 250,
-                                 maternal_reference: Optional[np.ndarray] = None) -> Tuple[np.ndarray, Dict]:
+                                 maternal_reference: Optional[np.ndarray] = None) -> Tuple[np.ndarray,
+                                                                                           Dict]:
     """
     Hybrid maternal cancellation with built-in morphology quality check.
     Returns: (cleaned_ecg, quality_report)
-    
+
     Args:
         raw_ecg: Input signal (1D or 2D)
         sampling_rate: Sampling frequency (default 250 Hz)
         maternal_reference: Optional reference maternal signal
-    
+
     Returns:
         Tuple of (cleaned_ecg, quality_report)
     """
@@ -54,29 +55,34 @@ def hybrid_maternal_cancellation(raw_ecg: np.ndarray,
 
     except Exception as e:
         print(f"Maternal cancellation failed: {e}")
-        fallback_signal = np.mean(raw_ecg, axis=0) if len(raw_ecg.shape) > 1 else raw_ecg
+        fallback_signal = np.mean(
+            raw_ecg, axis=0) if len(
+            raw_ecg.shape) > 1 else raw_ecg
         return fallback_signal, {"morphology_snr": 0.0, "status": "poor"}
 
 
-def compute_morphology_snr(cleaned_ecg: np.ndarray, sampling_rate: int) -> float:
+def compute_morphology_snr(cleaned_ecg: np.ndarray,
+                           sampling_rate: int) -> float:
     """Compute SNR focused on morphological features (QRS and T-wave regions)"""
     # Simple QRS detection for SNR estimation
-    peaks, _ = find_peaks(cleaned_ecg, distance=sampling_rate//2, prominence=np.std(cleaned_ecg)*0.5)
-    
+    peaks, _ = find_peaks(cleaned_ecg, distance=sampling_rate //
+                          2, prominence=np.std(cleaned_ecg) * 0.5)
+
     if len(peaks) < 3:
         return 0.0
-    
+
     # Estimate noise in non-QRS regions
     signal_power = np.var(cleaned_ecg)
     noise_segments = []
-    for i in range(len(peaks)-1):
-        mid = (peaks[i] + peaks[i+1]) // 2
+    for i in range(len(peaks) - 1):
+        mid = (peaks[i] + peaks[i + 1]) // 2
         segment_start = max(0, mid - 50)
         segment_end = min(len(cleaned_ecg), mid + 50)
         if segment_end - segment_start > 0:
             noise_segments.append(cleaned_ecg[segment_start:segment_end])
-    
-    noise_power = np.mean([np.var(seg) for seg in noise_segments if len(seg) > 0])
+
+    noise_power = np.mean([np.var(seg)
+                          for seg in noise_segments if len(seg) > 0])
     snr = 10 * np.log10(signal_power / (noise_power + 1e-8))
     return max(0.0, snr)
 

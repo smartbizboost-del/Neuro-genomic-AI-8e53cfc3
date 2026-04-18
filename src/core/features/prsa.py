@@ -1,6 +1,7 @@
 # src/core/features/prsa.py
 import numpy as np
 
+
 def phase_rectified_signal_averaging(rr_intervals, T=9):
     """
     Compute Acceleration Capacity (AC) and Deceleration Capacity (DC)

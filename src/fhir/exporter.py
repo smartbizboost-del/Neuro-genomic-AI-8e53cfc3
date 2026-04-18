@@ -34,7 +34,9 @@ class FHIRExporter:
         """
         Create a FHIR Bundle containing all resources
         """
-        patient_id = analysis_result.get('patient_id', analysis_result.get('file_id', 'unknown'))
+        patient_id = analysis_result.get(
+            'patient_id', analysis_result.get(
+                'file_id', 'unknown'))
         gestational_weeks = analysis_result.get('gestational_weeks', 34)
 
         patient = create_patient_resource(
@@ -58,9 +60,11 @@ class FHIRExporter:
 
         for feature_name, value in features.items():
             feature_key = _normalize_feature_name(feature_name)
-            if feature_key in normal_ranges and isinstance(value, (int, float)):
+            if feature_key in normal_ranges and isinstance(
+                    value, (int, float)):
                 low, high = normal_ranges[feature_key]
-                unit = "ms" if feature_key in ['RMSSD', 'SDNN', 'AC_T9', 'DC_T9'] else "ratio"
+                unit = "ms" if feature_key in [
+                    'RMSSD', 'SDNN', 'AC_T9', 'DC_T9'] else "ratio"
                 observations.append(create_observation_resource(
                     patient_id=patient_id,
                     feature_name=feature_key,
@@ -82,7 +86,8 @@ class FHIRExporter:
                     risk_type='IUGR',
                     risk_score=score,
                     confidence_interval=95,
-                    interpretation=analysis_result.get('risk_classification', 'Unknown')
+                    interpretation=analysis_result.get(
+                        'risk_classification', 'Unknown')
                 ))
             if 'preterm' in risk_data:
                 score = float(risk_data.get('preterm', 0))
@@ -91,7 +96,8 @@ class FHIRExporter:
                     risk_type='preterm',
                     risk_score=score,
                     confidence_interval=95,
-                    interpretation=analysis_result.get('risk_classification', 'Unknown')
+                    interpretation=analysis_result.get(
+                        'risk_classification', 'Unknown')
                 ))
             if 'hypoxia' in risk_data:
                 score = float(risk_data.get('hypoxia', 0))
@@ -100,11 +106,16 @@ class FHIRExporter:
                     risk_type='hypoxia',
                     risk_score=score,
                     confidence_interval=95,
-                    interpretation=analysis_result.get('risk_classification', 'Unknown')
+                    interpretation=analysis_result.get(
+                        'risk_classification', 'Unknown')
                 ))
 
             if 'predicted_class' in risk_data:
-                score = max(0.0, min(100.0, float(risk_data.get('pathological', 0) * 100)))
+                score = max(
+                    0.0, min(
+                        100.0, float(
+                            risk_data.get(
+                                'pathological', 0) * 100)))
                 risk_assessments.append(create_risk_assessment_resource(
                     patient_id=patient_id,
                     risk_type='overall',
@@ -117,8 +128,11 @@ class FHIRExporter:
             patient_id=patient_id,
             observations=observations,
             risk_assessments=risk_assessments,
-            developmental_index=float(analysis_result.get('developmental_index', 0.0)),
-            recommendations=analysis_result.get('recommendations', 'Continue routine monitoring')
+            developmental_index=float(
+                analysis_result.get(
+                    'developmental_index', 0.0)),
+            recommendations=analysis_result.get(
+                'recommendations', 'Continue routine monitoring')
         )
 
         bundle = {
@@ -127,10 +141,14 @@ class FHIRExporter:
             "type": "batch",
             "timestamp": datetime.now().isoformat(),
             "entry": [
-                {"resource": patient, "request": {"method": "POST", "url": "Patient"}},
-                *[{"resource": obs, "request": {"method": "POST", "url": "Observation"}} for obs in observations],
-                *[{"resource": risk, "request": {"method": "POST", "url": "RiskAssessment"}} for risk in risk_assessments],
-                {"resource": report, "request": {"method": "POST", "url": "DiagnosticReport"}}
+                {"resource": patient, "request": {
+                    "method": "POST", "url": "Patient"}},
+                *[{"resource": obs, "request": {"method": "POST", "url": "Observation"}}
+                    for obs in observations],
+                *[{"resource": risk, "request": {"method": "POST",
+                                                 "url": "RiskAssessment"}} for risk in risk_assessments],
+                {"resource": report, "request": {
+                    "method": "POST", "url": "DiagnosticReport"}}
             ]
         }
 
@@ -141,14 +159,19 @@ class FHIRExporter:
         Export analysis result to FHIR JSON file
         """
         bundle = self.create_bundle(analysis_result)
-        filename = f"{self.output_dir}/{analysis_result.get('file_id', 'unknown')}.fhir.json"
+        filename = f"{
+            self.output_dir}/{
+            analysis_result.get(
+                'file_id',
+                'unknown')}.fhir.json"
 
         with open(filename, 'w') as f:
             json.dump(bundle, f, indent=2)
 
         return filename
 
-    def export_to_kenya_emr(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
+    def export_to_kenya_emr(
+            self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
         """
         Format specifically for KenyaEMR / DHIS2 integration
         """

@@ -6,6 +6,7 @@ import logging
 import sys
 from pathlib import Path
 
+
 def setup_logging(level=logging.INFO):
     """Setup application logging"""
     logging.basicConfig(
@@ -16,7 +17,7 @@ def setup_logging(level=logging.INFO):
             logging.FileHandler('neuro_genomic.log')
         ]
     )
-    
+
     # Reduce noise from third-party libraries
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('boto3').setLevel(logging.WARNING)

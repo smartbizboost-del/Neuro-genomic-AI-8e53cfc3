@@ -7,7 +7,8 @@ def require_role(allowed_roles: list):
     """Decorator for role-based access control"""
     def decorator(func):
         @wraps(func)
-        async def wrapper(*args, current_user=Depends(get_current_user), **kwargs):
+        async def wrapper(
+                *args, current_user=Depends(get_current_user), **kwargs):
             if current_user.get('role') not in allowed_roles:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,

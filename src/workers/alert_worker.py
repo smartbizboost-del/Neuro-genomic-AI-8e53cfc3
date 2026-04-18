@@ -3,7 +3,8 @@ from src.core.workflow_automation import generate_clinical_note
 
 
 @celery_app.task(name='alert_worker.send_alert_if_pathological')
-def send_alert_if_pathological(analysis_id: str, patient_id: str, clinician_email: str):
+def send_alert_if_pathological(
+        analysis_id: str, patient_id: str, clinician_email: str):
     """Celery task for sending alert notifications."""
     note = generate_clinical_note({
         'analysis_id': analysis_id,

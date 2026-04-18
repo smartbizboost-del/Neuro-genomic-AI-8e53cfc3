@@ -32,8 +32,7 @@ class AuditLogger:
             self.db.execute(
                 "INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details, ip_address, created_at) "
                 "VALUES (:user_id, :action, :resource_type, :resource_id, :details, :ip_address, :created_at)",
-                log_entry
-            )
+                log_entry)
             self.db.commit()
         except Exception as exc:
             logger.error(f"Failed to write audit log: {exc}")
