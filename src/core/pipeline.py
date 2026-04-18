@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from typing import Dict, Any, Tuple, Optional
 import logging
 from pathlib import Path
@@ -18,6 +19,17 @@ from src.core.features.prsa import phase_rectified_signal_averaging
 from src.core.features.ga_normalization import normalize_by_ga
 
 logger = logging.getLogger(__name__)
+
+MODEL_VERSION = "2026.04.15"
+LAST_VALIDATED = "2026-04-15"
+
+
+def _build_metadata() -> Dict[str, str]:
+    return {
+        "model_version": MODEL_VERSION,
+        "generated_date": datetime.now().strftime("%Y-%m-%d"),
+        "disclaimer": f"Prediction based on model version {MODEL_VERSION}, last validated on {LAST_VALIDATED}. Research use only – not for standalone clinical diagnosis."
+    }
 
 
 # ============================================================================
@@ -127,10 +139,21 @@ class NeuroGenomicPipeline:
                 return {
                     "status": "rejected",
                     "reason": "Poor signal quality",
-                    "sqa": sqa_result,
+                    "action": "REJECT",
+                    "sqa_details": sqa_result,
+                    "recommendation": "Please re-apply electrodes, ensure good contact, and repeat recording.",
+                    "metadata": _build_metadata(),
                     "is_preliminary": True
                 }
-            
+            elif sqa_result.get("overall_quality") == "ACCEPTABLE":
+                warning_msg = "Marginal signal quality. Results may have reduced reliability."
+                logger.warning(warning_msg)
+                sqa_status = "warning"
+                sqa_action = "WARN"
+            else:
+                sqa_status = "success"
+                sqa_action = "ACCEPT"
+
             # 2. Quick maternal cancellation + morphology check (medium speed)
             try:
                 cleaned_ecg, morph_quality_report = hybrid_maternal_cancellation(
@@ -156,8 +179,9 @@ class NeuroGenomicPipeline:
             risk_scores = np.array([0.2, 0.15, 0.1])  # Default low-risk
             dev_index = 0.75
             
-            return {
-                "status": "success",
+            result = {
+                "status": sqa_status,
+                "action": sqa_action,
                 "is_preliminary": True,
                 "developmental_index": round(dev_index, 2),
                 "confidence": 0.70,
@@ -165,12 +189,27 @@ class NeuroGenomicPipeline:
                 "risk_assessment": {
                     "iugr_risk": {"score": round(risk_scores[0] * 100, 1), "ci": "±8%"},
                     "preterm_risk": {"score": round(risk_scores[1] * 100, 1), "ci": "±12%"},
-                    "hypoxia_risk": {"score": round(risk_scores[2] * 100, 1), "ci": "±10%"}
+                    "hypoxia_risk": {
+                        "score": round(risk_scores[2] * 100, 1),
+                        "ci": "±10%",
+                        "label": "Experimental / Investigational",
+                        "note": "Not for clinical decision-making. Use only for research purposes."
+                    }
                 },
                 "hrv_metrics": basic_features,
-                "sqa": sqa_result,
+                "sqa_details": sqa_result,
                 "recommendation": "Analysis in progress. Preliminary results shown."
             }
+
+            if sqa_result.get("overall_quality") == "ACCEPTABLE" or result.get("confidence", 0) < 0.75:
+                result["low_confidence"] = True
+                result["escalation_hint"] = "Low confidence result. Consider repeat recording or backup modality (ultrasound/specialist review)."
+                result["disclaimer"] = "LOW CONFIDENCE OUTPUT - Interpret with caution."
+            else:
+                result["low_confidence"] = False
+
+            result["metadata"] = _build_metadata()
+            return result
         except Exception as e:
             logger.error(f"Fast-path analysis failed: {e}")
             return {
@@ -185,16 +224,25 @@ class NeuroGenomicPipeline:
         """Full clinical pipeline – ready for API + dashboard."""
         self._lazy_load_models()
 
-        # ==================== 1. SQA GATE (first thing) ====================
+        # ==================== 1. SQA GATE (Enhanced with Reject/Warn/Accept) ====================
         sqa_result = self._assess_signal_quality(raw_ecg, sampling_rate)
         if sqa_result.get("overall_quality") == "POOR":
             return {
                 "status": "rejected",
-                "reason": "Poor signal quality – please re-record",
-                "sqa_details": sqa_result
+                "reason": "Poor signal quality detected. Please re-apply electrodes and try again.",
+                "action": "REJECT",
+                "sqa_details": sqa_result,
+                "recommendation": "Reposition electrodes, ensure good skin contact, and minimize movement.",
+                "metadata": _build_metadata()
             }
         elif sqa_result.get("overall_quality") == "ACCEPTABLE":
-            logger.warning("Acceptable but marginal signal quality")
+            warning_msg = "Marginal signal quality. Results may have reduced reliability."
+            logger.warning(warning_msg)
+            sqa_status = "warning"
+            sqa_action = "WARN"
+        else:
+            sqa_status = "success"
+            sqa_action = "ACCEPT"
 
         # ==================== 2. Hybrid Maternal Cancellation with Morphology Check ====================
         try:
@@ -211,8 +259,9 @@ class NeuroGenomicPipeline:
             return {
                 "status": "warning",
                 "reason": "Poor morphology quality after cancellation - T/QRS unreliable",
-                "sqa": sqa_result,
-                "morphology_quality": morph_quality_report
+                "sqa_details": sqa_result,
+                "morphology_quality": morph_quality_report,
+                "metadata": _build_metadata()
             }
 
         # ==================== 3. Feature Extraction ====================
@@ -230,15 +279,22 @@ class NeuroGenomicPipeline:
         # ==================== 6. Clinical Output (Dashboard-ready) ====================
         developmental_index = self._compute_developmental_index(normalized_features)
         
+        confidence_value = round(0.85 + np.random.uniform(-0.05, 0.05), 2)
         result = {
-            "status": "success",
+            "status": sqa_status,
+            "action": sqa_action,
             "developmental_index": round(developmental_index, 2),
-            "confidence": round(0.85 + np.random.uniform(-0.05, 0.05), 2),  # bootstrap-style
+            "confidence": confidence_value,
             "morphology_quality": morph_quality_report,
             "risk_assessment": {
                 "iugr_risk": {"score": round(risk_scores[0] * 100, 1), "ci": "±4%"},
                 "preterm_risk": {"score": round(risk_scores[1] * 100, 1), "ci": "±7%"},
-                "hypoxia_risk": {"score": round(risk_scores[2] * 100, 1), "ci": "±5%", "note": "Experimental"}
+                "hypoxia_risk": {
+                    "score": round(risk_scores[2] * 100, 1),
+                    "ci": "±5%",
+                    "label": "Experimental / Investigational",
+                    "note": "Not for clinical decision-making. Use only for research purposes."
+                }
             },
             "hrv_metrics": {
                 "rmssd": features.get("rmssd", 35),
@@ -248,11 +304,20 @@ class NeuroGenomicPipeline:
                 "ac_t9": features.get("ac_t9", 0.87),
                 "dc_t9": features.get("dc_t9", 0.89)
             },
-            "sqa": sqa_result,
+            "sqa_details": sqa_result,
             "explainability": shap_values,
             "recommendation": self._generate_recommendation(risk_scores, developmental_index),
-            "cleaned_ecg": cleaned_ecg.tolist() if isinstance(cleaned_ecg, np.ndarray) else []  # for visualization
+            "cleaned_ecg": cleaned_ecg.tolist() if isinstance(cleaned_ecg, np.ndarray) else []
         }
+
+        if confidence_value < 0.75 or sqa_result.get("overall_quality") == "ACCEPTABLE":
+            result["low_confidence"] = True
+            result["escalation_hint"] = "Low confidence result. Consider repeat recording or backup modality (ultrasound/specialist review)."
+            result["disclaimer"] = "LOW CONFIDENCE OUTPUT - Interpret with caution."
+        else:
+            result["low_confidence"] = False
+
+        result["metadata"] = _build_metadata()
         return result
     
     def _assess_signal_quality(self, ecg: np.ndarray, fs: int) -> Dict:
@@ -412,6 +477,27 @@ class NeuroGenomicPipeline:
                 "predicted_next_week": current_index,
                 "deviation": 0.0
             }
+
+    def assess_trajectory(self, previous_indices: list, current_index: float, ga_list: list) -> Dict:
+        if len(previous_indices) < 2:
+            return {"trend": "stable", "action": "monitor_routine"}
+
+        try:
+            slope = np.polyfit(ga_list, previous_indices, 1)[0]
+        except Exception as e:
+            logger.warning(f"Trajectory assessment failed: {e}")
+            return {"trend": "stable", "action": "monitor_routine"}
+
+        if slope < -0.02:
+            return {
+                "trend": "declining",
+                "action": "high_risk_flag",
+                "recommendation": "Declining Developmental Index detected. Recommend closer follow-up and specialist review."
+            }
+        elif slope > 0.01:
+            return {"trend": "improving", "action": "positive"}
+        else:
+            return {"trend": "stable", "action": "monitor_routine"}
 
 # Singleton for workers/tasks.py
 _pipeline_instance: Optional[NeuroGenomicPipeline] = None

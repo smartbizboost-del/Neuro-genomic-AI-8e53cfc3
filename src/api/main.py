@@ -46,10 +46,11 @@ app = FastAPI(
 # Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately in production
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.add_middleware(
@@ -88,7 +89,7 @@ async def readiness():
     """Kubernetes readiness probe"""
     return {"status": "ready"}
 
-@app.get("/health")
-async def liveness():
-    """Kubernetes liveness probe"""
-    return {"status": "healthy"}
+@app.options("/{path:path}")
+async def options_handler():
+    """Handle CORS preflight requests"""
+    return {"status": "ok"}

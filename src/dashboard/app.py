@@ -40,7 +40,116 @@ def render_developmental_index(dev_index: float, confidence: float):
     st.markdown(f"<h4 style='color:{color};'>{status}</h4>", unsafe_allow_html=True)
 
 
-def render_risk_cards(risk_assessment: dict):
+def render_acquisition_checklist():
+    st.subheader("📋 Acquisition Checklist")
+    image_path = "assets/electrode_placement_diagram.png"
+    if os.path.exists(image_path):
+        st.image(image_path, caption="Correct 4-Channel Abdominal Electrode Placement", use_column_width=True)
+    else:
+        st.info("Electrode placement diagram not available. Please ensure correct electrode placement before recording.")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        checklist1 = st.checkbox("Skin cleaned and dry")
+        checklist2 = st.checkbox("Electrodes firmly attached (no loose contact)")
+        checklist3 = st.checkbox("Patient lying comfortably, minimal movement")
+    with col2:
+        checklist4 = st.checkbox("No talking or deep breathing during recording")
+        checklist5 = st.checkbox("Recording environment is quiet")
+
+    if st.button("✅ Start Recording", type="primary"):
+        if all([checklist1, checklist2, checklist3, checklist4, checklist5]):
+            st.success("Checklist complete. Starting recording...")
+            return True
+        st.error("Please complete all checklist items before starting.")
+        return False
+    return False
+
+
+def fetch_system_status(api_url: str, timeout: float = 3.0) -> dict:
+    status = {
+        "api_ok": False,
+        "api_status": "unavailable",
+        "model_loaded": None,
+        "inference_status": "n/a",
+        "latency_ms": None,
+        "last_checked": None,
+        "system": None,
+        "errors": []
+    }
+
+    start = time.time()
+    try:
+        resp = requests.get(f"{api_url}/health", timeout=timeout)
+        status["latency_ms"] = round((time.time() - start) * 1000, 1)
+        status["last_checked"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        if resp.status_code == 200:
+            payload = resp.json()
+            status["api_ok"] = True
+            status["api_status"] = payload.get("status", "unknown")
+            status["model_loaded"] = payload.get("model_loaded")
+        else:
+            status["errors"].append(f"Health endpoint returned {resp.status_code}")
+    except Exception as exc:
+        status["errors"].append(str(exc))
+
+    try:
+        resp = requests.get(f"{api_url}/health/detailed", timeout=timeout)
+        if resp.status_code == 200:
+            status["system"] = resp.json().get("system")
+    except Exception:
+        pass
+
+    try:
+        resp = requests.get(f"{api_url}/health/model", timeout=timeout)
+        if resp.status_code == 200:
+            payload = resp.json()
+            status["model_loaded"] = payload.get("model_loaded")
+            status["inference_status"] = payload.get("inference_status", "unknown")
+            if payload.get("status") != "healthy":
+                status["api_ok"] = False
+                status["errors"].append("Model health check degraded")
+    except Exception:
+        pass
+
+    return status
+
+
+def render_system_status_panel(api_url: str):
+    st.subheader("🛠️ System Status Panel")
+    status = fetch_system_status(api_url)
+
+    if status["api_ok"]:
+        st.success("Backend is reachable")
+    else:
+        st.error("Backend health degraded or unavailable")
+
+    cols = st.columns([1, 1, 1, 1, 1])
+    with cols[0]:
+        st.metric("API Status", status["api_status"].upper())
+    with cols[1]:
+        st.metric("Model Loaded", str(status["model_loaded"]).upper())
+    with cols[2]:
+        st.metric("Inference", status["inference_status"].upper())
+    with cols[3]:
+        st.metric("Latency", f"{status['latency_ms'] or 0} ms")
+    with cols[4]:
+        st.metric("Last Checked", status["last_checked"] or "n/a")
+
+    if status["system"]:
+        row1, row2, row3 = st.columns(3)
+        with row1:
+            st.caption(f"CPU: {status['system'].get('cpu_percent', 'n/a')}%")
+        with row2:
+            st.caption(f"Memory: {status['system'].get('memory_percent', 'n/a')}%")
+        with row3:
+            st.caption(f"Disk: {status['system'].get('disk_percent', 'n/a')}%")
+
+    if status["errors"]:
+        st.warning("Backend diagnostics reported issues: " + ", ".join(status["errors"]))
+
+
+def render_risk_cards(risk_assessment: dict, low_confidence: bool = False):
     """Risk Assessment Cards - Clinical traffic light style"""
     st.markdown("### Risk Assessment")
     cols = st.columns(3)
@@ -69,6 +178,9 @@ def render_risk_cards(risk_assessment: dict):
                 "🔴",
             ),
         ]
+
+    if low_confidence:
+        st.warning("⚠️ Low Confidence - interpret results with caution.")
 
     for col, (label, data, emoji) in zip(cols, risks):
         with col:
@@ -938,6 +1050,7 @@ page = st.sidebar.radio("Go to", page_options, index=current_index)
 st.session_state["_page_nav"] = page
 
 if page == "Upload & Analyze":
+    render_system_status_panel(API_URL)
     st.header("Upload Fetal ECG File")
     uploaded_file = st.file_uploader(
         "Choose a fetal ECG file", type=["csv", "txt", "edf"]
@@ -948,35 +1061,43 @@ if page == "Upload & Analyze":
     patient_id = st.text_input("Patient ID", value="Jane Doe")
     auto_open = st.toggle("Auto-open Results Viewer after upload", value=True)
 
-    if st.button("Analyze", type="primary") and uploaded_file is not None:
-        with st.spinner("Uploading and processing..."):
-            files = {"file": uploaded_file}
-            form_data = {
-                "gestational_weeks": gestational_weeks,
-                "patient_id": patient_id,
-            }
-            try:
-                response = requests.post(
-                    f"{API_URL}/api/v1/upload", files=files, data=form_data, timeout=30
-                )
-                if response.status_code == 200:
-                    result = response.json()
-                    file_id = str(result.get("file_id", ""))
-                    st.session_state["latest_file_id"] = file_id
-                    st.session_state["latest_patient"] = patient_id
-                    st.session_state["latest_weeks"] = gestational_weeks
-                    st.success(f"File uploaded. File ID: {file_id}")
-                    st.info(
-                        "Processing started. Dashboard will use this file for results."
+    checklist_complete = render_acquisition_checklist()
+    analyze_clicked = st.button("Analyze", type="primary")
+
+    if analyze_clicked:
+        if uploaded_file is None:
+            st.error("Please upload a fetal ECG file before analyzing.")
+        elif not checklist_complete:
+            st.error("Please complete the acquisition checklist before analyzing.")
+        else:
+            with st.spinner("Uploading and processing..."):
+                files = {"file": uploaded_file}
+                form_data = {
+                    "gestational_weeks": gestational_weeks,
+                    "patient_id": patient_id,
+                }
+                try:
+                    response = requests.post(
+                        f"{API_URL}/api/v1/upload", files=files, data=form_data, timeout=30
                     )
-                    if auto_open:
-                        st.session_state["auto_fetch_latest"] = True
-                        st.session_state["_page_nav"] = "Results Viewer"
-                        st.rerun()
-                else:
-                    st.error(f"Upload failed: {response.text}")
-            except Exception as exc:
-                st.error(f"Upload error: {exc}")
+                    if response.status_code == 200:
+                        result = response.json()
+                        file_id = str(result.get("file_id", ""))
+                        st.session_state["latest_file_id"] = file_id
+                        st.session_state["latest_patient"] = patient_id
+                        st.session_state["latest_weeks"] = gestational_weeks
+                        st.success(f"File uploaded. File ID: {file_id}")
+                        st.info(
+                            "Processing started. Dashboard will use this file for results."
+                        )
+                        if auto_open:
+                            st.session_state["auto_fetch_latest"] = True
+                            st.session_state["_page_nav"] = "Results Viewer"
+                            st.rerun()
+                    else:
+                        st.error(f"Upload failed: {response.text}")
+                except Exception as exc:
+                    st.error(f"Upload error: {exc}")
 
 elif page == "Results Viewer":
     st.header("Results Viewer")
@@ -1104,7 +1225,7 @@ elif page == "Results Viewer":
                             "risk", {}
                         )
                         if risk_assessment:
-                            render_risk_cards(risk_assessment)
+                            render_risk_cards(risk_assessment, data.get("low_confidence", False))
 
                         # HRV Metrics
                         st.markdown("**HRV & PRSA Metrics**")
