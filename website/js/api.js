@@ -8,10 +8,7 @@
             return normalizeBase(window.NGAI_API_BASE_URL);
         }
 
-        if (window.location && window.location.protocol && window.location.protocol !== 'file:') {
-            return normalizeBase(`${window.location.origin}/api/v1`);
-        }
-
+        // Always use localhost:8000 for local development
         return 'http://localhost:8000/api/v1';
     };
 

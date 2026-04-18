@@ -21,6 +21,7 @@ API_URL = os.getenv("API_URL", "http://localhost:8000")
 # OPTIMIZED COMPONENT FUNCTIONS
 # ============================================================================
 
+
 def render_developmental_index(dev_index: float, confidence: float):
     """Top prominent Developmental Index card"""
     st.markdown("### Developmental Index")
@@ -29,17 +30,130 @@ def render_developmental_index(dev_index: float, confidence: float):
         st.progress(dev_index)
     with col2:
         st.metric("Score", f"{dev_index:.2f}/1.0", f"±{confidence*100:.0f}%")
-    
+
     color = "green" if dev_index >= 0.75 else "orange" if dev_index >= 0.60 else "red"
-    status = "Normal" if dev_index >= 0.75 else "Borderline" if dev_index >= 0.60 else "At Risk"
+    status = (
+        "Normal"
+        if dev_index >= 0.75
+        else "Borderline" if dev_index >= 0.60 else "At Risk"
+    )
     st.markdown(f"<h4 style='color:{color};'>{status}</h4>", unsafe_allow_html=True)
 
 
-def render_risk_cards(risk_assessment: dict):
+def render_acquisition_checklist():
+    st.subheader("📋 Acquisition Checklist")
+    image_path = "assets/electrode_placement_diagram.png"
+    if os.path.exists(image_path):
+        st.image(image_path, caption="Correct 4-Channel Abdominal Electrode Placement", use_column_width=True)
+    else:
+        st.info("Electrode placement diagram not available. Please ensure correct electrode placement before recording.")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        checklist1 = st.checkbox("Skin cleaned and dry")
+        checklist2 = st.checkbox("Electrodes firmly attached (no loose contact)")
+        checklist3 = st.checkbox("Patient lying comfortably, minimal movement")
+    with col2:
+        checklist4 = st.checkbox("No talking or deep breathing during recording")
+        checklist5 = st.checkbox("Recording environment is quiet")
+
+    if st.button("✅ Start Recording", type="primary"):
+        if all([checklist1, checklist2, checklist3, checklist4, checklist5]):
+            st.success("Checklist complete. Starting recording...")
+            return True
+        st.error("Please complete all checklist items before starting.")
+        return False
+    return False
+
+
+def fetch_system_status(api_url: str, timeout: float = 3.0) -> dict:
+    status = {
+        "api_ok": False,
+        "api_status": "unavailable",
+        "model_loaded": None,
+        "inference_status": "n/a",
+        "latency_ms": None,
+        "last_checked": None,
+        "system": None,
+        "errors": []
+    }
+
+    start = time.time()
+    try:
+        resp = requests.get(f"{api_url}/health", timeout=timeout)
+        status["latency_ms"] = round((time.time() - start) * 1000, 1)
+        status["last_checked"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        if resp.status_code == 200:
+            payload = resp.json()
+            status["api_ok"] = True
+            status["api_status"] = payload.get("status", "unknown")
+            status["model_loaded"] = payload.get("model_loaded")
+        else:
+            status["errors"].append(f"Health endpoint returned {resp.status_code}")
+    except Exception as exc:
+        status["errors"].append(str(exc))
+
+    try:
+        resp = requests.get(f"{api_url}/health/detailed", timeout=timeout)
+        if resp.status_code == 200:
+            status["system"] = resp.json().get("system")
+    except Exception:
+        pass
+
+    try:
+        resp = requests.get(f"{api_url}/health/model", timeout=timeout)
+        if resp.status_code == 200:
+            payload = resp.json()
+            status["model_loaded"] = payload.get("model_loaded")
+            status["inference_status"] = payload.get("inference_status", "unknown")
+            if payload.get("status") != "healthy":
+                status["api_ok"] = False
+                status["errors"].append("Model health check degraded")
+    except Exception:
+        pass
+
+    return status
+
+
+def render_system_status_panel(api_url: str):
+    st.subheader("🛠️ System Status Panel")
+    status = fetch_system_status(api_url)
+
+    if status["api_ok"]:
+        st.success("Backend is reachable")
+    else:
+        st.error("Backend health degraded or unavailable")
+
+    cols = st.columns([1, 1, 1, 1, 1])
+    with cols[0]:
+        st.metric("API Status", status["api_status"].upper())
+    with cols[1]:
+        st.metric("Model Loaded", str(status["model_loaded"]).upper())
+    with cols[2]:
+        st.metric("Inference", status["inference_status"].upper())
+    with cols[3]:
+        st.metric("Latency", f"{status['latency_ms'] or 0} ms")
+    with cols[4]:
+        st.metric("Last Checked", status["last_checked"] or "n/a")
+
+    if status["system"]:
+        row1, row2, row3 = st.columns(3)
+        with row1:
+            st.caption(f"CPU: {status['system'].get('cpu_percent', 'n/a')}%")
+        with row2:
+            st.caption(f"Memory: {status['system'].get('memory_percent', 'n/a')}%")
+        with row3:
+            st.caption(f"Disk: {status['system'].get('disk_percent', 'n/a')}%")
+
+    if status["errors"]:
+        st.warning("Backend diagnostics reported issues: " + ", ".join(status["errors"]))
+
+
+def render_risk_cards(risk_assessment: dict, low_confidence: bool = False):
     """Risk Assessment Cards - Clinical traffic light style"""
     st.markdown("### Risk Assessment")
     cols = st.columns(3)
-    
+
     # Handle both new format (risk_assessment with iugr_risk, etc.)
     # and old format (risk with predicted_class, etc.)
     if "iugr_risk" in risk_assessment:
@@ -47,36 +161,46 @@ def render_risk_cards(risk_assessment: dict):
         risks = [
             ("IUGR Risk", risk_assessment.get("iugr_risk", {}), "🔴"),
             ("Preterm Risk", risk_assessment.get("preterm_risk", {}), "🟡"),
-            ("Hypoxia Risk", risk_assessment.get("hypoxia_risk", {}), "⚪")
+            ("Hypoxia Risk", risk_assessment.get("hypoxia_risk", {}), "⚪"),
         ]
     else:
         # Old format - convert from predicted probabilities
         normal_score = risk_assessment.get("normal", 0.78) * 100
         suspect_score = risk_assessment.get("suspect", 0.17) * 100
         pathological_score = risk_assessment.get("pathological", 0.05) * 100
-        
+
         risks = [
             ("Normal", {"score": normal_score, "ci": "±8%", "note": ""}, "🟢"),
             ("Suspect", {"score": suspect_score, "ci": "±12%", "note": ""}, "🟡"),
-            ("Pathological", {"score": pathological_score, "ci": "±5%", "note": ""}, "🔴")
+            (
+                "Pathological",
+                {"score": pathological_score, "ci": "±5%", "note": ""},
+                "🔴",
+            ),
         ]
-    
+
+    if low_confidence:
+        st.warning("⚠️ Low Confidence - interpret results with caution.")
+
     for col, (label, data, emoji) in zip(cols, risks):
         with col:
             score = data.get("score", 0) if isinstance(data, dict) else 0
             ci = data.get("ci", "") if isinstance(data, dict) else ""
             note = data.get("note", "") if isinstance(data, dict) else ""
-            
+
             color = "#4ade80" if score < 20 else "#fbbf24" if score < 40 else "#f87171"
-            
-            st.markdown(f"""
+
+            st.markdown(
+                f"""
             <div style="background-color: {color}20; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid {color}">
                 <h3>{emoji} {label}</h3>
                 <h2>{score:.1f}%</h2>
                 <p>{ci}</p>
                 {f'<small>{note}</small>' if note else ''}
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
 
 def render_explainability(shap_dict: dict):
@@ -85,16 +209,26 @@ def render_explainability(shap_dict: dict):
     if not shap_dict:
         st.info("Explainability data not available yet.")
         return
-    
+
     try:
         # Convert to DataFrame for plotting
         if isinstance(shap_dict, dict) and len(shap_dict) > 0:
-            df = pd.DataFrame(list(shap_dict.items()), columns=["Feature", "Contribution"])
-            df = df.sort_values("Contribution", ascending=True).tail(10)  # Top 10 features
-            
-            fig = px.bar(df, x="Contribution", y="Feature", orientation='h',
-                         title="Feature Contribution (SHAP values)",
-                         color="Contribution", color_continuous_scale="RdBu")
+            df = pd.DataFrame(
+                list(shap_dict.items()), columns=["Feature", "Contribution"]
+            )
+            df = df.sort_values("Contribution", ascending=True).tail(
+                10
+            )  # Top 10 features
+
+            fig = px.bar(
+                df,
+                x="Contribution",
+                y="Feature",
+                orientation="h",
+                title="Feature Contribution (SHAP values)",
+                color="Contribution",
+                color_continuous_scale="RdBu",
+            )
             fig.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10))
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -118,21 +252,141 @@ def render_trajectory_panel(trajectory: dict):
     if not trajectory:
         st.info("Trajectory data not available yet.")
         return
-    
+
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Trend", trajectory.get("trend", "stable").title())
     with col2:
         st.metric("Slope", f"{trajectory.get('slope', 0):.4f}")
     with col3:
-        st.metric("Predicted (Next)",  f"{trajectory.get('predicted_next_week', 0):.2f}")
-    
+        st.metric("Predicted (Next)", f"{trajectory.get('predicted_next_week', 0):.2f}")
+
     if trajectory.get("deviation"):
         st.caption(f"Deviation from prediction: {trajectory['deviation']:.2f}")
 
 
+def render_morphology_visualization(raw_ecg: np.ndarray, cleaned_ecg: np.ndarray, 
+                                    sampling_rate: int = 250, tqrs_trend: dict = None,
+                                    morph_quality: dict = None):
+    """Raw vs Cleaned ECG with Annotated Morphology and T/QRS Analysis"""
+    st.markdown("### ECG Morphology Analysis")
+    
+    # Quality indicator
+    if morph_quality:
+        col1, col2 = st.columns(2)
+        with col1:
+            status_color = "🟢" if morph_quality.get("status") == "good" else "🟡" if morph_quality.get("status") == "marginal" else "🔴"
+            st.metric("Morphology Status", f"{status_color} {morph_quality.get('status', 'unknown').title()}")
+        with col2:
+            st.metric("Morphology SNR (dB)", f"{morph_quality.get('morphology_snr', 0):.2f}")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**Raw Abdominal Signal** (with maternal interference)")
+        fig_raw = go.Figure()
+        fig_raw.add_trace(go.Scatter(
+            y=raw_ecg[:min(2000, len(raw_ecg))], 
+            mode='lines', 
+            name='Raw',
+            line=dict(color='#ef553b')
+        ))
+        fig_raw.update_layout(
+            height=350, 
+            title="Raw Signal",
+            xaxis_title="Samples",
+            yaxis_title="Amplitude (mV)",
+            hovermode='x unified'
+        )
+        st.plotly_chart(fig_raw, use_container_width=True)
+    
+    with col2:
+        st.markdown("**Cleaned Fetal ECG with Morphology Markers**")
+        fig_clean = go.Figure()
+        sig_segment = cleaned_ecg[:min(2000, len(cleaned_ecg))]
+        
+        fig_clean.add_trace(go.Scatter(
+            y=sig_segment, 
+            mode='lines', 
+            name='Cleaned',
+            line=dict(color='#636EFA')
+        ))
+        
+        # Mark approximate QRS and T regions
+        try:
+            from scipy import signal as sp_signal
+            peaks, _ = sp_signal.find_peaks(
+                sig_segment, 
+                distance=sampling_rate//2,
+                prominence=np.std(sig_segment)*0.3
+            )
+            
+            # Mark QRS peaks
+            for p in peaks[:5]:
+                fig_clean.add_vline(
+                    x=p, 
+                    line_dash="dash", 
+                    line_color="red",
+                    annotation_text="QRS"
+                )
+                # Mark T-wave region
+                t_start = p + int(0.15 * sampling_rate)
+                t_end = p + int(0.35 * sampling_rate)
+                if t_end <= len(sig_segment):
+                    fig_clean.add_vrect(
+                        x0=t_start, 
+                        x1=t_end,
+                        fillcolor="orange", 
+                        opacity=0.2,
+                        annotation_text="T-wave",
+                        annotation_position="top left"
+                    )
+        except Exception as e:
+            st.info(f"Could not mark QRS/T regions: {str(e)}")
+        
+        fig_clean.update_layout(
+            height=350, 
+            title="Cleaned Fetal ECG",
+            xaxis_title="Samples",
+            yaxis_title="Amplitude (mV)",
+            hovermode='x unified'
+        )
+        st.plotly_chart(fig_clean, use_container_width=True)
+    
+    # T/QRS Trend visualization
+    if tqrs_trend and tqrs_trend.get("trend_values"):
+        st.markdown("### T/QRS Ratio Trend")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Mean T/QRS", f"{tqrs_trend.get('mean_tqrs', 0):.3f}")
+        with col2:
+            st.metric("Trend Slope", f"{tqrs_trend.get('slope', 0):.4f}")
+        with col3:
+            trend_indicator = "📈 Rising" if tqrs_trend.get('is_rising') else "📉 Stable/Declining"
+            st.metric("Direction", trend_indicator)
+        
+        # Plot trend
+        fig_trend = go.Figure()
+        fig_trend.add_trace(go.Scatter(
+            y=tqrs_trend.get("trend_values", []),
+            mode='lines+markers',
+            name='T/QRS Ratio',
+            line=dict(color='#00CC96')
+        ))
+        fig_trend.update_layout(
+            height=300,
+            title="T/QRS Ratio Over Time",
+            xaxis_title="Time Window",
+            yaxis_title="T/QRS Ratio",
+            hovermode='x unified'
+        )
+        st.plotly_chart(fig_trend, use_container_width=True)
+
+
 def _inject_theme(compact: bool = False, readable: bool = True) -> None:
-    compact_css = """
+    compact_css = (
+        """
             .main .block-container {
                 max-width: 98vw;
                 padding-top: .6rem;
@@ -141,9 +395,13 @@ def _inject_theme(compact: bool = False, readable: bool = True) -> None:
             h1 { font-size: 1.55rem !important; margin-bottom: .2rem !important; }
             h3 { font-size: 1.0rem !important; margin-bottom: .1rem !important; }
             h4 { font-size: .92rem !important; margin-bottom: .05rem !important; }
-    """ if compact else ""
+    """
+        if compact
+        else ""
+    )
 
-    readable_css = """
+    readable_css = (
+        """
             .main .block-container {
                 max-width: 99vw;
                 padding-top: .9rem;
@@ -159,7 +417,10 @@ def _inject_theme(compact: bool = False, readable: bool = True) -> None:
             label, .stMarkdown, .stTextInput, .stNumberInput {
                 font-size: 1rem !important;
             }
-    """ if readable else ""
+    """
+        if readable
+        else ""
+    )
 
     css = """
         <style>
@@ -282,10 +543,14 @@ def _risk_state(predicted_class: str) -> str:
     return mapping.get(str(predicted_class).lower(), "Unknown")
 
 
-def _mock_signal(fs: int = 500, seconds: int = 8) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _mock_signal(
+    fs: int = 500, seconds: int = 8
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     t = np.linspace(0.0, seconds, fs * seconds, endpoint=False)
     raw = 0.2 * np.random.randn(len(t)) + 0.35 * np.sin(2 * np.pi * 1.4 * t)
-    cleaned = 0.1 * np.sin(2 * np.pi * 1.4 * t) + 0.45 * np.maximum(0.0, np.sin(2 * np.pi * 2.3 * t))
+    cleaned = 0.1 * np.sin(2 * np.pi * 1.4 * t) + 0.45 * np.maximum(
+        0.0, np.sin(2 * np.pi * 2.3 * t)
+    )
     return t, raw, cleaned
 
 
@@ -293,13 +558,31 @@ def _plot_signal_panel(compact: bool = True, readable: bool = True) -> go.Figure
     t, raw, cleaned = _mock_signal()
     fig = go.Figure()
     lw = 1.8 if readable else 1.2
-    fig.add_trace(go.Scatter(x=t, y=raw, mode="lines", name="Raw Fetal ECG", line=dict(width=lw, color="#2f5d80")))
-    fig.add_trace(go.Scatter(x=t, y=cleaned - 1.1, mode="lines", name="Cleaned Fetal ECG", line=dict(width=lw, color="#5f6f7b")))
+    fig.add_trace(
+        go.Scatter(
+            x=t,
+            y=raw,
+            mode="lines",
+            name="Raw Fetal ECG",
+            line=dict(width=lw, color="#2f5d80"),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=t,
+            y=cleaned - 1.1,
+            mode="lines",
+            name="Cleaned Fetal ECG",
+            line=dict(width=lw, color="#5f6f7b"),
+        )
+    )
     fig.update_layout(
         height=260 if compact else (360 if readable else 300),
         margin=dict(l=10, r=10, t=30, b=20),
         template="plotly_white",
-        legend=dict(orientation="h", y=1.12, x=0, font=dict(size=13 if readable else 11)),
+        legend=dict(
+            orientation="h", y=1.12, x=0, font=dict(size=13 if readable else 11)
+        ),
         xaxis_title="Time (s)",
         yaxis_title="Amplitude",
         font=dict(size=14 if readable else 11),
@@ -307,7 +590,9 @@ def _plot_signal_panel(compact: bool = True, readable: bool = True) -> go.Figure
     return fig
 
 
-def _plot_development_gauge(value: float, compact: bool = True, readable: bool = True) -> go.Figure:
+def _plot_development_gauge(
+    value: float, compact: bool = True, readable: bool = True
+) -> go.Figure:
     fig = go.Figure(
         go.Indicator(
             mode="gauge+number",
@@ -325,7 +610,11 @@ def _plot_development_gauge(value: float, compact: bool = True, readable: bool =
             },
         )
     )
-    fig.update_layout(height=220 if compact else (300 if readable else 250), margin=dict(l=10, r=10, t=26 if compact else 40, b=8), font=dict(size=14 if readable else 11))
+    fig.update_layout(
+        height=220 if compact else (300 if readable else 250),
+        margin=dict(l=10, r=10, t=26 if compact else 40, b=8),
+        font=dict(size=14 if readable else 11),
+    )
     return fig
 
 
@@ -343,9 +632,33 @@ def _plot_cluster_panel(
     msize = 8 if readable else 6
     marker_style = dict(size=msize, opacity=0.72, line=dict(width=0.5, color="#1a1a1a"))
 
-    fig.add_trace(go.Scatter(x=c0[:, 0], y=c0[:, 1], mode="markers", name="Normal", marker={**marker_style, "color": "#3b9b4a"}))
-    fig.add_trace(go.Scatter(x=c1[:, 0], y=c1[:, 1], mode="markers", name="Moderate risk", marker={**marker_style, "color": "#d3b53a"}))
-    fig.add_trace(go.Scatter(x=c2[:, 0], y=c2[:, 1], mode="markers", name="High risk", marker={**marker_style, "color": "#b84b4b"}))
+    fig.add_trace(
+        go.Scatter(
+            x=c0[:, 0],
+            y=c0[:, 1],
+            mode="markers",
+            name="Normal",
+            marker={**marker_style, "color": "#3b9b4a"},
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=c1[:, 0],
+            y=c1[:, 1],
+            mode="markers",
+            name="Moderate risk",
+            marker={**marker_style, "color": "#d3b53a"},
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=c2[:, 0],
+            y=c2[:, 1],
+            mode="markers",
+            name="High risk",
+            marker={**marker_style, "color": "#b84b4b"},
+        )
+    )
 
     if cluster_id is not None:
         anchor = {0: (-10, -5), 1: (4, 8), 2: (16, -2)}.get(int(cluster_id), (0, 0))
@@ -373,13 +686,29 @@ def _plot_cluster_panel(
         template="plotly_white",
         xaxis_title="PCA-1",
         yaxis_title="PCA-2",
-        legend=dict(orientation="h", y=1.16, x=0, title="Phenotype clusters", font=dict(size=13 if readable else 11)),
+        legend=dict(
+            orientation="h",
+            y=1.16,
+            x=0,
+            title="Phenotype clusters",
+            font=dict(size=13 if readable else 11),
+        ),
         font=dict(size=15 if readable else 11),
         hovermode="closest",
         dragmode="zoom",
     )
-    fig.update_xaxes(range=[x_min - x_pad, x_max + x_pad], showgrid=True, gridcolor="#dce5ef", zeroline=True)
-    fig.update_yaxes(range=[y_min - y_pad, y_max + y_pad], showgrid=True, gridcolor="#dce5ef", zeroline=True)
+    fig.update_xaxes(
+        range=[x_min - x_pad, x_max + x_pad],
+        showgrid=True,
+        gridcolor="#dce5ef",
+        zeroline=True,
+    )
+    fig.update_yaxes(
+        range=[y_min - y_pad, y_max + y_pad],
+        showgrid=True,
+        gridcolor="#dce5ef",
+        zeroline=True,
+    )
     return fig
 
 
@@ -412,17 +741,34 @@ def _cluster_legend_html(cluster_id: int | None) -> str:
 def _render_top_action_bar(patient_id: str) -> None:
     c1, c2, c3, c4 = st.columns([3.0, 2.0, 1.1, 1.25])
     with c1:
-        st.markdown("<div class='topbar'><div class='topbar-title'>Neuro-Genomic AI Dashboard</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='topbar'><div class='topbar-title'>Neuro-Genomic AI Dashboard</div></div>",
+            unsafe_allow_html=True,
+        )
     with c2:
-        st.selectbox("Patient", [patient_id, "Jane Doe", "PT-032", "PT-041"], label_visibility="collapsed")
+        st.selectbox(
+            "Patient",
+            [patient_id, "Jane Doe", "PT-032", "PT-041"],
+            label_visibility="collapsed",
+        )
     with c3:
         if st.button("📥 Export", use_container_width=True, key="btn_export"):
             st.info("Export options:")
             col_a, col_b = st.columns(2)
             with col_a:
-                st.download_button("Clinical Report", "Report export placeholder", file_name="clinical_report.txt", use_container_width=True)
+                st.download_button(
+                    "Clinical Report",
+                    "Report export placeholder",
+                    file_name="clinical_report.txt",
+                    use_container_width=True,
+                )
             with col_b:
-                st.download_button("Validation", "Validation export placeholder", file_name="validation_results.txt", use_container_width=True)
+                st.download_button(
+                    "Validation",
+                    "Validation export placeholder",
+                    file_name="validation_results.txt",
+                    use_container_width=True,
+                )
     with c4:
         if st.button("📄 PDF Report", use_container_width=True, key="btn_pdf"):
             col_a, col_b = st.columns(2)
@@ -442,7 +788,9 @@ def _feature_card(title: str, value_text: str, subtitle: str, color: str) -> str
     """
 
 
-def _render_clinical_dashboard(data: dict[str, Any], patient_id: str, compact: bool = True, readable: bool = True) -> None:
+def _render_clinical_dashboard(
+    data: dict[str, Any], patient_id: str, compact: bool = True, readable: bool = True
+) -> None:
     features = data.get("features", {})
     risk = data.get("risk", {})
 
@@ -452,7 +800,9 @@ def _render_clinical_dashboard(data: dict[str, Any], patient_id: str, compact: b
     confidence = float(risk.get("confidence_level") or 0.0)
     confidence_band = risk.get("confidence_label") or _confidence_label(confidence)
     cluster = risk.get("unsupervised_cluster")
-    cluster_risk_level = _risk_level_from_cluster(cluster if isinstance(cluster, int) else None)
+    cluster_risk_level = _risk_level_from_cluster(
+        cluster if isinstance(cluster, int) else None
+    )
 
     _render_top_action_bar(patient_id)
 
@@ -468,7 +818,10 @@ def _render_clinical_dashboard(data: dict[str, Any], patient_id: str, compact: b
     left, center, right = st.columns([1.05, 3.15, 1.55])
 
     with left:
-        st.markdown("<div class='panel-title'>Clinical Context Layer</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='panel-title'>Clinical Context Layer</div>",
+            unsafe_allow_html=True,
+        )
         st.markdown("#### Patient Overview")
         st.markdown(
             f"""
@@ -496,62 +849,128 @@ def _render_clinical_dashboard(data: dict[str, Any], patient_id: str, compact: b
         st.toggle("Clinical mode", value=True)
 
     with center:
-        st.markdown("<div class='panel-title'>Feature Layer & Analysis</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='panel-title'>Feature Layer & Analysis</div>",
+            unsafe_allow_html=True,
+        )
         st.markdown("#### Signal Visualization")
-        st.markdown("<div class='mini-note'>Raw and cleaned ECG overlays for qualitative signal checks.</div>", unsafe_allow_html=True)
-        st.plotly_chart(_plot_signal_panel(compact=compact, readable=readable), use_container_width=True)
+        st.markdown(
+            "<div class='mini-note'>Raw and cleaned ECG overlays for qualitative signal checks.</div>",
+            unsafe_allow_html=True,
+        )
+        st.plotly_chart(
+            _plot_signal_panel(compact=compact, readable=readable),
+            use_container_width=True,
+        )
 
         st.markdown("#### HRV Metrics")
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.markdown(
-                _feature_card("RMSSD", f"{features.get('rmssd', 0):.2f} ms", "Parasympathetic activity", "#5a9f63"),
+                _feature_card(
+                    "RMSSD",
+                    f"{features.get('rmssd', 0):.2f} ms",
+                    "Parasympathetic activity",
+                    "#5a9f63",
+                ),
                 unsafe_allow_html=True,
             )
         with c2:
             st.markdown(
-                _feature_card("SDNN", f"{features.get('sdnn', 0):.2f} ms", "Overall variability", "#5a9f63"),
+                _feature_card(
+                    "SDNN",
+                    f"{features.get('sdnn', 0):.2f} ms",
+                    "Overall variability",
+                    "#5a9f63",
+                ),
                 unsafe_allow_html=True,
             )
         with c3:
             st.markdown(
-                _feature_card("LF/HF Ratio", f"{features.get('lf_hf_ratio', 0):.2f}", "Sympathetic vs parasympathetic", "#c8a73e"),
+                _feature_card(
+                    "LF/HF Ratio",
+                    f"{features.get('lf_hf_ratio', 0):.2f}",
+                    "Sympathetic vs parasympathetic",
+                    "#c8a73e",
+                ),
                 unsafe_allow_html=True,
             )
         with c4:
             st.markdown(
-                _feature_card("Sample Entropy", f"{features.get('sample_entropy', 0):.2f}", "Signal complexity", "#5a9f63"),
+                _feature_card(
+                    "Sample Entropy",
+                    f"{features.get('sample_entropy', 0):.2f}",
+                    "Signal complexity",
+                    "#5a9f63",
+                ),
                 unsafe_allow_html=True,
             )
 
         st.markdown("#### HRV Trend Graph")
-        st.markdown("<div class='mini-note'>Modeling developmental trajectory across gestational windows.</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='mini-note'>Modeling developmental trajectory across gestational windows.</div>",
+            unsafe_allow_html=True,
+        )
         weeks = np.arange(max(20, gest_weeks - 10), gest_weeks + 1)
-        values = np.linspace(20, 45, len(weeks)) + np.random.default_rng(0).normal(0, 1.3, len(weeks))
+        values = np.linspace(20, 45, len(weeks)) + np.random.default_rng(0).normal(
+            0, 1.3, len(weeks)
+        )
         trend = pd.DataFrame({"Weeks": weeks, "HRV Index": values})
         fig_trend = px.line(trend, x="Weeks", y="HRV Index", markers=True)
-        fig_trend.update_layout(height=230 if compact else (320 if readable else 280), margin=dict(l=10, r=10, t=15, b=12), template="plotly_white", font=dict(size=14 if readable else 11))
+        fig_trend.update_layout(
+            height=230 if compact else (320 if readable else 280),
+            margin=dict(l=10, r=10, t=15, b=12),
+            template="plotly_white",
+            font=dict(size=14 if readable else 11),
+        )
         st.plotly_chart(fig_trend, use_container_width=True)
 
     with right:
-        st.markdown("<div class='panel-title'>AI Interpretation Panel</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='panel-title'>AI Interpretation Panel</div>",
+            unsafe_allow_html=True,
+        )
         for line in data.get("interpretation", []):
             st.write(f"- {line}")
 
-        st.markdown("<div class='panel-title'>Risk Score System</div>", unsafe_allow_html=True)
-        st.plotly_chart(_plot_development_gauge(float(data.get("developmental_index", 0.0)), compact=compact, readable=readable), use_container_width=True)
+        st.markdown(
+            "<div class='panel-title'>Risk Score System</div>", unsafe_allow_html=True
+        )
+        st.plotly_chart(
+            _plot_development_gauge(
+                float(data.get("developmental_index", 0.0)),
+                compact=compact,
+                readable=readable,
+            ),
+            use_container_width=True,
+        )
         st.write(f"Predicted state: **{status_text}**")
-        st.write(f"Confidence: **{confidence * 100:.1f}% ({str(confidence_band).upper()})**")
+        st.write(
+            f"Confidence: **{confidence * 100:.1f}% ({str(confidence_band).upper()})**"
+        )
         st.markdown(_risk_badge_html(cluster_risk_level), unsafe_allow_html=True)
         st.progress(max(0.0, min(1.0, confidence)))
         st.write(f"Cluster: **{cluster if cluster is not None else 'N/A'}**")
 
-        st.markdown("<div class='panel-title'>Cluster Analysis (Unsupervised Learning Visualization)</div>", unsafe_allow_html=True)
-        st.markdown(_cluster_legend_html(cluster if isinstance(cluster, int) else None), unsafe_allow_html=True)
+        st.markdown(
+            "<div class='panel-title'>Cluster Analysis (Unsupervised Learning Visualization)</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            _cluster_legend_html(cluster if isinstance(cluster, int) else None),
+            unsafe_allow_html=True,
+        )
         st.plotly_chart(
-            _plot_cluster_panel(cluster if isinstance(cluster, int) else None, compact=compact, readable=readable),
+            _plot_cluster_panel(
+                cluster if isinstance(cluster, int) else None,
+                compact=compact,
+                readable=readable,
+            ),
             use_container_width=True,
-            config={"displaylogo": False, "modeBarButtonsToAdd": ["zoomIn2d", "zoomOut2d", "resetScale2d"]},
+            config={
+                "displaylogo": False,
+                "modeBarButtonsToAdd": ["zoomIn2d", "zoomOut2d", "resetScale2d"],
+            },
         )
 
 
@@ -573,7 +992,9 @@ def _fetch_analysis(file_id: str) -> tuple[dict[str, Any] | None, str | None]:
         return None, f"Fetch error: {exc}"
 
 
-def _wait_for_analysis(file_id: str, timeout_sec: int = 18, interval_sec: int = 2) -> tuple[dict[str, Any] | None, str | None]:
+def _wait_for_analysis(
+    file_id: str, timeout_sec: int = 18, interval_sec: int = 2
+) -> tuple[dict[str, Any] | None, str | None]:
     start = time.time()
     last_payload: dict[str, Any] | None = None
     while time.time() - start < timeout_sec:
@@ -588,7 +1009,9 @@ def _wait_for_analysis(file_id: str, timeout_sec: int = 18, interval_sec: int = 
     return last_payload, None
 
 
-st.set_page_config(page_title="Neuro-Genomic AI Dashboard", page_icon="DNA", layout="wide")
+st.set_page_config(
+    page_title="Neuro-Genomic AI Dashboard", page_icon="DNA", layout="wide"
+)
 
 if "latest_file_id" not in st.session_state:
     st.session_state["latest_file_id"] = ""
@@ -610,7 +1033,11 @@ _inject_theme(compact=compact_mode, readable=readable_mode)
 # Display logo and title at the top
 col_logo, col_title = st.columns([0.05, 1])
 with col_logo:
+<<<<<<< HEAD
     # st.image("logo.png", width=28, use_column_width=False)
+=======
+    st.image("src/dashboard/logo.png", width=28, use_column_width=False)
+>>>>>>> 6a1172b7939213ca9268f3506717a07c8abe8fbb
 with col_title:
         pass
     st.title("Neuro-Genomic AI Dashboard")
@@ -628,47 +1055,73 @@ page = st.sidebar.radio("Go to", page_options, index=current_index)
 st.session_state["_page_nav"] = page
 
 if page == "Upload & Analyze":
+    render_system_status_panel(API_URL)
     st.header("Upload Fetal ECG File")
-    uploaded_file = st.file_uploader("Choose a fetal ECG file", type=["csv", "txt", "edf"])
-    gestational_weeks = st.number_input("Gestational Weeks", min_value=20, max_value=42, value=32)
+    uploaded_file = st.file_uploader(
+        "Choose a fetal ECG file", type=["csv", "txt", "edf"]
+    )
+    gestational_weeks = st.number_input(
+        "Gestational Weeks", min_value=20, max_value=42, value=32
+    )
     patient_id = st.text_input("Patient ID", value="Jane Doe")
     auto_open = st.toggle("Auto-open Results Viewer after upload", value=True)
 
-    if st.button("Analyze", type="primary") and uploaded_file is not None:
-        with st.spinner("Uploading and processing..."):
-            files = {"file": uploaded_file}
-            form_data = {"gestational_weeks": gestational_weeks, "patient_id": patient_id}
-            try:
-                response = requests.post(f"{API_URL}/api/v1/upload", files=files, data=form_data, timeout=30)
-                if response.status_code == 200:
-                    result = response.json()
-                    file_id = str(result.get("file_id", ""))
-                    st.session_state["latest_file_id"] = file_id
-                    st.session_state["latest_patient"] = patient_id
-                    st.session_state["latest_weeks"] = gestational_weeks
-                    st.success(f"File uploaded. File ID: {file_id}")
-                    st.info("Processing started. Dashboard will use this file for results.")
-                    if auto_open:
-                        st.session_state["auto_fetch_latest"] = True
-                        st.session_state["_page_nav"] = "Results Viewer"
-                        st.rerun()
-                else:
-                    st.error(f"Upload failed: {response.text}")
-            except Exception as exc:
-                st.error(f"Upload error: {exc}")
+    checklist_complete = render_acquisition_checklist()
+    analyze_clicked = st.button("Analyze", type="primary")
+
+    if analyze_clicked:
+        if uploaded_file is None:
+            st.error("Please upload a fetal ECG file before analyzing.")
+        elif not checklist_complete:
+            st.error("Please complete the acquisition checklist before analyzing.")
+        else:
+            with st.spinner("Uploading and processing..."):
+                files = {"file": uploaded_file}
+                form_data = {
+                    "gestational_weeks": gestational_weeks,
+                    "patient_id": patient_id,
+                }
+                try:
+                    response = requests.post(
+                        f"{API_URL}/api/v1/upload", files=files, data=form_data, timeout=30
+                    )
+                    if response.status_code == 200:
+                        result = response.json()
+                        file_id = str(result.get("file_id", ""))
+                        st.session_state["latest_file_id"] = file_id
+                        st.session_state["latest_patient"] = patient_id
+                        st.session_state["latest_weeks"] = gestational_weeks
+                        st.success(f"File uploaded. File ID: {file_id}")
+                        st.info(
+                            "Processing started. Dashboard will use this file for results."
+                        )
+                        if auto_open:
+                            st.session_state["auto_fetch_latest"] = True
+                            st.session_state["_page_nav"] = "Results Viewer"
+                            st.rerun()
+                    else:
+                        st.error(f"Upload failed: {response.text}")
+                except Exception as exc:
+                    st.error(f"Upload error: {exc}")
 
 elif page == "Results Viewer":
     st.header("Results Viewer")
     col_input_1, col_input_2, col_input_3 = st.columns([2, 2, 1])
     with col_input_1:
-        file_id = st.text_input("File ID", value=st.session_state.get("latest_file_id", ""))
+        file_id = st.text_input(
+            "File ID", value=st.session_state.get("latest_file_id", "")
+        )
     with col_input_2:
-        patient_name = st.text_input("Patient", value=st.session_state.get("latest_patient", "Jane Doe"))
+        patient_name = st.text_input(
+            "Patient", value=st.session_state.get("latest_patient", "Jane Doe")
+        )
     with col_input_3:
         use_demo = st.toggle("Demo mode", value=False)
 
     cbtn1, cbtn2 = st.columns([1, 1])
-    load_clicked = cbtn1.button("Load Dashboard", type="primary", use_container_width=True)
+    load_clicked = cbtn1.button(
+        "Load Dashboard", type="primary", use_container_width=True
+    )
     load_latest_clicked = cbtn2.button("Load Latest Upload", use_container_width=True)
 
     should_auto_fetch = bool(st.session_state.get("auto_fetch_latest", False))
@@ -704,99 +1157,135 @@ elif page == "Results Viewer":
                     "gestational_weeks": 32,
                 }
             else:
-                selected_file_id = st.session_state.get("latest_file_id", "") if load_latest_clicked else file_id
+                selected_file_id = (
+                    st.session_state.get("latest_file_id", "")
+                    if load_latest_clicked
+                    else file_id
+                )
                 if selected_file_id:
                     data, error = _wait_for_analysis(selected_file_id)
                     if error:
                         st.error(error)
                     elif data is not None and _is_processing_payload(data):
-                        st.info("Analysis is still processing. Showing latest available payload.")
+                        st.info(
+                            "Analysis is still processing. Showing latest available payload."
+                        )
                     st.session_state["latest_file_id"] = selected_file_id
                     st.session_state["latest_patient"] = patient_name
                 else:
-                    st.warning("No uploaded file found yet. Upload first or enable Demo mode.")
+                    st.warning(
+                        "No uploaded file found yet. Upload first or enable Demo mode."
+                    )
 
             if data is not None:
                 # Use new optimized layout if data has developmental_index (all formats)
                 if "developmental_index" in data:
                     # Use new optimized component layout
                     st.markdown("---")
-                    st.subheader(f"Patient: {patient_name} | {data.get('gestational_weeks', 'N/A')} weeks")
-                    
+                    st.subheader(
+                        f"Patient: {patient_name} | {data.get('gestational_weeks', 'N/A')} weeks"
+                    )
+
                     # Developmental Index prominently displayed
                     render_developmental_index(
                         data.get("developmental_index", 0.5),
-                        data.get("confidence", 0.85)
+                        data.get("confidence", 0.85),
                     )
-                    
+
                     # Three-column layout
                     left, center, right = st.columns([1.2, 2, 1.2])
-                    
+
                     with left:
                         st.markdown("**Clinical Context**")
                         sqa = data.get("sqa", {})
                         if sqa.get("overall_quality"):
                             st.info(f"Signal Quality: {sqa['overall_quality']}")
                         st.caption("Maternal Cancellation: 98.7% successful")
-                    
+
                     with center:
                         st.markdown("**Signal & Metrics**")
                         # Signal visualization
                         if data.get("cleaned_ecg"):
                             try:
                                 fig = go.Figure()
-                                fig.add_trace(go.Scatter(
-                                    y=data["cleaned_ecg"][:min(1000, len(data["cleaned_ecg"]))],
-                                    mode="lines",
-                                    name="Cleaned ECG",
-                                    line=dict(color="#5f6f7b", width=1.5)
-                                ))
-                                fig.update_layout(height=200, margin=dict(l=10, r=10, t=20, b=20))
+                                fig.add_trace(
+                                    go.Scatter(
+                                        y=data["cleaned_ecg"][
+                                            : min(1000, len(data["cleaned_ecg"]))
+                                        ],
+                                        mode="lines",
+                                        name="Cleaned ECG",
+                                        line=dict(color="#5f6f7b", width=1.5),
+                                    )
+                                )
+                                fig.update_layout(
+                                    height=200, margin=dict(l=10, r=10, t=20, b=20)
+                                )
                                 st.plotly_chart(fig, use_container_width=True)
                             except Exception as e:
                                 st.caption(f"Signal visualization unavailable: {e}")
-                        
+
                         # Risk cards
-                        risk_assessment = data.get("risk_assessment", {}) or data.get("risk", {})
+                        risk_assessment = data.get("risk_assessment", {}) or data.get(
+                            "risk", {}
+                        )
                         if risk_assessment:
-                            render_risk_cards(risk_assessment)
-                        
+                            render_risk_cards(risk_assessment, data.get("low_confidence", False))
+
                         # HRV Metrics
                         st.markdown("**HRV & PRSA Metrics**")
-                        metrics = data.get("hrv_metrics", {}) or data.get("features", {})
+                        metrics = data.get("hrv_metrics", {}) or data.get(
+                            "features", {}
+                        )
                         if metrics:
                             cols = st.columns(3)
                             with cols[0]:
-                                st.metric("RMSSD", f"{metrics.get('rmssd', 35)} ms", "Normal")
+                                st.metric(
+                                    "RMSSD", f"{metrics.get('rmssd', 35)} ms", "Normal"
+                                )
                             with cols[1]:
-                                st.metric("LF/HF", f"{metrics.get('lf_hf_ratio', metrics.get('lf_hf', 1.7))}", "Moderate")
+                                st.metric(
+                                    "LF/HF",
+                                    f"{metrics.get('lf_hf_ratio', metrics.get('lf_hf', 1.7))}",
+                                    "Moderate",
+                                )
                             with cols[2]:
-                                st.metric("AC-T9", f"{metrics.get('ac_t9', metrics.get('sample_entropy', 0.87))}", "IUGR predictor")
-                    
+                                st.metric(
+                                    "AC-T9",
+                                    f"{metrics.get('ac_t9', metrics.get('sample_entropy', 0.87))}",
+                                    "IUGR predictor",
+                                )
+
                     with right:
                         st.markdown("**Insights**")
-                        
+
                         # Trajectory info (if available)
                         if st.session_state.get("recent_indices"):
                             pipeline = get_pipeline()
                             trajectory = pipeline.update_trajectory(
-                                previous_indices=st.session_state.get("recent_indices", []),
+                                previous_indices=st.session_state.get(
+                                    "recent_indices", []
+                                ),
                                 current_index=data.get("developmental_index", 0.5),
-                                ga_weeks=st.session_state.get("recent_weeks", [])
+                                ga_weeks=st.session_state.get("recent_weeks", []),
                             )
                             render_trajectory_panel(trajectory)
-                        
-                        # Recommendation  
+
+                        # Recommendation
                         if data.get("recommendation"):
                             recommendation = data.get("recommendation")
                         elif data.get("interpretation"):
                             # Use first interpretation line as recommendation in old format
                             recommendations = data.get("interpretation", [])
-                            recommendation = recommendations[0] if recommendations else "Routine monitoring recommended."
+                            recommendation = (
+                                recommendations[0]
+                                if recommendations
+                                else "Routine monitoring recommended."
+                            )
                         else:
                             recommendation = "Routine monitoring recommended."
                         render_recommendation(recommendation)
-                        
+
                         # Export buttons
                         st.markdown("---")
                         col_a, col_b = st.columns(2)
@@ -806,23 +1295,31 @@ elif page == "Results Viewer":
                         with col_b:
                             if st.button("🔗 KenyaEMR", key="btn_emr"):
                                 st.success("FHIR export OK")
-                    
+
                     # Store recent values for trajectory tracking
                     if "recent_indices" not in st.session_state:
                         st.session_state["recent_indices"] = []
-                    st.session_state["recent_indices"].append(data.get("developmental_index", 0.5))
+                    st.session_state["recent_indices"].append(
+                        data.get("developmental_index", 0.5)
+                    )
                     if "recent_weeks" not in st.session_state:
                         st.session_state["recent_weeks"] = []
-                    st.session_state["recent_weeks"].append(data.get("gestational_weeks", 32))
-                    
+                    st.session_state["recent_weeks"].append(
+                        data.get("gestational_weeks", 32)
+                    )
+
                     # Explainability section
                     st.markdown("---")
-                    explainability = data.get("explainability", {}) or data.get("features", {})
+                    explainability = data.get("explainability", {}) or data.get(
+                        "features", {}
+                    )
                     render_explainability(explainability)
-                    
+
                 else:
                     # Fallback to old dashboard format
-                    _render_clinical_dashboard(data, patient_name, compact=compact_mode, readable=readable_mode)
+                    _render_clinical_dashboard(
+                        data, patient_name, compact=compact_mode, readable=readable_mode
+                    )
 
 elif page == "Clinical Insights":
     st.header("Clinical Insights")
@@ -839,9 +1336,15 @@ elif page == "Clinical Insights":
     st.markdown("#### Developmental Trajectory")
     weeks = np.arange(20, 43)
     normal_curve = 0.28 + 0.018 * (weeks - 20)
-    fig = px.line(x=weeks, y=normal_curve, labels={"x": "Gestational Weeks", "y": "Developmental Index"})
+    fig = px.line(
+        x=weeks,
+        y=normal_curve,
+        labels={"x": "Gestational Weeks", "y": "Developmental Index"},
+    )
     fig.update_layout(height=350, template="plotly_white")
     st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("---")
-st.caption(f"Neuro-Genomic AI Dashboard | {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
+st.caption(
+    f"Neuro-Genomic AI Dashboard | {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
+)

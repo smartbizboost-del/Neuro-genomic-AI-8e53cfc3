@@ -66,10 +66,10 @@ def process_ecg_file(self, file_id: str, s3_key: str, gestational_weeks: int = N
         self.update_state(state="PROCESSING", meta={"status": "Computing HRV features via Blind Source Separation"})
         
         # Process through new unified machine learning pipeline
-        results = pipeline.process_recording(
-            mixed_signal=mixed_signal,
+        results = pipeline.analyze(
+            raw_ecg=mixed_signal,
             sampling_rate=500, # Defaulting for now
-            gestational_weeks=gestational_weeks
+            gestational_age=gestational_weeks or 32
         )
         
         self.update_state(state="PROCESSING", meta={"status": "Saving results"})

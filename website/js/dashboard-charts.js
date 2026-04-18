@@ -81,7 +81,7 @@ let hrvTrendChart = null;
 let shapChart = null;
 let pcaClusterChart = null;
 
-const clinicalApiUrl = 'http://localhost:8000/api/v1';
+const clinicalApiUrl = getNGAIApiBaseUrl();
 
 async function fetchAnalysisFromBackend(fileId) {
     try {
