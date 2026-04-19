@@ -1,5 +1,9 @@
 // Neuro-Genomic AI Dashboard Charts and Clinical Data
 
+function getNGAIApiBaseUrl() {
+    return localStorage.getItem('api_base_url') || 'http://localhost:8000';
+}
+
 const sampleClinicalData = [
     {
         patient_id: 'Jane Doe',
@@ -177,7 +181,6 @@ function updateDashboardFields() {
     document.getElementById('patient-weeks').textContent = data.gestational_weeks;
     document.getElementById('data-source').textContent = 'PhysioNet CTU-UHB';
     document.getElementById('recording-duration').textContent = '1 hour';
-    document.getElementById('signal-quality-text').textContent = data.signal_quality_text;
 
     document.getElementById('summary-developmental-index').textContent = data.developmental_index.toFixed(2);
     document.getElementById('summary-developmental-range').textContent = `95% CI: ${data.confidence_interval[0].toFixed(2)} - ${data.confidence_interval[1].toFixed(2)}`;
@@ -257,6 +260,7 @@ function generateECGData(points, noiseLevel, isCleaned = false) {
 
 function initRawECG() {
     const canvas = document.getElementById('raw-ecg-chart');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (rawEcgChart) rawEcgChart.destroy();
     rawEcgChart = new Chart(ctx, {
@@ -286,6 +290,7 @@ function initRawECG() {
 
 function initCleanedECG() {
     const canvas = document.getElementById('cleaned-ecg-chart');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (cleanedEcgChart) cleanedEcgChart.destroy();
     const data = generateECGData(100, 0.04, true);
@@ -318,6 +323,7 @@ function initCleanedECG() {
 function initHRVTrend() {
     const data = getCurrentData();
     const canvas = document.getElementById('hrv-trend-chart');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (hrvTrendChart) hrvTrendChart.destroy();
 
@@ -361,6 +367,7 @@ function initHRVTrend() {
 function initRiskGauge() {
     const data = getCurrentData();
     const canvas = document.getElementById('risk-gauge');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
     const height = canvas.height;
@@ -408,6 +415,7 @@ function initRiskGauge() {
 
 function initPCACluster() {
     const canvas = document.getElementById('pca-cluster-chart');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (pcaClusterChart) pcaClusterChart.destroy();
 
@@ -457,6 +465,7 @@ function initPCACluster() {
 
 function initShapChart() {
     const canvas = document.getElementById('shap-chart');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (shapChart) shapChart.destroy();
 

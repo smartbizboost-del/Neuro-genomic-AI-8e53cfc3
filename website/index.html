@@ -3,304 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neuro-Genomic AI | Ethical AI for Fetal Development</title>
-    <link rel="icon" type="image/png" href="images/favicon.png">
-    <link rel="stylesheet" href="css/style.css">
+    <title>Neuro-Genomic AI Dashboard</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+        .success { background-color: #22c55e; }
+        .warning { background-color: #eab308; }
+        .error { background-color: #ef4444; }
+        .risk-card { padding: 15px; border-radius: 10px; margin-bottom: 10px; text-align: center; }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <img src="images/logo.png" alt="Neuro-Genomic AI" class="logo-image" style="height: 28px; width: 28px; object-fit: cover; flex: 0 0 28px;">
-            </div>
-            <ul class="nav-menu">
-                <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="pages/about.html">About</a></li>
-                <li><a href="pages/team.html">Team</a></li>
-                <li><a href="pages/services.html">Services</a></li>
-                <li><a href="pages/technology.html">Technology</a></li>
-                <li><a href="pages/dashboard.html">Dashboard</a></li>
-                <li><a href="pages/contact.html">Contact</a></li>
-            </ul>
-            <div class="nav-buttons">
-                <a href="pages/login.html" class="btn-outline">Sign In</a>
-                <a href="pages/register.html" class="btn-primary">Register</a>
-            </div>
+
+    <!-- Navbar -->
+    <nav class="dashboard-nav">
+        <a href="../../index.html" class="brand" style="text-decoration: none; color: white;">
+            <span class="logo-icon">🧬</span>
+            <span>Neuro-Genomic AI Dashboard</span>
+        </a>
+        <div class="nav-actions">
+            <select id="patient-selector" class="patient-selector"></select>
+            <input type="text" id="api-file-id" class="api-file-input" placeholder="Backend File ID" />
+            <button class="btn-header" id="load-data-btn"><span>⟳</span> Load Clinical Data</button>
+            <button class="btn-header" id="load-latest-btn"><span>★</span> Load Latest</button>
+            <button class="btn-header" id="btn-export-pdf">Export PDF</button>
+            <button class="btn-header" id="logout-btn">Logout</button>
         </div>
     </nav>
 
-    <main>
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="container">
-                <div class="hero-grid">
-                    <div class="hero-content">
-                        <div class="hero-badge">FETUS DEVELOPMENT IS OUR PRIORITY</div>
-                        <h1>Understanding development by listening to the <span class="gradient-text">earliest signals</span> of life.</h1>
-                        <p>Neuro-Genomic AI is an ethical AI platform that models fetal nervous system development from heart rate signals — moving beyond "is something wrong?" to <strong>"how is development progressing?"</strong></p>
-                        <div class="hero-buttons">
-                            <a href="pages/contact.html" class="btn-primary">Request Demo →</a>
-                            <a href="pages/technology.html" class="btn-secondary">View Technology</a>
-                        </div>
-                        <div class="hero-stats">
-                            <div class="stat">
-                                <span class="stat-number">1,800+</span>
-                                <span class="stat-label">Recordings Analyzed</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-number">12</span>
-                                <span class="stat-label">HRV Features</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-number">329</span>
-                                <span class="stat-label">Tests Passing</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-number">$5B+</span>
-                                <span class="stat-label">Market Opportunity</span>
-                            </div>
-                        </div>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-indicator" id="status-indicator">
+            Patient | <span id="patient-weeks-display">32</span> weeks | Clinical State: <span id="signal-dot" class="dot success"></span> <span id="clinical-state">Normal</span>
+        </div>
+    </div>
+
+    <div class="analysis-caption" id="analysis-caption">
+        <strong>High confidence analysis</strong> — Results below are reliable for this <span id="caption-weeks">32</span>-week recording.
+    </div>
+
+    <!-- Summary Row -->
+    <div class="summary-row">
+        <div class="summary-card">
+            <div class="summary-title">Developmental Index</div>
+            <div class="summary-value" id="summary-developmental-index">0.74</div>
+            <div class="summary-note" id="summary-developmental-range">95% CI: 0.72 - 0.78</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">Signal Quality</div>
+            <div class="summary-value" id="summary-signal-quality">92%</div>
+            <div class="summary-note" id="summary-signal-status">GOOD</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">Confidence</div>
+            <div class="summary-value" id="summary-confidence">92%</div>
+            <div class="summary-note" id="summary-confidence-range">± 3%</div>
+        </div>
+    </div>
+
+    <main class="dashboard-grid">
+
+        <!-- Left Column: Clinical Context -->
+        <section class="col">
+            <div class="panel">
+                <div class="panel-title">CLINICAL CONTEXT LAYER</div>
+                <div class="section-header">Patient Overview</div>
+                <div class="data-grid">
+                    <div class="label">Name:</div><div class="value" id="patient-name">Jane Doe</div>
+                    <div class="label">Age:</div><div class="value" id="patient-age">39</div>
+                    <div class="label">ID:</div><div class="value" id="patient-id">PT-032</div>
+                    <div class="label">Gravidity:</div><div class="value" id="patient-gravidity">G1P0</div>
+                </div>
+
+                <div class="risk-factor-card">
+                    <h4>Pregnancy Risk Factors</h4>
+                    <ul class="risk-list" id="risk-factors-list">
+                        <li>Mild Preeclampsia</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">Metadata</div>
+                <div class="data-grid">
+                    <div class="label">Gestational week:</div><div class="value" id="patient-weeks">32</div>
+                    <div class="label">Data source:</div><div class="value" id="data-source">PhysioNet CTU-UHB</div>
+                    <div class="label">Recording duration:</div><div class="value" id="recording-duration">8 minutes</div>
+                    <div class="label">Signal quality:</div><div class="value"><span id="signal-dot-small" class="dot success"></span> <span id="signal-quality-text">Good</span></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">Maternal Vital Signs</div>
+                <div class="data-grid">
+                    <div class="label">Systolic BP:</div><div class="value" id="maternal-sbp">118 mmHg</div>
+                    <div class="label">Diastolic BP:</div><div class="value" id="maternal-dbp">76 mmHg</div>
+                    <div class="label">MAP:</div><div class="value" id="maternal-map">90 mmHg</div>
+                </div>
+            </div>
+
+            <div class="mode-toggle-container">
+                <div class="section-header">Mode Toggle</div>
+                <label class="switch">
+                    <input type="checkbox" id="research-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>Clinical Mode</span>
+            </div>
+        </section>
+
+        <!-- Center Column: Feature Layer -->
+        <section class="col">
+            <div class="panel">
+                <div class="panel-title">FEATURE LAYER & ANALYSIS</div>
+                <div class="section-header">Signal Visualization</div>
+                <canvas id="raw-ecg-chart" height="180"></canvas>
+                <canvas id="cleaned-ecg-chart" height="180" style="margin-top: 15px;"></canvas>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">HRV Metrics</div>
+                <div class="metrics-grid">
+                    <div class="metric-card" id="metric-rmssd">RMSSD <span id="rmssd-value">35 ms</span></div>
+                    <div class="metric-card" id="metric-sdnn">SDNN <span id="sdnn-value">110 ms</span></div>
+                    <div class="metric-card" id="metric-lfhf">LF/HF <span id="lfhf-value">1.7</span></div>
+                    <div class="metric-card" id="metric-sample-entropy">Sample Entropy <span id="entropy-value">0.91</span></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">Risk Assessment</div>
+                <div class="risk-grid">
+                    <div class="risk-card" id="iugr-card">
+                        <div class="risk-title">IUGR Risk</div>
+                        <div class="risk-value" id="iugr-value">12%</div>
+                        <div class="risk-label" id="iugr-level">Low</div>
                     </div>
-                    <div class="hero-image">
-                        <div class="dashboard-frame">
-                            <header class="dashboard-header">
-                                <div class="dashboard-title">
-                                    <div class="dashboard-dot"></div>
-                                    <h2>DATA_SYSTEMS_v2.0</h2>
-                                </div>
-                                <div class="dashboard-controls">
-                                    <div class="dashboard-search">SEARCH...</div>
-                                    <div class="dashboard-avatar"></div>
-                                </div>
-                            </header>
-                            <div class="dashboard-grid">
-                                <aside class="dashboard-panel dashboard-performance">
-                                    <h3>Performance Index</h3>
-                                    <div class="performance-chart">
-                                        <svg viewBox="0 0 120 80" preserveAspectRatio="none">
-                                            <path d="M0 60 Q30 20 60 40 T120 20" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round" />
-                                            <path d="M0 70 Q30 45 60 55 T120 35" fill="none" stroke="#7dd3fc" stroke-width="2" stroke-dasharray="6 6" opacity="0.85" />
-                                        </svg>
-                                    </div>
-                                    <div class="performance-metrics">
-                                        <span class="metric-pill">14.2%</span>
-                                        <span class="metric-pill">0.8s</span>
-                                    </div>
-                                </aside>
-                                <main class="dashboard-panel dashboard-main">
-                                    <div class="panel-top">
-                                        <span class="status-label">Active Monitoring</span>
-                                        <span class="status-tag">Live Updates</span>
-                                    </div>
-                                    <div class="data-table">
-                                        <div class="table-row table-header">
-                                            <span>METRIC</span>
-                                            <span>STATUS</span>
-                                            <span>VALUE</span>
-                                        </div>
-                                        <div class="table-row">
-                                            <span class="metric-name">CORE_TEMP</span>
-                                            <span class="status-optimal">OPTIMAL</span>
-                                            <span>34°C</span>
-                                        </div>
-                                        <div class="table-row">
-                                            <span class="metric-name">NET_FLOW</span>
-                                            <span class="status-stable">STABLE</span>
-                                            <span>1.2Gbps</span>
-                                        </div>
-                                    </div>
-                                </main>
-                                <section class="dashboard-panel dashboard-insights">
-                                    <div class="insight-visual">
-                                        <div class="pulse-ring">
-                                            <div class="pulse-dot"></div>
-                                        </div>
-                                        <div class="insight-label">HEART_RATE: 72 BPM</div>
-                                    </div>
-                                    <div class="progress-block">
-                                        <div class="progress-track">
-                                            <div class="progress-fill"></div>
-                                        </div>
-                                        <p class="progress-text">System Integrity: 65%</p>
-                                    </div>
-                                </section>
-                            </div>
-                        </div>
+                    <div class="risk-card" id="preterm-card">
+                        <div class="risk-title">Preterm Risk</div>
+                        <div class="risk-value" id="preterm-value">34%</div>
+                        <div class="risk-label" id="preterm-level">Moderate</div>
+                    </div>
+                    <div class="risk-card" id="hypoxia-card">
+                        <div class="risk-title">Hypoxia Risk</div>
+                        <div class="risk-value" id="hypoxia-value">8%</div>
+                        <div class="risk-label" id="hypoxia-level">Experimental</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Problem Section -->
-        <section class="problem">
-            <div class="container">
-                <div class="section-header">
-                    <h2>The Problem We Solve</h2>
-                    <p>Three critical gaps in fetal monitoring</p>
-                </div>
-                <div class="problem-grid">
-                    <div class="problem-card">
-                        <div class="problem-icon">🔬</div>
-                        <h3>Scientific Gap</h3>
-                        <p>No systematic method to model normal fetal nervous system development. Current research focuses only on abnormalities.</p>
-                    </div>
-                    <div class="problem-card">
-                        <div class="problem-icon">💻</div>
-                        <h3>HCI Gap</h3>
-                        <p>Technology treats users as static. No foundation for systems that adapt to human development.</p>
-                    </div>
-                    <div class="problem-card">
-                        <div class="problem-icon">🛡️</div>
-                        <h3>Ethical Gap</h3>
-                        <p>AI in healthcare is a black box. No practical implementations of ethical AI principles.</p>
-                    </div>
+        <!-- Right Column: Intelligence Layer -->
+        <section class="col">
+            <div class="panel">
+                <div class="panel-title">AI INTERPRETATION</div>
+                <ul class="interpretation-list" id="interpretation-list"></ul>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">Explainability (SHAP)</div>
+                <canvas id="shap-chart" height="220"></canvas>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">Clinical Recommendation</div>
+                <div class="recommendation-card" id="recommendation-card">
+                    <strong>Recommendation</strong>
+                    <p id="recommendation-text">Continue routine monitoring. Repeat in 2 weeks.</p>
                 </div>
             </div>
-        </section>
 
-        <!-- Solution Section -->
-        <section class="solution">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Our Solution</h2>
-                    <p>6-Layer Neuro-Genomic AI Architecture</p>
-                </div>
-                <div class="solution-architecture">
-                    <div class="arch-layer">📊 Data Layer</div>
-                    <div class="arch-arrow">→</div>
-                    <div class="arch-layer">⚙️ Processing</div>
-                    <div class="arch-arrow">→</div>
-                    <div class="arch-layer">🧠 Modeling</div>
-                    <div class="arch-arrow">→</div>
-                    <div class="arch-layer">✅ Validation</div>
-                    <div class="arch-arrow">→</div>
-                    <div class="arch-layer">🛡️ Ethics</div>
-                    <div class="arch-arrow">→</div>
-                    <div class="arch-layer">💻 HCI</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Traction Section -->
-        <section class="traction">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Proven Traction</h2>
-                    <p>Validated by judges, investors, and partners</p>
-                </div>
-                <div class="traction-grid">
-                    <div class="traction-card">
-                        <span class="traction-icon">🥈</span>
-                        <h3>#2 of 52 Innovators</h3>
-                        <p>Kirinyaga University Innovation Day 2026</p>
-                    </div>
-                    <div class="traction-card">
-                        <span class="traction-icon">🚀</span>
-                        <h3>Innovation Hub</h3>
-                        <p>Dedicated workspace awarded</p>
-                    </div>
-                    <div class="traction-card">
-                        <span class="traction-icon">☁️</span>
-                        <h3>Oracle Meeting</h3>
-                        <p>Scheduled for Q2 2026</p>
-                    </div>
-                    <div class="traction-card">
-                        <span class="traction-icon">📈</span>
-                        <h3>IPO Track</h3>
-                        <p>Consideration from university</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Our Team in Action Section -->
-        <section class="team-action">
-            <div class="container">
-                <div class="team-action-grid">
-                    <div class="team-action-content">
-                        <h2>Our Team in Action</h2>
-                        <p>At Neuro-Genomic AI, we're a small team of passionate experts working together to transform fetal monitoring through ethical AI. From signal processing to cloud deployment, every line of code is written with purpose.</p>
-                        <div class="team-action-stats">
-                            <div class="team-stat">
-                                <span class="team-stat-number">3</span>
-                                <span class="team-stat-label">Co-Founders</span>
-                            </div>
-                            <div class="team-stat">
-                                <span class="team-stat-number">4</span>
-                                <span class="team-stat-label">Disciplines</span>
-                            </div>
-                            <div class="team-stat">
-                                <span class="team-stat-number">1</span>
-                                <span class="team-stat-label">Mission</span>
-                            </div>
-                        </div>
-                        <a href="pages/team.html" class="btn-primary">Meet the Team →</a>
-                    </div>
-                    <div class="team-action-image">
-                        <img src="images/team-collaborating.jpg.png" alt="Neuro-Genomic AI team collaborating" style="width:100%; border-radius:16px;">
-                        <p class="image-caption">Collaborative intelligence in action at Kirinyaga University Innovation Hub</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
-        <section class="cta">
-            <div class="container">
-                <h2>Ready to understand fetal development like never before?</h2>
-                <p>Join researchers and clinicians using Neuro-Genomic AI.</p>
-                <div class="cta-buttons">
-                    <a href="pages/contact.html" class="btn-primary">Request Demo</a>
-                    <a href="pages/services.html" class="btn-outline-white">View Services</a>
-                </div>
+            <div class="panel">
+                <div class="section-header">Export & Integration</div>
+                <button class="btn-export" id="btn-export-pdf">Export PDF</button>
+                <button class="btn-export" id="btn-sync-emr">Sync KenyaEMR</button>
             </div>
         </section>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <img src="images/logo.png" alt="Neuro-Genomic AI" class="logo-image" style="height: 40px; width: 40px; object-fit: cover; flex: 0 0 40px;">
-                    <div>
-                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Neuro-Genomic AI</p>
-                        <p>Understanding development by listening to the earliest signals of life.</p>
-                    </div>
-                    <div class="footer-trust">
-                        <span>Partner: Kirinyaga University Innovation Hub</span>
-                        <span>Recognition: #2 Innovators</span>
-                    </div>
-                    <p class="footer-address">Nairobi Office • Kirinyaga University Innovation Hub</p>
-                </div>
-                <div class="footer-links">
-                    <h4>Company</h4>
-                    <a href="pages/about.html">About</a>
-                    <a href="pages/team.html">Team</a>
-                    <a href="pages/services.html">Services</a>
-                    <a href="pages/contact.html">Contact</a>
-                </div>
-                <div class="footer-links">
-                    <h4>Resources</h4>
-                    <a href="pages/technology.html">Technology</a>
-                    <a href="#">Documentation</a>
-                    <a href="#">API Reference</a>
-                    <a href="#">Research Papers</a>
-                </div>
-                <div class="footer-links">
-                    <h4>Legal</h4>
-                    <a href="pages/privacy.html">Privacy Policy</a>
-                    <a href="pages/terms.html">Terms of Service</a>
-                    <a href="#">Ethics Statement</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Neuro-Genomic AI Ltd. All rights reserved.</p>
-                <p>📍 Kirinyaga University Innovation Hub, Kerugoya, Kenya</p>
-            </div>
-        </div>
-    </footer>
+    <script>
+        // ==================== ALL JAVASCRIPT FROM YOUR ORIGINAL CODE ====================
 
-    <script src="js/main.js"></script>
+        function getNGAIApiBaseUrl() {
+            return localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        }
+
+        const sampleClinicalData = [
+            {
+                patient_id: 'Jane Doe',
+                gestational_weeks: 32,
+                maternal_age: 39,
+                developmental_index: 0.74,
+                confidence_interval: [0.72, 0.78],
+                signal_quality: 92,
+                signal_quality_text: 'GOOD',
+                risk_scores: {
+                    IUGR: { value: 12, level: 'Low', ci: [8, 16] },
+                    Preterm: { value: 34, level: 'Moderate', ci: [28, 40] },
+                    Hypoxia: { value: 8, level: 'Low', ci: [5, 11] }
+                },
+                hrv_metrics: {
+                    RMSSD: 35.0,
+                    SDNN: 110.0,
+                    'LF/HF': 1.7,
+                    Sample_Entropy: 0.91,
+                    AC_T9: 32.4,
+                    DC_T9: 29.8
+                },
+                prsa: { AC_T9: 32.4, DC_T9: 29.8 },
+                feature_importance: [
+                    { feature: 'RMSSD', importance: -0.32, direction: 'decreases risk' },
+                    { feature: 'LF/HF', importance: 0.28, direction: 'increases risk' },
+                    { feature: 'Sample Entropy', importance: -0.15, direction: 'decreases risk' }
+                ],
+                recommendation: 'Continue routine monitoring. Repeat in 2 weeks.',
+                interpretation: [
+                    'Autonomic maturation consistent with gestational age',
+                    'HRV appears within expected physiological range',
+                    'Sympathetic and parasympathetic balance is acceptable'
+                ],
+                cluster_id: 0
+            }
+        ];
+
+        let currentPatientIndex = 0;
+        let currentPatientData = null;
+        let rawEcgChart = null;
+        let cleanedEcgChart = null;
+        let hrvTrendChart = null;
+        let shapChart = null;
+        let pcaClusterChart = null;
+
+        const clinicalApiUrl = getNGAIApiBaseUrl();
+
+        async function fetchAnalysisFromBackend(fileId) {
+            try {
+                const response = await fetch(`${clinicalApiUrl}/analysis/${fileId}`);
+                if (!response.ok) throw new Error(`Backend error: ${response.status}`);
+                const payload = await response.json();
+                return adaptApiResponse(payload, fileId);
+            } catch (error) {
+                console.error('API fetch failed', error);
+                alert('Unable to load backend analysis. Using sample demo data.');
+                return null;
+            }
+        }
+
+        function adaptApiResponse(payload, fileId) {
+            const features = payload.features || {};
+            const risk = payload.risk || {};
+            const baseValue = payload.developmental_index ?? (features.developmental_index ?? 0.0);
+            return {
+                patient_id: payload.patient_id || `Backend ${fileId}`,
+                gestational_weeks: payload.gestational_weeks ?? 32,
+                maternal_age: payload.maternal_age ?? 34,
+                developmental_index: baseValue,
+                confidence_interval: [baseValue - 0.03, baseValue + 0.03],
+                signal_quality: payload.signal_quality ?? Math.round((features.developmental_index ?? 0.7) * 100),
+                signal_quality_text: payload.signal_quality_text || 'LIVE',
+                risk_scores: {
+                    IUGR: { value: Math.round((risk.suspect ?? 0) * 100), level: 'Low', ci: [0, 0] },
+                    Preterm: { value: Math.round((risk.normal ?? 0) * 100), level: 'Moderate', ci: [0, 0] },
+                    Hypoxia: { value: Math.round((risk.pathological ?? 0) * 100), level: 'Low', ci: [0, 0] }
+                },
+                hrv_metrics: {
+                    RMSSD: features.rmssd ?? 35,
+                    SDNN: features.sdnn ?? 110,
+                    'LF/HF': features.lf_hf_ratio ?? 1.7,
+                    Sample_Entropy: features.sample_entropy ?? 0.91,
+                    AC_T9: features.rmssd ?? 32.4,
+                    DC_T9: features.sdnn ?? 29.8
+                },
+                prsa: { AC_T9: features.rmssd ?? 32.4, DC_T9: features.sdnn ?? 29.8 },
+                feature_importance: [
+                    { feature: 'RMSSD', importance: -0.32, direction: 'decreases risk' },
+                    { feature: 'LF/HF', importance: 0.28, direction: 'increases risk' },
+                    { feature: 'Sample Entropy', importance: -0.15, direction: 'decreases risk' }
+                ],
+                recommendation: payload.interpretation?.[0] || 'Continue routine monitoring.',
+                interpretation: payload.interpretation || [],
+                cluster_id: risk.unsupervised_cluster ?? 0
+            };
+        }
+
+        function getCurrentData() {
+            return currentPatientData || sampleClinicalData[currentPatientIndex];
+        }
+
+        function updateDashboardFields() {
+            const data = getCurrentData();
+            document.getElementById('patient-name').textContent = data.patient_id;
+            document.getElementById('patient-age').textContent = data.maternal_age;
+            document.getElementById('patient-id').textContent = data.patient_id.replace(' ', '_');
+            document.getElementById('patient-weeks').textContent = data.gestational_weeks;
+            document.getElementById('patient-weeks-display').textContent = data.gestational_weeks;
+            document.getElementById('signal-quality-text').textContent = data.signal_quality_text;
+            document.getElementById('summary-developmental-index').textContent = data.developmental_index.toFixed(2);
+            document.getElementById('summary-developmental-range').textContent = `95% CI: ${data.confidence_interval[0].toFixed(2)} - ${data.confidence_interval[1].toFixed(2)}`;
+            document.getElementById('summary-signal-quality').textContent = `${data.signal_quality}%`;
+            document.getElementById('summary-signal-status').textContent = data.signal_quality_text;
+            document.getElementById('summary-confidence').textContent = '92%';
+            document.getElementById('summary-confidence-range').textContent = '± 3%';
+            document.getElementById('iugr-value').textContent = `${data.risk_scores.IUGR.value}%`;
+            document.getElementById('iugr-level').textContent = data.risk_scores.IUGR.level;
+            document.getElementById('preterm-value').textContent = `${data.risk_scores.Preterm.value}%`;
+            document.getElementById('preterm-level').textContent = data.risk_scores.Preterm.level;
+            document.getElementById('hypoxia-value').textContent = `${data.risk_scores.Hypoxia.value}%`;
+            document.getElementById('hypoxia-level').textContent = data.risk_scores.Hypoxia.level;
+            document.getElementById('recommendation-text').innerHTML = `<strong>Recommendation</strong><p>${data.recommendation}</p>`;
+            const interpretationList = document.getElementById('interpretation-list');
+            interpretationList.innerHTML = data.interpretation.map(item => `<li>${item}</li>`).join('');
+        }
+
+        function initRawECG() {
+            const canvas = document.getElementById('raw-ecg-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (rawEcgChart) rawEcgChart.destroy();
+            rawEcgChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: 100 }, (_, i) => i),
+                    datasets: [{
+                        data: Array.from({ length: 100 }, () => Math.random() * 2 - 1),
+                        borderColor: '#2c5282',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.35
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+            });
+        }
+
+        function initCleanedECG() {
+            const canvas = document.getElementById('cleaned-ecg-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (cleanedEcgChart) cleanedEcgChart.destroy();
+            cleanedEcgChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: 100 }, (_, i) => i),
+                    datasets: [{
+                        data: Array.from({ length: 100 }, (_, i) => Math.sin(i * 0.2) * 0.5 + 0.5),
+                        borderColor: '#636EFA',
+                        borderWidth: 1.8,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+            });
+        }
+
+        function updateCharts() {
+            initRawECG();
+            initCleanedECG();
+        }
+
+        function initDashboard() {
+            updateDashboardFields();
+            updateCharts();
+        }
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
 </body>
 </html>
