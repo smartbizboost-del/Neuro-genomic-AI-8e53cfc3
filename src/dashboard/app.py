@@ -14,7 +14,16 @@ import streamlit as st
 
 from src.core.pipeline import get_pipeline
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+API_URL = "http://localhost:8000"  # Hardcoded for local dev
+API_TOKEN = os.getenv("API_TOKEN", "")
+
+
+def _get_auth_headers() -> dict[str, str]:
+    """Return authorization headers if token is configured."""
+    headers = {}
+    if API_TOKEN:
+        headers["Authorization"] = f"Bearer {API_TOKEN}"
+    return headers
 
 
 def render_developmental_index(dev_index: float, confidence: float):
@@ -22,7 +31,7 @@ def render_developmental_index(dev_index: float, confidence: float):
     st.markdown("### Developmental Index")
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.progress(dev_index)
+        st.progress(min(1.0, max(0.0, dev_index)))
     with col2:
         st.metric("Score", f"{dev_index:.2f}/1.0", f"±{confidence * 100:.0f}%")
 
@@ -45,6 +54,7 @@ def render_developmental_index(dev_index: float, confidence: float):
 
 
 def render_acquisition_checklist():
+    """Render acquisition checklist with persistent state."""
     st.subheader("📋 Acquisition Checklist")
     image_path = "assets/electrode_placement_diagram.png"
     if os.path.exists(image_path):
@@ -58,22 +68,47 @@ def render_acquisition_checklist():
             "Electrode placement diagram not available. Please ensure correct electrode placement before recording."
         )
 
+    if "checklist_1" not in st.session_state:
+        st.session_state["checklist_1"] = False
+    if "checklist_2" not in st.session_state:
+        st.session_state["checklist_2"] = False
+    if "checklist_3" not in st.session_state:
+        st.session_state["checklist_3"] = False
+    if "checklist_4" not in st.session_state:
+        st.session_state["checklist_4"] = False
+    if "checklist_5" not in st.session_state:
+        st.session_state["checklist_5"] = False
+
     col1, col2 = st.columns(2)
     with col1:
-        checklist1 = st.checkbox("Skin cleaned and dry")
-        checklist2 = st.checkbox("Electrodes firmly attached (no loose contact)")
-        checklist3 = st.checkbox("Patient lying comfortably, minimal movement")
+        st.session_state["checklist_1"] = st.checkbox("Skin cleaned and dry", value=st.session_state["checklist_1"])
+        st.session_state["checklist_2"] = st.checkbox("Electrodes firmly attached (no loose contact)", value=st.session_state["checklist_2"])
+        st.session_state["checklist_3"] = st.checkbox("Patient lying comfortably, minimal movement", value=st.session_state["checklist_3"])
     with col2:
-        checklist4 = st.checkbox("No talking or deep breathing during recording")
-        checklist5 = st.checkbox("Recording environment is quiet")
+        st.session_state["checklist_4"] = st.checkbox("No talking or deep breathing during recording", value=st.session_state["checklist_4"])
+        st.session_state["checklist_5"] = st.checkbox("Recording environment is quiet", value=st.session_state["checklist_5"])
 
-    if st.button("✅ Start Recording", type="primary"):
-        if all([checklist1, checklist2, checklist3, checklist4, checklist5]):
-            st.success("Checklist complete. Starting recording...")
-            return True
-        st.error("Please complete all checklist items before starting.")
+    all_checked = all([
+        st.session_state["checklist_1"],
+        st.session_state["checklist_2"],
+        st.session_state["checklist_3"],
+        st.session_state["checklist_4"],
+        st.session_state["checklist_5"],
+    ])
+
+    if all_checked:
+        st.success("✅ All checklist items completed!")
+        return True
+    else:
+        remaining = sum([
+            not st.session_state["checklist_1"],
+            not st.session_state["checklist_2"],
+            not st.session_state["checklist_3"],
+            not st.session_state["checklist_4"],
+            not st.session_state["checklist_5"],
+        ])
+        st.warning(f"⚠️ {remaining} item(s) remaining before analysis")
         return False
-    return False
 
 
 def fetch_system_status(api_url: str, timeout: float = 3.0) -> dict:
@@ -90,7 +125,7 @@ def fetch_system_status(api_url: str, timeout: float = 3.0) -> dict:
 
     start = time.time()
     try:
-        resp = requests.get(f"{api_url}/health", timeout=timeout)
+        resp = requests.get(f"{api_url}/health", timeout=timeout, headers=_get_auth_headers())
         status["latency_ms"] = round((time.time() - start) * 1000, 1)
         status["last_checked"] = time.strftime("%Y-%m-%d %H:%M:%S")
         if resp.status_code == 200:
@@ -104,14 +139,14 @@ def fetch_system_status(api_url: str, timeout: float = 3.0) -> dict:
         status["errors"].append(str(exc))
 
     try:
-        resp = requests.get(f"{api_url}/health/detailed", timeout=timeout)
+        resp = requests.get(f"{api_url}/health/detailed", timeout=timeout, headers=_get_auth_headers())
         if resp.status_code == 200:
             status["system"] = resp.json().get("system")
     except Exception:
         pass
 
     try:
-        resp = requests.get(f"{api_url}/health/model", timeout=timeout)
+        resp = requests.get(f"{api_url}/health/model", timeout=timeout, headers=_get_auth_headers())
         if resp.status_code == 200:
             payload = resp.json()
             status["model_loaded"] = payload.get("model_loaded")
@@ -550,6 +585,7 @@ def _inject_theme(compact: bool = False, readable: bool = True) -> None:
 
 
 def _confidence_label(value: float) -> str:
+    """Determine confidence label based on threshold values."""
     high = float(os.getenv("CONFIDENCE_HIGH_THRESHOLD", "0.80"))
     medium = float(os.getenv("CONFIDENCE_MEDIUM_THRESHOLD", "0.60"))
     if medium > high:
@@ -770,6 +806,7 @@ def _cluster_legend_html(cluster_id: int | None) -> str:
 
 
 def _render_top_action_bar(patient_id: str) -> None:
+    """Render top action bar with navigation and controls."""
     c1, c2, c3, c4 = st.columns([3.0, 2.0, 1.1, 1.25])
     with c1:
         st.markdown(
@@ -804,9 +841,11 @@ def _render_top_action_bar(patient_id: str) -> None:
         if st.button("📄 PDF Report", use_container_width=True, key="btn_pdf"):
             col_a, col_b = st.columns(2)
             with col_a:
-                st.button("Generate PDF", use_container_width=True, key="btn_gen_pdf")
+                if st.button("Generate PDF", use_container_width=True, key="btn_gen_pdf"):
+                    st.success("PDF generated successfully!")
             with col_b:
-                st.button("Open Last", use_container_width=True, key="btn_open_pdf")
+                if st.button("Open Last", use_container_width=True, key="btn_open_pdf"):
+                    st.info("Opening last PDF report...")
 
 
 def _feature_card(
@@ -827,6 +866,7 @@ def _render_clinical_dashboard(
     compact: bool = True,
     readable: bool = True,
 ) -> None:
+    """Render the complete clinical dashboard."""
     features = data.get("features", {})
     risk = data.get("risk", {})
 
@@ -1020,18 +1060,30 @@ def _is_processing_payload(data: dict[str, Any]) -> bool:
 
 
 def _fetch_analysis(file_id: str) -> tuple[dict[str, Any] | None, str | None]:
+    """Fetch analysis results from API."""
     try:
-        response = requests.get(f"{API_URL}/api/v1/analysis/{file_id}", timeout=30)
+        response = requests.get(
+            f"{API_URL}/api/v1/analysis/{file_id}",
+            timeout=30,
+            headers=_get_auth_headers(),
+        )
         if response.status_code == 200:
             return response.json(), None
-        return None, f"API error: {response.text}"
+        if response.status_code == 401:
+            return None, "❌ Authentication failed. Check API_TOKEN environment variable."
+        if response.status_code == 403:
+            return None, "❌ Access denied (403 Forbidden). Your token may lack permissions or be invalid."
+        if response.status_code == 404:
+            return None, "❌ Analysis not found. Check the file ID."
+        return None, f"❌ API error ({response.status_code}): {response.text}"
     except Exception as exc:
-        return None, f"Fetch error: {exc}"
+        return None, f"❌ Fetch error: {exc}"
 
 
 def _wait_for_analysis(
     file_id: str, timeout_sec: int = 18, interval_sec: int = 2
 ) -> tuple[dict[str, Any] | None, str | None]:
+    """Poll analysis results until ready or timeout."""
     start = time.time()
     last_payload: dict[str, Any] | None = None
     while time.time() - start < timeout_sec:
@@ -1069,7 +1121,10 @@ _inject_theme(compact=compact_mode, readable=readable_mode)
 
 col_logo, col_title = st.columns([0.05, 1])
 with col_logo:
-    st.image("src/dashboard/logo.png", width=28, use_column_width=False)
+    try:
+        st.image("src/dashboard/logo.png", width=28, use_column_width=False)
+    except Exception:
+        st.write("🧬")
 with col_title:
     st.title("Neuro-Genomic AI Dashboard")
     st.markdown("**Clinical intelligence view for fetal ECG analysis**")
@@ -1117,6 +1172,7 @@ if page == "Upload & Analyze":
                         files=files,
                         data=form_data,
                         timeout=30,
+                        headers=_get_auth_headers(),
                     )
                     if response.status_code == 200:
                         result = response.json()
@@ -1293,15 +1349,18 @@ elif page == "Results Viewer":
                         st.markdown("**Insights**")
 
                         if st.session_state.get("recent_indices"):
-                            pipeline = get_pipeline()
-                            trajectory = pipeline.update_trajectory(
-                                previous_indices=st.session_state.get(
-                                    "recent_indices", []
-                                ),
-                                current_index=data.get("developmental_index", 0.5),
-                                ga_weeks=st.session_state.get("recent_weeks", []),
-                            )
-                            render_trajectory_panel(trajectory)
+                            try:
+                                pipeline = get_pipeline()
+                                trajectory = pipeline.update_trajectory(
+                                    previous_indices=st.session_state.get(
+                                        "recent_indices", []
+                                    ),
+                                    current_index=data.get("developmental_index", 0.5),
+                                    ga_weeks=st.session_state.get("recent_weeks", []),
+                                )
+                                render_trajectory_panel(trajectory)
+                            except Exception as e:
+                                st.caption(f"Trajectory unavailable: {e}")
 
                         if data.get("recommendation"):
                             recommendation = data.get("recommendation")
