@@ -179,52 +179,170 @@ def _render_marketing_page(title: str, body: str) -> None:
     st.markdown(f"<div class='nga-card'><div class='panel-title'>{title}</div><div>{body}</div></div>", unsafe_allow_html=True)
 
 
+def _render_section(title: str, body: str | list[str], bullets: list[str] | None = None) -> None:
+    st.markdown(f"### {title}")
+    if isinstance(body, list):
+        for paragraph in body:
+            st.write(paragraph)
+    else:
+        st.write(body)
+    if bullets:
+        for bullet in bullets:
+            st.markdown(f"- {bullet}")
+
+
+def _render_cta_row(left_label: str, right_label: str, left_page: str = "Contact", right_page: str = "Contact") -> None:
+    left, right = st.columns(2)
+    with left:
+        if st.button(left_label, use_container_width=True):
+            st.session_state["_page_nav"] = left_page
+            st.rerun()
+    with right:
+        if st.button(right_label, use_container_width=True):
+            st.session_state["_page_nav"] = right_page
+            st.rerun()
+
+
 def _render_home_page() -> None:
     st.markdown(
         """
         <div class='nga-card' style='background: linear-gradient(90deg,#0f6b8a 0%, #2bb1d6 100%); color: white; border: none;'>
             <div style='font-size:0.78rem; text-transform:uppercase; opacity:0.95; letter-spacing:0.12em;'>Neuro-Genomic AI</div>
             <h1 style='margin:0.25rem 0 0.35rem 0; color:white;'>AI-Powered Maternal &amp; Neonatal Risk Intelligence</h1>
-            <p style='max-width:980px; line-height:1.5;'>A clinical decision-support dashboard for fetal ECG analysis and maternal-fetal risk insight, designed for safer workflows and clearer clinical review.</p>
+            <p style='max-width:980px; line-height:1.5;'>Neuro-Genomic AI is building an AI-assisted clinical decision support platform designed to help healthcare workers identify high-risk pregnancies, fetal distress, preeclampsia, hypoxia, IUGR, and neonatal complications earlier — enabling faster intervention and reducing preventable maternal and newborn deaths.</p>
+            <p style='max-width:980px; line-height:1.5; font-weight:600;'>Built for African healthcare realities. Designed for hospitals, maternity centers, clinicians, researchers, and public health systems.</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    st.markdown("### Quick Actions")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        if st.button("Open Upload", use_container_width=True):
-            st.session_state["_page_nav"] = "Upload & Analyze"
-            st.rerun()
-    with c2:
-        if st.button("Open Results", use_container_width=True):
-            st.session_state["_page_nav"] = "Results Viewer"
-            st.rerun()
-    with c3:
-        if st.button("Open Clinical", use_container_width=True):
-            st.session_state["_page_nav"] = "Clinical Insights"
-            st.rerun()
+    _render_cta_row("Request Early Access", "Partner With Us")
 
-    cols = st.columns(3)
-    with cols[0]:
+    _render_section(
+        "Problem",
+        "Preventable maternal and newborn deaths remain a critical challenge.",
+        [
+            "Limited continuous monitoring systems",
+            "Delayed clinical intervention",
+            "Inconsistent risk assessment workflows",
+            "Resource-constrained maternity environments",
+            "Limited predictive decision-support infrastructure",
+            "Fragmented patient monitoring systems",
+        ],
+    )
+    _render_section(
+        "Why Delays Matter",
+        "These delays increase the risk of fetal distress, neonatal hypoxia, preeclampsia complications, intrauterine growth restriction (IUGR), preterm labor complications, and maternal mortality.",
+    )
+    _render_section(
+        "Solution",
+        "AI-assisted clinical decision support that combines clinical monitoring data, risk scoring systems, predictive AI models, maternal health analytics, and real-time monitoring workflows.",
+        [
+            "Early detection of high-risk pregnancies",
+            "Fetal distress prediction",
+            "Preeclampsia progression monitoring",
+            "Hypoxia risk trajectory analysis",
+            "Obstetric triage prioritization",
+            "Clinical escalation decision support",
+        ],
+    )
+
+    features = st.columns(3)
+    with features[0]:
         _render_marketing_page("Predictive Risk Engine", "AI-assisted analysis for maternal and fetal risk detection.")
-        _render_marketing_page("Risk Alerts", "Real-time warning system for deteriorating maternal or fetal conditions.")
-    with cols[1]:
         _render_marketing_page("Clinical Dashboard", "Centralized maternal and fetal monitoring interface for healthcare providers.")
-        _render_marketing_page("Maternal & Neonatal Analytics", "Population-level insights for hospitals and public health programs.")
-    with cols[2]:
+    with features[1]:
+        _render_marketing_page("Risk Alerts", "Real-time warning system for deteriorating maternal or fetal conditions.")
         _render_marketing_page("Obstetric Intelligence Layer", "Structured clinical insights supporting triage and intervention prioritization.")
-        _render_marketing_page("Low-Resource Adaptability", "Designed for African healthcare infrastructure realities.")
+    with features[2]:
+        _render_marketing_page("Maternal & Neonatal Analytics", "Population-level insights for hospitals and public health programs.")
+        _render_marketing_page("Low-Resource Adaptability", "Designed to work within African healthcare infrastructure realities.")
+
+    _render_section(
+        "Why It Matters",
+        [
+            "Our mission is to help clinicians identify complications earlier and improve maternal and neonatal outcomes through data-driven clinical support systems.",
+            "We believe technology should strengthen healthcare workers — not replace them.",
+        ],
+    )
+    _render_section(
+        "Partners & Stakeholders",
+        "Potential collaboration areas:",
+        [
+            "Hospitals",
+            "Maternity centers",
+            "Public health agencies",
+            "Medical researchers",
+            "Universities",
+            "NGOs",
+            "Health innovation ecosystems",
+            "Maternal health programs",
+        ],
+    )
+    _render_cta_row("Contact Us", "Request Partnership")
 
 
 def _render_about_page() -> None:
     st.header("About Neuro-Genomic AI")
     st.write("Neuro-Genomic AI is a health technology initiative focused on reducing preventable maternal and neonatal complications using AI-assisted clinical intelligence systems.")
+    _render_section(
+        "Focus Conditions",
+        "The platform is being developed to support healthcare workers with earlier risk detection, structured monitoring, and predictive decision support for maternal and fetal care.",
+        ["Fetal distress", "Preeclampsia", "Neonatal hypoxia", "IUGR", "Preterm labor complications", "Obstetric emergencies"],
+    )
+    _render_section("Vision", "To build intelligent maternal and neonatal healthcare infrastructure that improves clinical decision-making and helps reduce preventable deaths across Africa.")
+    _render_section("Mission", "To develop scalable, AI-assisted healthcare systems that empower clinicians with earlier risk detection, actionable insights, and accessible maternal-fetal monitoring tools.")
+    _render_section(
+        "What Makes Us Different",
+        "We are designing with resource-constrained environments, clinical workflow realities, infrastructure limitations, and public healthcare scalability in mind.",
+        [
+            "Clinical + engineering collaboration",
+            "Biomedical engineering",
+            "AI and machine learning",
+            "Clinical validation",
+            "Public health insights",
+            "Research-driven development",
+            "Focus on preventive intelligence",
+        ],
+    )
+    _render_section("Long-Term Goal", "To create a scalable maternal and neonatal intelligence platform capable of supporting hospitals, county health systems, maternal health programs, and national healthcare infrastructure.")
+    _render_section("Team", "Neuro-Genomic AI brings together contributors from Biomedical Engineering, Clinical Medicine, AI & Machine Learning, Research & Public Health, and Product & Systems Development.")
+    _render_section("Ethical Position", "We believe healthcare AI must be clinically responsible, transparent, human-centered, privacy-conscious, and supportive of healthcare professionals.")
 
 
 def _render_technology_page() -> None:
     st.header("Technology Overview")
-    st.write("The platform combines clinical data processing, AI/ML risk models, signal analysis, and workflow-centric visualization.")
+    _render_section(
+        "Overview",
+        "Neuro-Genomic AI is being designed as an AI-assisted clinical intelligence platform combining healthcare analytics, predictive modeling, and maternal-fetal monitoring workflows.",
+    )
+    _render_section(
+        "Core Technology Areas",
+        "AI & Machine Learning capabilities are planned for risk prediction models, pattern recognition, clinical trend analysis, predictive maternal risk scoring, and fetal distress forecasting.",
+    )
+    _render_section(
+        "Clinical Data Processing",
+        "The system architecture is designed to support maternal vital monitoring, fetal monitoring inputs, CTG-related analysis workflows, structured clinical observations, and risk categorization pipelines.",
+    )
+    _render_section(
+        "Intelligent Alert Systems",
+        "Designed to assist healthcare providers through escalation notifications, abnormal trend detection, and risk prioritization.",
+    )
+    _render_section(
+        "Dashboard Infrastructure",
+        "Centralized interfaces for clinicians, researchers, and healthcare administrators with live monitoring, risk visualization, patient prioritization, and reporting systems.",
+    )
+    _render_section(
+        "Infrastructure Philosophy",
+        "We aim to build systems that are scalable, modular, secure, interoperable, and adaptable to low-resource healthcare settings.",
+    )
+    _render_section(
+        "Data & Security Principles",
+        "We prioritize patient privacy, secure data handling, responsible AI development, and ethical healthcare technology practices.",
+    )
+    _render_section(
+        "Research-Driven Development",
+        "Our product direction is informed through clinical interviews, workflow analysis, maternal health research, and real-world healthcare challenges.",
+    )
 
 
 def _render_research_page() -> None:
@@ -234,27 +352,105 @@ def _render_research_page() -> None:
 
 def _render_services_page() -> None:
     st.header("Services")
-    st.write("AI-assisted maternal monitoring, fetal distress support, obstetric triage intelligence, and analytics.")
+    _render_section(
+        "Our Core Solutions",
+        "AI-Assisted Maternal Risk Monitoring provides clinical decision support tools for identifying high-risk pregnancies and maternal complications earlier.",
+        ["Risk scoring", "Monitoring dashboards", "Clinical alerts", "Predictive insights"],
+    )
+    _render_section(
+        "Fetal Distress Detection Support",
+        "AI-supported fetal monitoring workflows are designed to assist clinicians in identifying signs of fetal compromise.",
+        ["Fetal heart rate analysis", "CTG interpretation support", "Hypoxia risk indicators", "Escalation alerts"],
+    )
+    _render_section(
+        "Obstetric Triage Intelligence",
+        "Structured triage support tools for prioritizing urgent maternal and neonatal cases to reduce delays, improve workflow prioritization, and strengthen emergency response.",
+    )
+    _render_section(
+        "Maternal Health Analytics",
+        "Healthcare data insights supporting maternal health programs, hospital quality improvement, and public health reporting.",
+    )
+    _render_section(
+        "Research & Clinical Collaboration",
+        "We collaborate with hospitals, researchers, clinicians, and academic institutions for validation studies, pilot programs, workflow analysis, and healthcare innovation.",
+    )
+    _render_section(
+        "Future Expansion Areas",
+        "Planned future capabilities may include remote maternal monitoring, AI-powered obstetric risk forecasting, integrated wearable monitoring, predictive maternal-fetal analytics, and neonatal risk intelligence systems.",
+    )
 
 
 def _render_pricing_page() -> None:
     st.header("Pricing & Access")
-    st.write("Neuro-Genomic AI is in pilot validation. Contact us for pilot collaboration opportunities.")
+    _render_section("Current Status", "Neuro-Genomic AI is currently in early-stage development and pilot validation.")
+    _render_section("Current Access Options", "Research and pilot partnerships are available for hospitals, maternity centers, and universities. Contact us for pilot collaboration opportunities.")
+    _render_section(
+        "Institutional Deployment (Planned)",
+        "Future pricing may include hospital subscription licensing, per-facility deployment plans, enterprise health system integrations, and public health program partnerships.",
+    )
+    _render_section(
+        "Custom Partnership Models",
+        "We are open to research collaborations, grant-funded pilots, clinical partnerships, NGO partnerships, and maternal health initiatives.",
+    )
+    _render_section("Early Access Program", "Organizations interested in pilot testing, validation studies, or strategic collaboration can request early access.")
+    _render_cta_row("Request Early Access", "Contact Us")
 
 
 def _render_privacy_page() -> None:
     st.header("Privacy Policy")
-    st.write("We collect contact information and communication details. We do not intentionally collect sensitive patient data through the public site.")
+    _render_section(
+        "Privacy Policy",
+        "Last Updated: May 2026. Neuro-Genomic AI values privacy, confidentiality, and responsible healthcare technology practices.",
+    )
+    _render_section(
+        "Information We May Collect",
+        "We may collect contact information, organization information, communication details, website analytics data, and voluntary research or partnership information. We do not intentionally collect sensitive patient medical data through the public website.",
+    )
+    _render_section(
+        "How Information May Be Used",
+        "Information may be used for communication, partnership coordination, research collaboration, platform improvement, and operational purposes.",
+    )
+    _render_section("Data Protection", "We aim to implement reasonable safeguards to protect information from unauthorized access, misuse, or disclosure.")
+    _render_section("Research & Clinical Data", "Any future clinical or healthcare-related deployments will follow applicable ethical, institutional, and regulatory requirements.")
+    _render_section("Third-Party Services", "Our website or platform may use third-party services for analytics, hosting, communication, or infrastructure support.")
+    _render_section("Your Rights", "You may contact us regarding data inquiries, correction requests, or communication preferences.")
+    _render_section("Contact", "For privacy-related questions: privacy@neurogenomicai.com")
 
 
 def _render_terms_page() -> None:
     st.header("Terms of Service")
-    st.write("The content on this website is informational and research-related only; it is not direct medical diagnosis or treatment.")
+    _render_section(
+        "Terms of Service",
+        "Last Updated: May 2026. By accessing or using our website, materials, or services, you agree to these Terms of Service.",
+    )
+    _render_section(
+        "Informational Purpose",
+        "The content provided on this website is for informational and research-related purposes only. Neuro-Genomic AI does not provide direct medical diagnosis, treatment, or emergency healthcare services. Clinical decisions must always remain under the authority of qualified healthcare professionals.",
+    )
+    _render_section("Intellectual Property", "All platform concepts, branding, content, designs, documentation, and system materials are protected intellectual property unless otherwise stated. Unauthorized reproduction or redistribution is prohibited.")
+    _render_section("Acceptable Use", "Users agree not to misuse the platform, attempt unauthorized access, disrupt systems, or use materials unlawfully.")
+    _render_section("Research & Pilot Programs", "Participation in any future pilot, research, or collaboration activities may require separate agreements and ethical approvals.")
+    _render_section("Limitation of Liability", "Neuro-Genomic AI is not liable for indirect damages, service interruptions, or outcomes resulting from misuse of information.")
+    _render_section("Future Modifications", "We may update these terms periodically as the platform evolves.")
+    _render_section("Governing Principles", "We are committed to ethical innovation, responsible AI development, and healthcare-centered system design.")
+    _render_section("Contact", "For legal or policy inquiries: legal@neurogenomicai.com")
 
 
 def _render_contact_page() -> None:
     st.header("Contact Us")
-    st.write("hello@neurogenomicai.com")
+    st.write("We welcome collaboration opportunities with healthcare institutions, researchers, clinicians, public health organizations, and innovation partners.")
+    _render_section("General Inquiries", "hello@neurogenomicai.com")
+    _render_section("Partnership Opportunities", "Pilot programs, clinical validation, research collaboration, public health partnerships, and healthcare innovation initiatives.")
+    _render_section("Location", "Nairobi, Kenya")
+    _render_section("Social Media", "LinkedIn: Neuro-Genomic AI · Twitter/X: @NeuroGenomicAI")
+    with st.form("contact_form"):
+        st.text_input("Full Name")
+        st.text_input("Organization")
+        st.text_input("Email Address")
+        st.text_input("Phone Number")
+        st.text_input("Subject")
+        st.text_area("Message")
+        st.form_submit_button("Send Message")
 
 
 def _render_login_prompt(page: str) -> None:
@@ -844,7 +1040,17 @@ with col_actions:
 if _is_authenticated():
     nav_map = {"📤 Upload & Analyze": "Upload & Analyze", "📊 Results Viewer": "Results Viewer", "🩺 Clinical Insights": "Clinical Insights"}
 else:
-    nav_map = {"🏠 Home": "Home", "ℹ️ About": "About Us", "🧰 Tech": "Technology", "🔬 Research": "Research", "🧩 Services": "Services", "💳 Pricing": "Pricing"}
+    nav_map = {
+        "🏠 Home": "Home",
+        "ℹ️ About": "About Us",
+        "🧰 Tech": "Technology",
+        "🔬 Research": "Research",
+        "🧩 Services": "Services",
+        "💳 Pricing": "Pricing",
+        "✉️ Contact": "Contact",
+        "🔒 Privacy": "Privacy Policy",
+        "📜 Terms": "Terms of Service",
+    }
 
 nav_labels = list(nav_map.keys())
 nav_cols = st.columns(len(nav_labels))
