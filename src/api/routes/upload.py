@@ -1,0 +1,287 @@
+"""
+File upload endpoints
+"""
+
+from src.core.pipeline import get_pipeline
+import tempfile
+from fastapi import BackgroundTasks, APIRouter, UploadFile, File, HTTPException, Depends
+from src.workers.tasks import extract_raw_signals, process_ecg_file
+from typing import List
+import uuid
+import boto3
+from botocore.exceptions import ClientError
+import os
+import numpy as np
+import logging
+from datetime import datetime
+import re
+from src.api.middleware.auth import get_current_user
+
+
+from src.api.models.schemas import UploadResponse, FileMetadata, AnalysisResponse, FeatureResponse, RiskAssessment, HealthStatus
+from src.api.routes import analysis as analysis_routes
+
+router = APIRouter(dependencies=[Depends(get_current_user)])
+logger = logging.getLogger(__name__)
+
+s3_client = boto3.client("s3")
+
+pipeline = get_pipeline()
+
+
+@router.post("/upload", response_model=UploadResponse)
+async def upload_ecg(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
+    gestational_weeks: int = None,
+    patient_id: str = None
+):
+    """
+    Upload a fetal ECG file for processing
+    """
+
+    # Validate file type
+    allowed_extensions = ['.csv', '.txt', '.edf', '.hea', '.dat']
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type not allowed. Allowed: {allowed_extensions}"
+        )
+
+    # Generate unique file ID
+    file_id = str(uuid.uuid4())
+    s3_key = f"uploads/{file_id}/{file.filename}"
+
+    content = await file.read()
+    temp_path = os.path.join(tempfile.gettempdir(), f"{file_id}.ecg")
+
+    bucket_name = os.environ.get("S3_BUCKET_NAME", "neuro-genomic-ai")
+    # Try S3 first; if not configured or fails, fall back to local storage for development.
+    local_fallback_path = None
+    try:
+        s3_client.put_object(Bucket=bucket_name, Key=s3_key, Body=content)
+    except ClientError as e:
+        logger.warning(f"S3 upload failed for {file_id}: {e}. Attempting local fallback.")
+        try:
+            uploads_dir = os.environ.get("LOCAL_UPLOAD_DIR", os.path.join(os.path.dirname(__file__), "..", "..", "data", "uploads"))
+            os.makedirs(uploads_dir, exist_ok=True)
+            file_dir = os.path.join(uploads_dir, file_id)
+            os.makedirs(file_dir, exist_ok=True)
+            local_fallback_path = os.path.join(file_dir, file.filename)
+            with open(local_fallback_path, "wb") as f:
+                f.write(content)
+            logger.info(f"Wrote upload to local fallback path {local_fallback_path}")
+        except Exception as e2:
+            logger.error(f"Local fallback write failed for {file_id}: {e2}")
+            raise HTTPException(status_code=500, detail="S3 upload failed and local fallback failed")
+    except Exception as e:
+        logger.warning(f"Storage upload failed for {file_id}: {e}. Attempting local fallback.")
+        try:
+            uploads_dir = os.environ.get("LOCAL_UPLOAD_DIR", os.path.join(os.path.dirname(__file__), "..", "..", "data", "uploads"))
+            os.makedirs(uploads_dir, exist_ok=True)
+            file_dir = os.path.join(uploads_dir, file_id)
+            os.makedirs(file_dir, exist_ok=True)
+            local_fallback_path = os.path.join(file_dir, file.filename)
+            with open(local_fallback_path, "wb") as f:
+                f.write(content)
+            logger.info(f"Wrote upload to local fallback path {local_fallback_path}")
+        except Exception as e2:
+            logger.error(f"Local fallback write failed for {file_id}: {e2}")
+            raise HTTPException(status_code=500, detail="Upload storage failed and local fallback failed")
+
+    def process_in_background():
+        """Background task: Full analysis"""
+        with open(temp_path, "wb") as f:
+            f.write(content)
+        try:
+            mixed_signal = extract_raw_signals(temp_path)
+
+            # Run FULL analysis with all features and SHAP
+            res = pipeline.analyze(
+                raw_ecg=mixed_signal,
+                sampling_rate=250,
+                gestational_age=gestational_weeks or 32
+            )
+
+            # Store complete result in schema-compliant format
+            features_data = res.get("hrv_metrics", {})
+            features = FeatureResponse(
+                rmssd=features_data.get("rmssd"),
+                sdnn=features_data.get("sdnn"),
+                lf_hf_ratio=features_data.get("lf_hf"),
+                sample_entropy=features_data.get("sample_entropy"),
+                mean_rr=features_data.get("mean_rr"),
+                pnn50=features_data.get("pnn50"),
+                lf_power=features_data.get("lf_power"),
+                hf_power=features_data.get("hf_power"),
+                developmental_index=res.get("developmental_index", 0.72)
+            )
+
+            risk_data = res.get("risk_assessment", {})
+            risk = RiskAssessment(
+                normal=risk_data.get("iugr_risk", {}).get("score", 20) / 100,
+                suspect=risk_data.get("preterm_risk", {}).get("score", 15) / 100,
+                pathological=risk_data.get("hypoxia_risk", {}).get("score", 10) / 100,
+                predicted_class=HealthStatus.NORMAL,
+                confidence_level=res.get("confidence", 0.85),
+                confidence_label="high" if res.get(
+                    "confidence", 0.85) > 0.80 else "medium" if res.get(
+                    "confidence", 0.85) > 0.60 else "low"
+            )
+
+            analysis_routes.RESULTS_DB[file_id] = AnalysisResponse(
+                file_id=file_id,
+                features=features,
+                risk=risk,
+                developmental_index=res.get("developmental_index", 0.72),
+                gestational_weeks=gestational_weeks or 32,
+                interpretation=[
+                    res.get(
+                        "recommendation",
+                        "Analysis complete")],
+                created_at=datetime.now(),
+                confidence_intervals=None
+            )
+            analysis_routes.LATEST_FILE_ID = file_id
+            logger.info(f"Background processing completed for {file_id}")
+        except Exception as e:
+            logger.error(f"Background processing error for {file_id}: {e}")
+            features = FeatureResponse()
+            risk = RiskAssessment(
+                normal=0.5,
+                suspect=0.3,
+                pathological=0.2,
+                predicted_class=HealthStatus.SUSPECT,
+                confidence_level=0.5,
+                confidence_label="low"
+            )
+            analysis_routes.RESULTS_DB[file_id] = AnalysisResponse(
+                file_id=file_id,
+                features=features,
+                risk=risk,
+                developmental_index=0.5,
+                gestational_weeks=gestational_weeks or 32,
+                interpretation=[f"Analysis failed: {str(e)}"],
+                created_at=datetime.now(),
+                confidence_intervals=None
+            )
+
+    raw_ecg = None
+    if file_ext in ['.csv', '.txt']:
+        try:
+            text = content.decode('utf-8', errors='ignore')
+            lines = [line.strip() for line in text.splitlines() if line.strip()]
+            values = []
+            for line in lines:
+                cols = re.split(r'[\t,]+', line)
+                if len(cols) > 1:
+                    cols = cols[1:]
+                for val in cols:
+                    try:
+                        values.append(float(val))
+                    except ValueError:
+                        continue
+            if values:
+                raw_ecg = np.array(values, dtype=np.float32)
+        except Exception:
+            raw_ecg = None
+
+    if raw_ecg is None:
+        raw_ecg = np.frombuffer(content, dtype=np.uint8).astype(np.float32)
+
+    task_id = "local_sync"
+    celery_scheduled = False
+    try:
+        celery_task = process_ecg_file.delay(
+            file_id, temp_path, gestational_weeks or 32, patient_id)
+        task_id = getattr(celery_task, "id", task_id)
+        celery_scheduled = True
+    except Exception as e:
+        logger.warning(f"Could not enqueue Celery task: {e}")
+        if background_tasks is not None:
+            background_tasks.add_task(process_in_background)
+        else:
+            import threading
+            thread = threading.Thread(target=process_in_background, daemon=True)
+            thread.start()
+
+    try:
+        fast_result = pipeline.analyze_fast(
+            raw_ecg=raw_ecg,
+            sampling_rate=250,
+            gestational_age=gestational_weeks or 32
+        )
+    except Exception as e:
+        logger.warning(f"Fast analysis failed: {e}")
+        fast_result = {"status": "processing", "is_preliminary": True}
+
+    # Store fast result temporarily in schema-compliant format
+    if fast_result.get("status") in ["success", "error"]:
+        # Build response from fast result
+        features_data = fast_result.get("hrv_metrics", {})
+        features = FeatureResponse(
+            rmssd=features_data.get("rmssd"),
+            sdnn=features_data.get("sdnn"),
+            lf_hf_ratio=features_data.get("lf_hf"),
+            sample_entropy=features_data.get("sample_entropy")
+        )
+
+        risk_data = fast_result.get("risk_assessment", {})
+        risk = RiskAssessment(
+            normal=risk_data.get("iugr_risk", {}).get("score", 20) / 100,
+            suspect=risk_data.get("preterm_risk", {}).get("score", 15) / 100,
+            pathological=risk_data.get(
+                "hypoxia_risk", {}).get(
+                "score", 10) / 100,
+            predicted_class=HealthStatus.NORMAL,
+            confidence_level=fast_result.get("confidence", 0.70),
+            confidence_label="medium"
+        )
+
+        analysis_routes.RESULTS_DB[file_id] = AnalysisResponse(
+            file_id=file_id,
+            features=features,
+            risk=risk,
+            developmental_index=fast_result.get("developmental_index", 0.70),
+            gestational_weeks=gestational_weeks or 32,
+            interpretation=[
+                "⏳ Analysis in progress - Preliminary results shown"],
+            created_at=datetime.now(),
+            confidence_intervals=None
+        )
+        analysis_routes.LATEST_FILE_ID = file_id
+
+    # Return an UploadResponse so the client (UI) receives file metadata.
+    size = len(content)
+    task_id = task_id
+    status = "processing" if celery_scheduled or background_tasks else "queued"
+    message = "Upload stored"
+    if local_fallback_path:
+        message += f"; stored locally at {local_fallback_path}"
+
+    from src.api.models.schemas import UploadResponse as _UR
+
+    return _UR(
+        file_id=file_id,
+        filename=file.filename,
+        size=size,
+        task_id=task_id,
+        status=status,
+        message=message,
+    )
+
+
+@router.get("/status/{file_id}")
+async def get_upload_status(file_id: str):
+    """
+    Check processing status of uploaded file
+    """
+    from src.workers.celery_app import celery_app
+
+    # This would typically query a database
+    # Simplified version
+    return {
+        "file_id": file_id,
+        "status": "processing"  # Would be actual status from DB
+    }

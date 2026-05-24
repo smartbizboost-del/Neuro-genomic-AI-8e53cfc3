@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#1b4a62"/>
+      <stop offset="1" stop-color="#2b7b9a"/>
+    </linearGradient>
+  </defs>
+  <rect rx="24" width="160" height="160" fill="#f8fafc"/>
+  <g transform="translate(24,24)">
+    <circle cx="56" cy="56" r="40" fill="url(#g)"/>
+    <path d="M40 56c0-8 8-16 16-16s16 8 16 16-8 16-16 16S40 64 40 56z" fill="#fff" opacity="0.9"/>
+    <text x="10" y="110" font-family="Segoe UI, Roboto, Arial" font-size="18" fill="#1b4a62">Neuro</text>
+  </g>
+</svg>

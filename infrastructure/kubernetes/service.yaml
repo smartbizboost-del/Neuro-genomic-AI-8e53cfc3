@@ -1,0 +1,56 @@
+# infrastructure/kubernetes/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuro-api
+  namespace: neuro-genomic
+spec:
+  selector:
+    app: neuro-api
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuro-dashboard
+  namespace: neuro-genomic
+spec:
+  selector:
+    app: neuro-dashboard
+  ports:
+  - port: 8501
+    targetPort: 8501
+    name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuro-api-lb
+  namespace: neuro-genomic
+spec:
+  selector:
+    app: neuro-api
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: http
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuro-dashboard-lb
+  namespace: neuro-genomic
+spec:
+  selector:
+    app: neuro-dashboard
+  ports:
+  - port: 80
+    targetPort: 8501
+    name: http
+  type: LoadBalancer

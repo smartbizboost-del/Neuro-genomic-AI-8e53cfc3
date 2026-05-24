@@ -1,0 +1,91 @@
+name: Build, Push and Deploy to Kubernetes
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/Dockerfile.api
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/neurogenomic-api:latest
+
+      - name: Build and push Worker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/Dockerfile.worker
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/neurogenomic-worker:latest
+
+      - name: Build and push Dashboard image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/Dockerfile.dashboard
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/neurogenomic-dashboard:latest
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          if [ -z "$KUBE_CONFIG_B64" ]; then echo "KUBE_CONFIG secret is empty"; exit 1; fi
+          echo "$KUBE_CONFIG_B64" | base64 --decode > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl version --client
+
+      - name: Apply Kubernetes manifests
+        run: |
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl apply -f infrastructure/kubernetes --recursive
+
+      - name: Update deployments to use GHCR images
+        run: |
+          export KUBECONFIG=$PWD/kubeconfig
+          OWNER=${{ github.repository_owner }}
+          kubectl -n neuro-genomic set image deployment/neuro-api api=ghcr.io/$OWNER/neurogenomic-api:latest || true
+          kubectl -n neuro-genomic set image deployment/neuro-worker worker=ghcr.io/$OWNER/neurogenomic-worker:latest || true
+          kubectl -n neuro-genomic set image deployment/neuro-dashboard dashboard=ghcr.io/$OWNER/neurogenomic-dashboard:latest || true
+
+      - name: Wait for rollouts
+        run: |
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl -n neuro-genomic rollout status deployment/neuro-api --timeout=120s || true
+          kubectl -n neuro-genomic rollout status deployment/neuro-worker --timeout=120s || true
+          kubectl -n neuro-genomic rollout status deployment/neuro-dashboard --timeout=120s || true

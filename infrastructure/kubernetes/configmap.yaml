@@ -1,0 +1,19 @@
+# infrastructure/kubernetes/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neuro-config
+  namespace: neuro-genomic
+data:
+  environment: "production"
+  log_level: "info"
+  max_upload_size: "100MB"
+  allowed_origins: "https://neuro-genomic.com,https://api.neuro-genomic.com"
+  model_version: "v2.0"
+  feature_flags: |
+    {
+      "enable_advanced_clustering": true,
+      "enable_uncertainty_viz": true,
+      "enable_export_pdf": true,
+      "enable_batch_processing": true
+    }
