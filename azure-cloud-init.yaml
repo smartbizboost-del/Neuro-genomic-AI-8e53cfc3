@@ -24,12 +24,17 @@ runcmd:
   - chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
   
   # Setup the AI platform
-  - mkdir /opt/neuro-genomic-ai
+  - mkdir -p /opt/neuro-genomic-ai
   - cd /opt/neuro-genomic-ai
   
-  # Important: Instead of pulling from a repo (since yours might be local/private), 
-  # creating a placeholder for demonstrating. You will need to SCP your code here.
-  # If you have it on github: git clone https://github.com/yourusername/neuro-genomic-ai-main .
+  # Clone the repository from GitHub
+  - git clone https://github.com/ibrahim2002-dev/Neurogenomic2.git .
   
-  # Start the background services via compose
-  # - docker compose up -d --build
+  # Start the services via Docker Compose
+  - docker compose up -d --build
+  
+  # Wait for services to stabilize
+  - sleep 30
+  
+  # Verify API is running
+  - curl -f http://localhost:8000/health || echo "Warning: API health check failed"
