@@ -16,7 +16,6 @@ import requests
 import streamlit as st
 
 DEFAULT_API_URL = os.getenv("API_URL")
-API_URL = DEFAULT_API_URL or "http://127.0.0.1:8000"
 API_TOKEN = os.getenv("API_TOKEN", "")
 
 
@@ -29,12 +28,23 @@ def _is_streamlit_cloud() -> bool:
     )
 
 
+API_URL = ""
+if _is_streamlit_cloud():
+    API_URL = DEFAULT_API_URL or ""
+else:
+    API_URL = DEFAULT_API_URL or "http://127.0.0.1:8000"
+
+
 def _render_cloud_api_warning() -> None:
-    if _is_streamlit_cloud() and API_URL.startswith("http://127.0.0.1"):
+    if _is_streamlit_cloud() and (not API_URL or API_URL.startswith("http://127.0.0.1") or API_URL.startswith("https://127.0.0.1") or API_URL.startswith("http://localhost") or API_URL.startswith("https://localhost")):
         st.error(
-            "The deployed Streamlit app is configured to use `127.0.0.1:8000`, which is not reachable from Streamlit Cloud. "
-            "Set `API_URL` in Streamlit Cloud environment variables to your public backend URL, then refresh."
+            "The deployed Streamlit app is missing a valid backend URL. Streamlit Cloud cannot reach `localhost` or `127.0.0.1`."
         )
+        st.info(
+            "Set `API_URL` in Streamlit Cloud environment variables to the public backend address (for example `https://your-backend.example.com`). "
+            "Then refresh the app."
+        )
+        st.stop()
 
 
 def _register_user(email: str, password: str, full_name: str = "", role: str = "researcher") -> tuple[bool, str | None]:
