@@ -1243,7 +1243,7 @@ elif page == "Upload & Analyze":
                     st.session_state["latest_patient"] = patient_id
                     st.session_state["latest_weeks"] = gestational_weeks
                     st.session_state["auto_fetch_latest"] = True
-                    st.warning("Backend unavailable. File saved locally and demo results will be shown.")
+                    st.info("Upload saved locally. Demo results will be shown for this file.")
                     st.info(f"Local upload saved with File ID: {local_file_id}")
                     if upload_error:
                         st.caption(upload_error)
@@ -1292,7 +1292,7 @@ elif page == "Results Viewer":
                     data, error = _wait_for_analysis(selected_file_id)
                     if error:
                         if selected_file_id.startswith("local-") or "connection refused" in error.lower() or "failed to establish" in error.lower():
-                            st.warning("Backend unavailable. Showing demo results for the uploaded file.")
+                            st.info("Showing demo results for the uploaded file.")
                             data = _mock_results_payload(patient_name, int(st.session_state.get("latest_weeks", 32)), selected_file_id)
                         else:
                             st.error(error)
@@ -1319,7 +1319,7 @@ elif page == "Clinical Insights":
         data, error = _wait_for_analysis(latest_file_id)
         if error:
             if latest_file_id.startswith("local-") or "connection refused" in error.lower() or "failed to establish" in error.lower():
-                st.warning("Backend unavailable. Showing demo clinical data for the uploaded file.")
+                st.info("Showing demo clinical data for the uploaded file.")
                 data = _mock_normal_clinical_assessment(patient_name, gestational_weeks)
             else:
                 st.error(error)
