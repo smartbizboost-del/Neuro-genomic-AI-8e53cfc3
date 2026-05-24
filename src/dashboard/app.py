@@ -15,36 +15,32 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-DEFAULT_API_URL = os.getenv("API_URL")
+DEFAULT_API_URL = os.getenv("API_URL", "").strip()
 API_TOKEN = os.getenv("API_TOKEN", "")
 
-
-def _is_streamlit_cloud() -> bool:
-    return bool(
-        os.getenv("STREAMLIT_APP_ID")
-        or os.getenv("STREAMLIT_DEPLOYMENT_ID")
-        or os.getenv("STREAMLIT_CLOUD")
-        or os.getenv("STREAMLIT_APP_NAME")
+if not DEFAULT_API_URL:
+    st.set_page_config(page_title="Neuro-Genomic AI", page_icon="🧬", layout="wide")
+    st.error("❌ API_URL environment variable is not set")
+    st.markdown(
+        """
+        This application requires a backend API endpoint to function. 
+        
+        **Local Development:**
+        - Set `API_URL=http://127.0.0.1:8000` in your shell before running `streamlit run streamlit_app.py`
+        
+        **Streamlit Cloud:**
+        - Go to https://share.streamlit.io → Your app → Settings → Secrets
+        - Add: `API_URL = https://your-public-backend-url.com`
+        - Refresh the app
+        
+        **Example backend URLs:**
+        - `https://neuro-genomic-api.herokuapp.com`
+        - `https://api.example.com:8000`
+        """
     )
+    st.stop()
 
-
-API_URL = ""
-if _is_streamlit_cloud():
-    API_URL = DEFAULT_API_URL or ""
-else:
-    API_URL = DEFAULT_API_URL or "http://127.0.0.1:8000"
-
-
-def _render_cloud_api_warning() -> None:
-    if _is_streamlit_cloud() and (not API_URL or API_URL.startswith("http://127.0.0.1") or API_URL.startswith("https://127.0.0.1") or API_URL.startswith("http://localhost") or API_URL.startswith("https://localhost")):
-        st.error(
-            "The deployed Streamlit app is missing a valid backend URL. Streamlit Cloud cannot reach `localhost` or `127.0.0.1`."
-        )
-        st.info(
-            "Set `API_URL` in Streamlit Cloud environment variables to the public backend address (for example `https://your-backend.example.com`). "
-            "Then refresh the app."
-        )
-        st.stop()
+API_URL = DEFAULT_API_URL
 
 
 def _register_user(email: str, password: str, full_name: str = "", role: str = "researcher") -> tuple[bool, str | None]:
@@ -998,8 +994,6 @@ for key, default in [
     st.session_state.setdefault(key, default)
 
 _inject_theme()
-
-_render_cloud_api_warning()
 
 col_logo, col_title, col_actions = st.columns([0.06, 1, 0.35])
 with col_logo:
