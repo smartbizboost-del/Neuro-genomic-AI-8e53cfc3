@@ -5,8 +5,13 @@ from __future__ import annotations
 import html
 import math
 import os
+import sqlite3
+import hashlib
+import hmac
+import secrets
 import time
 from typing import Any
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,6 +22,85 @@ import streamlit as st
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 API_TOKEN = os.getenv("API_TOKEN", "")
+LOCAL_AUTH_DB = Path(__file__).resolve().parents[2] / "data" / "local_auth.sqlite3"
+
+
+def _ensure_local_auth_store() -> None:
+    LOCAL_AUTH_DB.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(LOCAL_AUTH_DB) as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                email TEXT PRIMARY KEY,
+                full_name TEXT,
+                role TEXT,
+                password_salt TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.commit()
+
+
+def _hash_password(password: str, salt: str | None = None) -> tuple[str, str]:
+    salt = salt or secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 120_000)
+    return salt, digest.hex()
+
+
+def _local_register_user(email: str, password: str, full_name: str = "", role: str = "researcher") -> tuple[bool, str | None]:
+    _ensure_local_auth_store()
+    normalized_email = email.strip().lower()
+    if not normalized_email or not password:
+        return False, "Email and password are required."
+    salt, password_hash = _hash_password(password)
+    try:
+        with sqlite3.connect(LOCAL_AUTH_DB) as conn:
+            conn.execute(
+                "INSERT INTO users (email, full_name, role, password_salt, password_hash) VALUES (?, ?, ?, ?, ?)",
+                (normalized_email, full_name.strip(), role, salt, password_hash),
+            )
+            conn.commit()
+        return True, None
+    except sqlite3.IntegrityError:
+        return False, "An account with that email already exists."
+
+
+def _local_login_user(email: str, password: str) -> tuple[str | None, str | None]:
+    _ensure_local_auth_store()
+    normalized_email = email.strip().lower()
+    with sqlite3.connect(LOCAL_AUTH_DB) as conn:
+        row = conn.execute(
+            "SELECT password_salt, password_hash FROM users WHERE email = ?",
+            (normalized_email,),
+        ).fetchone()
+    if not row:
+        return None, "No local account found for that email."
+    salt, stored_hash = row
+    _, password_hash = _hash_password(password, salt)
+    if not hmac.compare_digest(password_hash, stored_hash):
+        return None, "Incorrect password."
+    token = f"local-{normalized_email}"
+    st.session_state["auth_token"] = token
+    st.session_state["auth_email"] = normalized_email
+    return token, None
+
+
+def _register_user(email: str, password: str, full_name: str = "", role: str = "researcher") -> tuple[bool, str | None]:
+    try:
+        response = requests.post(
+            f"{API_URL}/auth/register",
+            json={"email": email, "password": password, "full_name": full_name, "role": role},
+            timeout=8,
+        )
+        if response.status_code in (200, 201):
+            return True, None
+        if response.status_code >= 400:
+            return False, response.json().get("detail", response.text)
+    except requests.RequestException:
+        pass
+    return _local_register_user(email, password, full_name, role)
 
 
 def _get_auth_token() -> str:
@@ -50,7 +134,10 @@ def _login_user(email: str, password: str) -> tuple[str | None, str | None]:
             return None, "Login succeeded but no token was returned."
         return None, response.json().get("detail", response.text)
     except Exception as exc:
-        return None, str(exc)
+        local_token, local_error = _local_login_user(email, password)
+        if local_token:
+            return local_token, None
+        return None, str(exc) if not local_error else local_error
 
 
 def _logout_user() -> None:
@@ -463,22 +550,15 @@ def _render_login_prompt(page: str) -> None:
             su_role = st.selectbox("Role", ["researcher", "clinician"], index=0)
             create_clicked = st.form_submit_button("Create account")
         if create_clicked and su_email and su_password:
-            try:
-                resp = requests.post(
-                    f"{API_URL}/auth/register",
-                    json={"email": su_email, "password": su_password, "full_name": su_name, "role": su_role},
-                    timeout=8,
-                )
-                if resp.status_code in (200, 201):
-                    token, error = _login_user(su_email, su_password)
+                ok, error = _register_user(su_email, su_password, su_name, su_role)
+                if ok:
+                    token, login_error = _login_user(su_email, su_password)
                     if token:
                         st.rerun()
                     else:
-                        st.info(error or "Account created, please sign in.")
+                        st.info(login_error or "Account created, please sign in.")
                 else:
-                    st.error(resp.text)
-            except Exception as exc:
-                st.error(str(exc))
+                    st.error(error or "Registration failed")
     else:
         with st.form("login_form"):
             email = st.text_input("Email", value=st.session_state.get("auth_email", ""))
@@ -1020,22 +1100,15 @@ with col_actions:
                 su_role = st.selectbox("Role", ["researcher", "clinician"], index=0, key="su_role")
                 if st.button("Create account", key="top_signup"):
                     if su_email and su_password:
-                        try:
-                            resp = requests.post(
-                                f"{API_URL}/auth/register",
-                                json={"email": su_email, "password": su_password, "full_name": su_name, "role": su_role},
-                                timeout=8,
-                            )
-                            if resp.status_code in (200, 201):
-                                token, error = _login_user(su_email, su_password)
-                                if token:
-                                    st.rerun()
-                                else:
-                                    st.info(error or "Account created, sign in.")
+                        ok, error = _register_user(su_email, su_password, su_name, su_role)
+                        if ok:
+                            token, login_error = _login_user(su_email, su_password)
+                            if token:
+                                st.rerun()
                             else:
-                                st.error(resp.text)
-                        except Exception as exc:
-                            st.error(str(exc))
+                                st.info(login_error or "Account created, sign in.")
+                        else:
+                            st.error(error or "Registration failed")
 
 if _is_authenticated():
     nav_map = {"📤 Upload & Analyze": "Upload & Analyze", "📊 Results Viewer": "Results Viewer", "🩺 Clinical Insights": "Clinical Insights"}
