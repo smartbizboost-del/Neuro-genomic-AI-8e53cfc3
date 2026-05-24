@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import secrets
 import time
+import uuid
 from typing import Any
 from pathlib import Path
 
@@ -23,6 +24,7 @@ import streamlit as st
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 API_TOKEN = os.getenv("API_TOKEN", "")
 LOCAL_AUTH_DB = Path(__file__).resolve().parents[2] / "data" / "local_auth.sqlite3"
+LOCAL_UPLOAD_DIR = Path(__file__).resolve().parents[2] / "data" / "uploads"
 
 
 def _ensure_local_auth_store() -> None:
@@ -101,6 +103,44 @@ def _register_user(email: str, password: str, full_name: str = "", role: str = "
     except requests.RequestException:
         pass
     return _local_register_user(email, password, full_name, role)
+
+
+def _mock_results_payload(patient_name: str, gestational_weeks: int, file_id: str = "demo") -> dict[str, Any]:
+    return {
+        "file_id": file_id,
+        "patient": patient_name,
+        "features": {"rmssd": 35.0, "sdnn": 110.0, "lf_hf_ratio": 1.7, "sample_entropy": 0.91},
+        "risk": {
+            "normal": 0.90,
+            "suspect": 0.07,
+            "pathological": 0.03,
+            "predicted_class": "normal",
+            "unsupervised_cluster": 0,
+            "confidence_level": 0.95,
+            "confidence_label": "high",
+        },
+        "interpretation": [
+            "Autonomic maturation consistent with gestational age",
+            "HRV appears within expected physiological range",
+            "Sympathetic and parasympathetic balance is acceptable",
+        ],
+        "developmental_index": 0.86,
+        "gestational_weeks": gestational_weeks,
+    }
+
+
+def _store_local_upload(uploaded_file: Any, patient_id: str) -> str:
+    LOCAL_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    file_id = f"local-{uuid.uuid4().hex[:12]}"
+    target_dir = LOCAL_UPLOAD_DIR / file_id
+    target_dir.mkdir(parents=True, exist_ok=True)
+    filename = getattr(uploaded_file, "name", "fetal_ecg_upload.bin") or "fetal_ecg_upload.bin"
+    target_path = target_dir / filename
+    with open(target_path, "wb") as buffer:
+        buffer.write(uploaded_file.getvalue())
+    metadata_path = target_dir / "metadata.txt"
+    metadata_path.write_text(f"patient_id={patient_id}\nfilename={filename}\n", encoding="utf-8")
+    return file_id
 
 
 def _get_auth_token() -> str:
@@ -1180,6 +1220,8 @@ elif page == "Upload & Analyze":
             st.error("Please complete the acquisition checklist before analyzing.")
         else:
             with st.spinner("Uploading and processing..."):
+                result = None
+                upload_error: str | None = None
                 try:
                     response = requests.post(
                         f"{API_URL}/api/v1/upload",
@@ -1190,19 +1232,34 @@ elif page == "Upload & Analyze":
                     )
                     if response.status_code == 200:
                         result = response.json()
-                        st.session_state["latest_file_id"] = str(result.get("file_id", ""))
-                        st.session_state["latest_patient"] = patient_id
-                        st.session_state["latest_weeks"] = gestational_weeks
-                        st.success(f"File uploaded. File ID: {result.get('file_id', '')}")
-                        st.info("Processing started. The app will use this file for results.")
-                        if auto_open:
-                            st.session_state["auto_fetch_latest"] = True
-                            st.session_state["_page_nav"] = "Results Viewer"
-                            st.rerun()
                     else:
-                        st.error(f"Upload failed: {response.text}")
+                        upload_error = f"Upload failed: {response.text}"
                 except Exception as exc:
-                    st.error(f"Upload error: {exc}")
+                    upload_error = str(exc)
+
+                if result is None:
+                    local_file_id = _store_local_upload(uploaded_file, patient_id)
+                    st.session_state["latest_file_id"] = local_file_id
+                    st.session_state["latest_patient"] = patient_id
+                    st.session_state["latest_weeks"] = gestational_weeks
+                    st.session_state["auto_fetch_latest"] = True
+                    st.warning("Backend unavailable. File saved locally and demo results will be shown.")
+                    st.info(f"Local upload saved with File ID: {local_file_id}")
+                    if upload_error:
+                        st.caption(upload_error)
+                    if auto_open:
+                        st.session_state["_page_nav"] = "Results Viewer"
+                        st.rerun()
+                else:
+                    st.session_state["latest_file_id"] = str(result.get("file_id", ""))
+                    st.session_state["latest_patient"] = patient_id
+                    st.session_state["latest_weeks"] = gestational_weeks
+                    st.success(f"File uploaded. File ID: {result.get('file_id', '')}")
+                    st.info("Processing started. The app will use this file for results.")
+                    if auto_open:
+                        st.session_state["auto_fetch_latest"] = True
+                        st.session_state["_page_nav"] = "Results Viewer"
+                        st.rerun()
 elif page == "Results Viewer":
     st.header("Results Viewer")
     col_input_1, col_input_2, col_input_3 = st.columns([2, 2, 1])
@@ -1234,26 +1291,18 @@ elif page == "Results Viewer":
                 if selected_file_id:
                     data, error = _wait_for_analysis(selected_file_id)
                     if error:
-                        st.error(error)
+                        if selected_file_id.startswith("local-") or "connection refused" in error.lower() or "failed to establish" in error.lower():
+                            st.warning("Backend unavailable. Showing demo results for the uploaded file.")
+                            data = _mock_results_payload(patient_name, int(st.session_state.get("latest_weeks", 32)), selected_file_id)
+                        else:
+                            st.error(error)
                     st.session_state["latest_file_id"] = selected_file_id
                     st.session_state["latest_patient"] = patient_name
                 else:
                     st.warning("No uploaded file found yet. Showing mock normal data.")
-                    data = {
-                        "features": {"rmssd": 35.0, "sdnn": 110.0, "lf_hf_ratio": 1.7, "sample_entropy": 0.91},
-                        "risk": {"normal": 0.90, "suspect": 0.07, "pathological": 0.03, "predicted_class": "normal", "unsupervised_cluster": 0, "confidence_level": 0.95, "confidence_label": "high"},
-                        "interpretation": ["Autonomic maturation consistent with gestational age", "HRV appears within expected physiological range", "Sympathetic and parasympathetic balance is acceptable"],
-                        "developmental_index": 0.86,
-                        "gestational_weeks": int(st.session_state.get("latest_weeks", 32)),
-                    }
+                    data = _mock_results_payload(patient_name, int(st.session_state.get("latest_weeks", 32)), "demo")
             else:
-                data = {
-                    "features": {"rmssd": 35.0, "sdnn": 110.0, "lf_hf_ratio": 1.7, "sample_entropy": 0.91},
-                    "risk": {"normal": 0.90, "suspect": 0.07, "pathological": 0.03, "predicted_class": "normal", "unsupervised_cluster": 0, "confidence_level": 0.95, "confidence_label": "high"},
-                    "interpretation": ["Autonomic maturation consistent with gestational age", "HRV appears within expected physiological range", "Sympathetic and parasympathetic balance is acceptable"],
-                    "developmental_index": 0.86,
-                    "gestational_weeks": int(st.session_state.get("latest_weeks", 32)),
-                }
+                data = _mock_results_payload(patient_name, int(st.session_state.get("latest_weeks", 32)), "demo")
             if data:
                 data = _normalize_results_payload(data, patient_name, int(st.session_state.get("latest_weeks", 32)))
                 if "developmental_index" in data:
@@ -1269,7 +1318,11 @@ elif page == "Clinical Insights":
         st.info("Showing analyzed clinical data from the latest upload.")
         data, error = _wait_for_analysis(latest_file_id)
         if error:
-            st.error(error)
+            if latest_file_id.startswith("local-") or "connection refused" in error.lower() or "failed to establish" in error.lower():
+                st.warning("Backend unavailable. Showing demo clinical data for the uploaded file.")
+                data = _mock_normal_clinical_assessment(patient_name, gestational_weeks)
+            else:
+                st.error(error)
         elif data:
             data = _normalize_results_payload(data, patient_name, gestational_weeks)
             if "developmental_index" in data:
