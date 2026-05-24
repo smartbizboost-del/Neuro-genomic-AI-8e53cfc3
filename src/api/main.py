@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -7,6 +8,12 @@ from src.api.routes import health, analysis, upload, export, contact
 from src.api.routes.assessment import router as assessment_router
 from src.api.routes.auth import router as auth_router
 from src.core.pipeline import get_pipeline, NeuroGenomicPipeline
+from src.config.environment import get_config
+
+# Get environment-specific config
+config = get_config()
+logger = logging.getLogger(__name__)
+logger.setLevel(config.log_level)
 
 app = FastAPI(
     title="Neuro-Genomic AI API",
@@ -14,9 +21,13 @@ app = FastAPI(
     description="Neuro-Genomic AI API for fetal ECG analysis, upload, and export"
 )
 
+# Environment-specific CORS configuration
+cors_origins = config.cors_origins
+logger.info(f"Configured CORS origins: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,12 +55,25 @@ app.include_router(auth_router)
 
 @app.get("/")
 async def root():
-    return {"name": app.title, "version": app.version, "status": "operational"}
+    return {
+        "name": app.title,
+        "version": app.version,
+        "status": "operational",
+        "environment": config.environment.value
+    }
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": config.environment.value
+    }
 
 @app.get("/ready")
 async def readiness_check():
-    return {"status": "ready", "timestamp": datetime.utcnow().isoformat()}
+    return {
+        "status": "ready",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": config.environment.value
+    }

@@ -15,32 +15,45 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-DEFAULT_API_URL = os.getenv("API_URL", "").strip()
+from src.config.environment import get_config
+
+config = get_config()
+API_URL = config.api_url
 API_TOKEN = os.getenv("API_TOKEN", "")
 
-if not DEFAULT_API_URL:
+
+# Validate API_URL is set and accessible
+if not API_URL:
     st.set_page_config(page_title="Neuro-Genomic AI", page_icon="🧬", layout="wide")
-    st.error("❌ API_URL environment variable is not set")
+    st.error("❌ API Backend Not Configured")
     st.markdown(
-        """
-        This application requires a backend API endpoint to function. 
+        f"""
+        **Environment:** {config.environment.value}
+        
+        The API_URL is not configured. Please set it according to your deployment:
         
         **Local Development:**
-        - Set `API_URL=http://127.0.0.1:8000` in your shell before running `streamlit run streamlit_app.py`
+        ```bash
+        set API_URL=http://127.0.0.1:8000
+        streamlit run streamlit_app.py
+        ```
         
-        **Streamlit Cloud:**
-        - Go to https://share.streamlit.io → Your app → Settings → Secrets
-        - Add: `API_URL = https://your-public-backend-url.com`
-        - Refresh the app
+        **Docker Compose:**
+        - Automatically configured as `http://api:8000`
         
-        **Example backend URLs:**
-        - `https://neuro-genomic-api.herokuapp.com`
-        - `https://api.example.com:8000`
+        **Streamlit Cloud + ngrok:**
+        1. Run locally: `ngrok http 8000`
+        2. Copy the URL (e.g., `https://abc123.ngrok-free.dev`)
+        3. Go to Streamlit app → Settings → Secrets
+        4. Add: `API_URL = "https://abc123.ngrok-free.dev"`
+        
+        **Streamlit Cloud + Azure:**
+        1. Deploy backend to Azure
+        2. Get public IP from Azure Portal
+        3. In Streamlit Secrets: `API_URL = "http://YOUR_IP:8000"`
         """
     )
     st.stop()
-
-API_URL = DEFAULT_API_URL
 
 
 def _register_user(email: str, password: str, full_name: str = "", role: str = "researcher") -> tuple[bool, str | None]:
