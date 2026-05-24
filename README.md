@@ -107,6 +107,17 @@ python -m src.run
 # Dashboard: python -m streamlit run src/dashboard/app.py
 ```
 
+### Streamlit Cloud Deployment
+
+Use `streamlit_app.py` as the main file when deploying to Streamlit Community Cloud.
+
+Recommended settings:
+- **Main file path:** `streamlit_app.py`
+- **Requirements file:** `requirements.txt`
+- **API URL:** set `API_URL` in Streamlit secrets or environment variables if you want the dashboard to talk to a remote backend
+
+If no backend is configured, the dashboard still opens in demo mode for the home, results, and clinical pages.
+
 ---
 
 ## 📊 Features
